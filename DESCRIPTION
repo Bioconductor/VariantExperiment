@@ -1,5 +1,5 @@
 Package: VariantExperiment
-Title: GDS back end data for DelayedArray
+Title: GDS back end data for DelayedArray to represent gdsfmt using standard SummarizedExperiment metaphor.
 Version: 0.99.0
 Authors@R: person("Qian", "Liu",
     email = "qliu7@buffalo.edu",

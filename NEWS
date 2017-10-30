@@ -1,0 +1,2 @@
+Stick the assay data stored in the GDS file into the SE. For this you need a GDS back-end for DelayedArray. 
+Implement 2 classes for this e.g. GDSArraySeed and GDSArray.

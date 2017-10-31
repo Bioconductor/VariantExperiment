@@ -4,14 +4,14 @@
 
 
 setClass("GDSArraySeed",
-    contains="Array",
-    representation(
+    contains = "Array", ## ?? or "gds.class"
+    slots = c(
         file="character",   # Absolute path to the gds file so the object
                             # doesn't break when the user changes the working
                             # directory (e.g. with setwd()).
-        name="character",   # Name of the node in the gds file.
-        dim="integer",
-        first_val="ANY"     # First value in the dataset. Needed for GDSArraySeed???? 
+        dim = "integer",
+        dimnames = "list"
+        ## first_val="ANY"  # First value in the dataset. Needed for GDSArraySeed???? 
     )
 )
 

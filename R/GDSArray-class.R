@@ -1,7 +1,7 @@
 #' @import SNPRelate
 #' @import gdsfmt
 #' @importFrom tools file_path_as_absolute
-#' @importFrom S4Vectors isSingleString isSingleStringOrNA
+#' @import S4Vectors
 #' 
 
 ## library(gdsfmt)
@@ -13,15 +13,17 @@
 ### GDSArray objects
 ### -------------------------------------------------------------------------
 
+#' @importClassesFrom DelayedArray Array
+#' @importFrom DelayedArray subset_seed_as_array
 setClass("GDSArraySeed",
-    contains = "array", ## ?? or "gds.class"
+    contains = "Array", ## ?? or "gds.class"
     slots = c(
         file="character",   # Absolute path to the gds file so the object
                             # doesn't break when the user changes the working
                             # directory (e.g. with setwd()).
         dim = "integer",
         dimnames = "list",
-        first_val="ANY"  # First value in the dataset. Needed for GDSArraySeed???? 
+        first_val = "ANY"
     )
 )
 
@@ -37,11 +39,10 @@ setMethod("dimnames", "GDSArraySeed", function(x) x@dimnames)
 setMethod(
     "show", "GDSArraySeed",
     function(object){
-        cat("GDSArraySeed\n")
-        cat("gds file:", object@file, "\n")
-        cat("The total number of samples: ", unname(dim(object)["sample.id"]), "\n")
-        cat("The total number of snps: ", unname(dim(object)["snp.id"]), "\n")
-        cat("The first value of assay:", object@first_val, "\n")
+        cat("GDSArraySeed\n",
+            "gds file: ", object@file, "\n",
+            "dim: ", nrow(object), " x ", ncol(object), "\n",
+            sep="")
     }
 )
 
@@ -57,7 +58,9 @@ setMethod(
         ans <- seed@first_val[0]
         dim(ans) <- ans_dim
     } else {
-        ans <- h5read2(seed@file, seed@name, index)
+        f <- snpgdsOpen(seed@file)
+        on.exit(snpgdsClose(f))
+        ans <- readex.gdsn(index.gdsn(f, "genotype"), index)
     }
     ans
 }
@@ -166,6 +169,7 @@ GDSArraySeed <- function(file, type=NA){
 ### and DelayedMatrix objects.
 ###
 
+#' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
 setClass("GDSArray", contains="DelayedArray")
 
 setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
@@ -176,7 +180,7 @@ setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
 
 ### For internal use only.
-setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
+## setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
 
 .validate_GDSArray <- function(x)
 {
@@ -187,6 +191,7 @@ setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
     TRUE
 }
 
+#' @importFrom S4Vectors setValidity2
 setValidity2("GDSArray", .validate_GDSArray)
 
 setAs("ANY", "GDSMatrix",
@@ -198,13 +203,14 @@ setAs("ANY", "GDSMatrix",
 ### Constructor
 ###
 
+#' @importFrom DelayedArray DelayedArray
 setMethod("DelayedArray", "GDSArraySeed",
     function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
 )
 
 ### Works directly on a GDSArraySeed object, in which case it must be called
 ### with a single argument.
-GDSArray <- function(file, name, type=NA)
+GDSArray <- function(file, type=NA)
 {
     if (is(file, "GDSArraySeed")) {
         if (!(missing(name) && identical(type, NA)))
@@ -212,8 +218,8 @@ GDSArray <- function(file, name, type=NA)
                       "when passed a GDSArraySeed object"))
         seed <- file
     } else {
-        seed <- GDSArraySeed(file, name, type=type)
+        seed <- GDSArraySeed(file, type)
     }
-    DelayedArray(seed)
+    as(DelayedArray(seed), "GDSMatrix")
 }
 

@@ -15,8 +15,11 @@
 
 #' @importClassesFrom DelayedArray Array
 #' @importFrom DelayedArray subset_seed_as_array
+#' @export 
 setClass("GDSArraySeed",
-    contains = "Array", ## ?? or "gds.class"
+         contains = "Array", ## from DelayedArray: A virtual class with no slots
+                             ## to be extended by concrete subclasses with
+                             ## an array-like semantic.
     slots = c(
         file="character",   # Absolute path to the gds file so the object
                             # doesn't break when the user changes the working
@@ -48,7 +51,7 @@ setMethod(
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_seed_as_array()  ???????
+### subset_seed_as_array()
 ###
 
 .subset_GDSArraySeed_as_array <- function(seed, index)
@@ -74,12 +77,7 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ### GDSArraySeed constructor
 ###
 
-## ## library(SeqArray)
-## ## file <- seqExampleFileName("gds")
-## ## library(SNPRelate)
-## ## file <- seqOpen(fn)
-
-## file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
+file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
 ## snpgdsSummary(file)
 ## f <- snpgdsOpen(file)
 
@@ -109,8 +107,8 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 
 .read_gdsdata_first_val <- function(file){
     f <- snpgdsOpen(file)
+    on.exit(snpgdsClose(f))
     first_val <- read.gdsn(index.gdsn(f, "genotype"), start=c(1,1), count=c(1,1))
-    snpgdsClose(f)
     first_val
 }
 
@@ -120,10 +118,11 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ## f2 <- snpgdsOpen("test2.gds")
 ## snpgdsClose(f2)
 
-### Return a GDSArraySeed object with NO dimnames!
-### FIXME: Investigate the possiblity to store the dimnames in the GDS file
-### and make dimnames() on the object returned by GDSArraySeed() bring them
-### back.
+#' @export 
+###
+## GDSArraySeed constructor
+###
+
 GDSArraySeed <- function(file, type=NA){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
@@ -171,7 +170,6 @@ GDSArraySeed <- function(file, type=NA){
 
 #' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
 setClass("GDSArray", contains="DelayedArray")
-
 setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
 ### Automatic coercion method from GDSArray to GDSMatrix silently returns
@@ -213,9 +211,9 @@ setMethod("DelayedArray", "GDSArraySeed",
 GDSArray <- function(file, type=NA)
 {
     if (is(file, "GDSArraySeed")) {
-        if (!(missing(name) && identical(type, NA)))
-            stop(wmsg("GDSArray() must be called with a single argument ",
-                      "when passed a GDSArraySeed object"))
+        stopifnot(identical(type, NA))
+        ## stop(wmsg("GDSArray() must be called with a single argument ",
+        ##               "when passed a GDSArraySeed object"))
         seed <- file
     } else {
         seed <- GDSArraySeed(file, type)

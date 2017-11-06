@@ -77,12 +77,14 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ### GDSArraySeed constructor
 ###
 
-file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
+## file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
 ## snpgdsSummary(file)
-## f <- snpgdsOpen(file)
+## f <- openfn.gds(file)
 
 .get_gdsdata_dim <- function(file){
-    dim <- sapply(snpgdsSummary(file, show=FALSE), length)
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    dim <- objdesp.gdsn(index.gdsn(f, "genotype"))$dim
     if (!is.integer(dim)) {
         if (any(dim > .Machine$integer.max)) {
             dim_in1string <- paste0(dim, collapse=" x ")
@@ -97,7 +99,19 @@ file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
 }
 
 .get_gdsdata_dimnames <- function(file){
-    dimnames <- snpgdsSummary(file, show=FALSE)
+    summ <- snpgdsSummary(file, show=FALSE)
+    sample.id <- summ$sample.id
+    snp.id <- summ$snp.id
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    rd <- names(get.attr.gdsn(index.gdsn(f, "genotype")))
+    if ("snp.order" %in% rd){
+        dimnames <- list(snp.id = snp.id, sample.id = sample.id)
+    }else{
+        dimnames <- list(sample.id = samp.id, snp.id = snp.id)
+    }
+    dimnames
+    ## dimnames <- snpgdsSummary(file, show=FALSE)
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
     }
@@ -110,6 +124,35 @@ file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
     on.exit(snpgdsClose(f))
     first_val <- read.gdsn(index.gdsn(f, "genotype"), start=c(1,1), count=c(1,1))
     first_val
+}
+
+.read_gdsdata_sampleInCol <- function(file){
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    rd <- names(get.attr.gdsn(index.gdsn(f, "genotype")))
+    if ("snp.order" %in% rd) sampleInCol <- TRUE   ## snpfirstdim (in row)
+    if ("sample.order" %in% rd) sampleInCol <- FALSE
+    sampleInCol
+}
+
+#' @import gdsfmt
+.write_gdsdata_sampleInCol <- function(file){
+    if(!.read_gdsdata_sampleInCol(file)){
+        message("\nthe GDSArray will coerce the data to be dimensions of 'variant X sample'\n")
+        file <- file_path_as_absolute(file)
+        tmpfile <- file.path(
+            dirname(file),
+            paste0(strsplit(basename(file), split=".gds")[[1]], "_perm", ".gds"))
+        file.copy(file, tmpfile, overwrite=TRUE)
+        message("The gds file with permuted dimensions is saved in '", tmpfile, "'\n")
+        f <- openfn.gds(tmpfile, readonly=FALSE)
+        on.exit(closefn.gds(f))
+        g <- index.gdsn(f, "genotype")
+        permdim.gdsn(g, c(2,1))
+        put.attr.gdsn(g, "snp.order", NULL)
+        delete.attr.gdsn(g, "sample.order")
+        tmpfile
+    }
 }
 
 ## vcf.fn <- system.file("extdata", "sequence.vcf", package="SNPRelate")
@@ -130,6 +173,8 @@ GDSArraySeed <- function(file, type=NA){
     file <- file_path_as_absolute(file)
     if (!isSingleStringOrNA(type))
         stop("'type' must be a single string or NA")
+    ## force to read in data with variant * sample order.
+    file <- .write_gdsdata_sampleInCol(file)
     dim <- .get_gdsdata_dim(file)
     dimnames <- .get_gdsdata_dimnames(file)
     first_val <- .read_gdsdata_first_val(file)

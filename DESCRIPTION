@@ -23,3 +23,7 @@ LazyData: true
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr
 Suggests: testthat
+Collate:
+    utils.R
+    GDSArray-class.R
+    makeSummarizedExperimentFromGdsfmt.R

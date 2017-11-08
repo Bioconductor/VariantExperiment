@@ -1,3 +1,5 @@
+#' GDSArraySeed
+#' Generate the seed for gds data for the GDSArray
 #' @import SNPRelate
 #' @import gdsfmt
 #' @importFrom tools file_path_as_absolute
@@ -275,9 +277,10 @@ setMethod("DelayedArray", "GDSArraySeed",
     function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
 )
 
+#' @export
 ### Works directly on a GDSArraySeed object, in which case it must be called
 ### with a single argument.
-GDSArray <- function(file, type=NA)
+GDSArray <- function(file, node=NA)
 {
     if (is(file, "GDSArraySeed")) {
         stopifnot(identical(type, NA))
@@ -285,7 +288,7 @@ GDSArray <- function(file, type=NA)
         ##               "when passed a GDSArraySeed object"))
         seed <- file
     } else {
-        seed <- GDSArraySeed(file, type)
+        seed <- GDSArraySeed(file, node)
     }
     as(DelayedArray(seed), "GDSMatrix")
 }

@@ -16,7 +16,7 @@
     gr <- GenomicRanges::GRanges(seqnames=chr,
                                  ranges=IRanges(start=pos, end=pos+reflen-1L),
                   ...)
-    names(gr) <- vid
+    names(gr) <- as.integer(vid)
     gr
 }
 
@@ -86,15 +86,45 @@ makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, frompkg = c("SNPRe
     frompkg <- match.arg(frompkg)
     if(frompkg == "SNPRelate"){  ## snpgdsFileClass
         f <- snpgdsOpen(file)
-        on.exit(snpgdsClose(f))
         colData <- .colData_snpgds(f)
         rowRange <- .rowRanges_snpgds(f)
+        snpgdsClose(f)
         ## Irange with meta data (ID, allele1, allele2)
     }else if(frompkg == "SeqArray"){  ## SeqVarGDSClass
         f <- seqOpen(file)
-        on.exit(seqClose(f))
         colData <- SeqArray::colData(f)
         rowRange <- SeqArray::rowRanges(f)
+        seqClose(f)
     }
-    SummarizedExperiment(assay = list(assay=GDSArray(file, node=name)), colData=colData, rowRanges = rowRanges)
+    assay <- setNames(list(GDSArray(file, node=name)), name)
+    SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
+
+setGeneric("gdsfile", function(x) standardGeneric("gdsfile"))
+
+setMethod("gdsfile", "GDSArraySeed", function(x) x@file)
+
+setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))
+setMethod("gdsfile", "DelayedArray", function(x) gdsfile(seed(x)))
+
+setMethod("gdsfile", "SummarizedExperiment", function(x) {
+    vapply(assays(gse1), gdsfile, character(1))
+})
+
+
+## file <- SNPRelate::sngdsExampleFileName()
+## gdsa <- GDSArray(file)
+## f <- snpgdsOpen(file)
+## colData <- .colData_snpgds(f)
+## rowRange <- .rowRanges_snpgds(f)
+## SummarizedExperiment(assay = gdsa, colData = colData, rowRanges = rowRange)
+
+## file1 <- SeqArray::seqExampleFileName("gds")
+## gdsa1 <- GDSArray(file1)
+## f1 <- seqOpen(file1)
+## colData1 <- .colData_snpgds(f1)
+## rowRange1 <- .rowRanges_snpgds(f1)
+## SummarizedExperiment(assay = gdsa1, colData = colData1, rowRanges = rowRange1)
+
+
+

@@ -64,7 +64,7 @@ setMethod(
         dim(ans) <- ans_dim
     } else {
         f <- openfn.gds(seed@file)
-        on.exit(snpgdsClose(f))
+        on.exit(closefn.gds(f))
         ans <- readex.gdsn(index.gdsn(f, "genotype"), index)
     }
     ans
@@ -125,6 +125,8 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
         put.attr.gdsn(g, "snp.order", NULL)  ## true for other array nodes? 
         delete.attr.gdsn(g, "sample.order")  ## true for other array nodes? 
         tmpfile
+    }else{
+        file
     }
 }
 
@@ -146,9 +148,9 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 }
 
 .get_gdsdata_dimnames <- function(file, node){
-    summ <- snpgdsSummary(file, show=FALSE)
+    summ <- SNPRelate::snpgdsSummary(file, show=FALSE)
     sample.id <- summ$sample.id
-    snp.id <- summ$snp.id
+    snp.id <- as.character(summ$snp.id)
     f <- openfn.gds(file)
     on.exit(closefn.gds(f))
     rd <- names(get.attr.gdsn(index.gdsn(f, node))) ## ?
@@ -158,7 +160,7 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
         dimnames <- list(sample.id = samp.id, snp.id = snp.id)
     }
     dimnames
-    ## dimnames <- snpgdsSummary(file, show=FALSE)
+    ## dimnames <- SNPRelate::snpgdsSummary(file, show=FALSE)
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
     }
@@ -167,8 +169,8 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ## if dimnames is shorter than the corresponding dimensions, use NULL to extend.??
 
 .read_gdsdata_first_val <- function(file, node){
-    f <- snpgdsOpen(file)
-    on.exit(snpgdsClose(f))
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
     first_val <- read.gdsn(index.gdsn(f, node), start=c(1,1), count=c(1,1))
     first_val
 }
@@ -176,9 +178,9 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 
 ## vcf.fn <- system.file("extdata", "sequence.vcf", package="SNPRelate")
 ## snpgdsVCF2GDS(vcf.fn, "test2.gds", method="biallelic.only", snpfirstdim=TRUE)
-## snpgdsSummary("test2.gds")  ## 2snp X 3samples
-## f2 <- snpgdsOpen("test2.gds")
-## snpgdsClose(f2)
+## SNPRelate::snpgdsSummary("test2.gds")  ## 2snp X 3samples
+## f2 <- openfn.gds("test2.gds")
+## closefn.gds(f2)
 
 #' @param gfile the gds file
 #' @param node the gds nodes to be read into GDSArray
@@ -241,7 +243,7 @@ GDSArraySeed <- function(file, node=NA){
 ### and DelayedMatrix objects.
 ###
 
-#' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
+    #' @importClassesFrom DelayedArray DelayedArray DelayedMatrix
 setClass("GDSArray", contains="DelayedArray")
 setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
@@ -273,14 +275,14 @@ setAs("ANY", "GDSMatrix",
 ###
 
 #' @importFrom DelayedArray DelayedArray
-setMethod("DelayedArray", "GDSArraySeed",
-    function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
-)
-
-#' @export
+    setMethod("DelayedArray", "GDSArraySeed",
+          function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
+    )
+    
+    #' @export
 ### Works directly on a GDSArraySeed object, in which case it must be called
 ### with a single argument.
-GDSArray <- function(file, node=NA)
+    GDSArray <- function(file, node=NA)
 {
     if (is(file, "GDSArraySeed")) {
         stopifnot(identical(type, NA))
@@ -292,4 +294,3 @@ GDSArray <- function(file, node=NA)
     }
     as(DelayedArray(seed), "GDSMatrix")
 }
-

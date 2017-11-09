@@ -1,0 +1,44 @@
+1. modify GDSArray-class.R with `GDSArray(frompkg=c("SNPRelate", "SeqArray"). )`
+2. modify `.write_gdsdata_sampleInCol` for `names(get.attr.gdsn())`. Not `snp.order` or `sample.order` for SeqVarGDSClass data. 
+3. SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
+
+4. accessor `gdsfile` for GSE object. S4Vectors)
+
+GDS based SE object, coerce to VRanges. 
+
+```{r}
+setGeneric("gdsfile", function(x) standardGeneric("gdsfile"))
+
+setMethod("gdsfile", "GDSArraySeed", function(x) x@file)
+
+setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))
+setMethod("gdsfile", "DelayedArray", function(x) gdsfile(seed(x)))
+
+setMethod("gdsfile", "SummarizedExperiment", function(x) {
+    vapply(assays(gse1), gdsfile, character(1))
+})
+```
+import(SNPRelate)
+import(VariantAnnotation)
+import(gdsfmt)
+
+```{r}
+file <- SNPRelate::snpgdsExampleFileName()
+gdsa <- GDSArray(file)
+f <- snpgdsOpen(file)
+colData <- .colData_snpgds(f)
+rowRange <- .rowRanges_snpgds(f)
+SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
+## Error in FUN(X[[i]], ...) : 
+##   assay rownames() must be NULL or equal rowData rownames() / rowRanges
+##   names()
+head(rownames(gdsa))  ## integer
+head(names(rowRange))  ## character
+```
+
+## send to Martin: 
+gds file path
+gse1.Rds
+
+
+data sharing in same location (shared dir on server)

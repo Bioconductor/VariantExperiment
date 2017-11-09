@@ -16,9 +16,12 @@ BugReports: https://github.com/Bioconductor/VariantExperiment/issues
 Imports: 
     tools,
     S4Vectors,
-    SNPRelate,
+    GenomicRanges,
     gdsfmt, 
-    DelayedArray
+    SNPRelate,
+    SeqArray, 
+    DelayedArray,
+    VariantAnnotation
 LazyData: true
 RoxygenNote: 6.0.1
 VignetteBuilder: knitr

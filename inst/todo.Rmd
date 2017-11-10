@@ -1,10 +1,33 @@
+Friday mtg about rest of sprint: 
+
+Remove the `.write_gdsdata_sampInCol`, do not generate the temp file.
+
 1. modify GDSArray-class.R with `GDSArray(frompkg=c("SNPRelate", "SeqArray"). )`
 2. modify `.write_gdsdata_sampleInCol` for `names(get.attr.gdsn())`. Not `snp.order` or `sample.order` for SeqVarGDSClass data. 
 3. SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
 
-4. accessor `gdsfile` for GSE object. S4Vectors)
+4. accessor `gdsfile` for GSE object. S4Vectors
 
-GDS based SE object, coerce to VRanges. 
+5. ??GDS based SE object, coerce to VRanges. 
+6. 
+```
+file <- system.file("VariantExperiment", "extdata", )
+se <- makeSu..(file)
+library(RSQLite)
+args(dbWriteTable)
+fl <- tempfile()
+conn <- dbConnect(RSQLite::SQLite(), fl)
+dbWriteTable(conn, "row_ranges", as.data.frame(rowRanges(se)))
+dbDisconnect(conn)
+db_readBin(fl)
+
+db
+add.gdsn(f, "sqlite", db, storage="")
+writeBin()
+$ sqlite3
+```
+7. update the seed setter for GDSArray. create a new GDSArraySeed. 
+
 
 ```{r}
 setGeneric("gdsfile", function(x) standardGeneric("gdsfile"))
@@ -21,6 +44,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 import(SNPRelate)
 import(VariantAnnotation)
 import(gdsfmt)
+
+
+## demo
 
 ```{r}
 file <- SNPRelate::snpgdsExampleFileName()
@@ -42,3 +68,27 @@ gse1.Rds
 
 
 data sharing in same location (shared dir on server)
+
+
+## RSQLite
+```{r}
+library(RSQLite)
+fl <- tempfile()
+conn <- dbConnect(RSQLite::SQLite(), fl)
+dbWriteTable(conn, "row_ranges", as.data.frame(rowRanges(se)))
+dbDisconnect(conn)
+db = readBin(fl, raw(), file.size(fl))
+file.size(fl)
+[1] 335872
+length(db)
+[1] 335872
+head(db)
+[1] 53 51 4c 69 74 65
+f = openfn.gds(gds, readonly=FALSE)
+add.gdsn(f, "sqlite1", db, storage="bit8", replace=TRUE)
+inp <- read.gdsn(index.gdsn(f, "sqlite"), .useraw=TRUE)
+writeBin(inp, "/tmp/row_ranges.sql")
+conn <- dbConnect(RSQLite::RSQLite(), "/tmp/row_ranges.sql")
+conn <- dbConnect(RSQLite::SQLite(), "/tmp/row_ranges.sql")
+GRanges(dbReadTable(conn, "row_ranges"))
+```

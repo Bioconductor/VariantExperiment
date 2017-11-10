@@ -83,34 +83,31 @@ makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, frompkg = c("SNPRe
     if (!isSingleStringOrNA(name))
         stop("'type' must be a single string or NA")
 
+    if (is.na(name)){
+        name <- "genotype"
+        ## the default value for "name"? genotype for snpgds. ? for SeqArray? 
+    } 
+    assay <- setNames(list(GDSArray(file, name)), name)
+    
     frompkg <- match.arg(frompkg)
     if(frompkg == "SNPRelate"){  ## snpgdsFileClass
         f <- snpgdsOpen(file)
+        on.exit(snpgdsClose(f))
         colData <- .colData_snpgds(f)
         rowRange <- .rowRanges_snpgds(f)
-        snpgdsClose(f)
         ## Irange with meta data (ID, allele1, allele2)
     }else if(frompkg == "SeqArray"){  ## SeqVarGDSClass
         f <- seqOpen(file)
+        on.exit(seqClose(f))
         colData <- SeqArray::colData(f)
         rowRange <- SeqArray::rowRanges(f)
-        seqClose(f)
     }
-    assay <- setNames(list(GDSArray(file, node=name)), name)
     SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
-
-setGeneric("gdsfile", function(x) standardGeneric("gdsfile"))
-
-setMethod("gdsfile", "GDSArraySeed", function(x) x@file)
-
-setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))
-setMethod("gdsfile", "DelayedArray", function(x) gdsfile(seed(x)))
 
 setMethod("gdsfile", "SummarizedExperiment", function(x) {
     vapply(assays(gse1), gdsfile, character(1))
 })
-
 
 ## file <- SNPRelate::sngdsExampleFileName()
 ## gdsa <- GDSArray(file)

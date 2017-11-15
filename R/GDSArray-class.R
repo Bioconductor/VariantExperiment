@@ -52,7 +52,8 @@ setMethod(
         cat("GDSArraySeed\n",
             "gds file: ", object@file, "\n",
             "array data: ", object@name, "\n",
-            "dim: ", nrow(object), " x ", ncol(object), "\n",
+            ## "dim: ", nrow(object), " x ", ncol(object), "\n",
+            "dim: ", paste(dim(object), collapse=" x "), "\n",
             sep="")
     }
 )
@@ -71,8 +72,9 @@ setMethod(
         f <- openfn.gds(seed@file)
         on.exit(closefn.gds(f))
         if(seed@permute){
-            index <- index[rev(seq_len(length(index)))] ## always 2 dimensional? SeqArray...
-            ans <- t(readex.gdsn(index.gdsn(f, seed@name), index))
+            permdim <- rev(seq_len(length(index)))
+            index <- index[permdim] ## always 2 dimensional? SeqArray...
+            ans <- aperm(readex.gdsn(index.gdsn(f, seed@name), index), permdim)
         }else{
             ans <- readex.gdsn(index.gdsn(f, seed@name), index)
         }
@@ -92,35 +94,42 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ## snpgdsSummary(file)
 ## f <- openfn.gds(file)
 
-.get_gdsdata_arraynodes <- function(file){
+.get_gdsdata_fileFormat <- function(file){
     f <- openfn.gds(file)
     on.exit(closefn.gds(f))
-    names.gdsn <- ls.gdsn(f)
-    a <- lapply(names.gdsn, function(x) ls.gdsn(index.gdsn(f, x)))
+    ff <- get.attr.gdsn(f$root)$FileFormat
+    ff
+}
+.get_gdsdata_arrayNodes <- function(gdsfile){
+    stopifnot(inherits(gdsfile, "gds.class"))
+    names.gdsn <- ls.gdsn(gdsfile)
+    a <- lapply(names.gdsn, function(x) ls.gdsn(index.gdsn(gdsfile, x)))
     a[lengths(a)==0] <- ""
     n <- rep(names.gdsn, lengths(a))
     all.gdsn <- paste(n, unlist(a), sep="/")
     all.gdsn <- sub("/$", "", all.gdsn)
 
-    isarray <- sapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(f, x))$is.array)
-    dims <- lapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(f, x))$dim)
+    isarray <- sapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
+    dims <- lapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
     names(dims) <- all.gdsn
     names(dims)[unlist(isarray) & lengths(dims) > 1]
 }
 
-.read_gdsdata_sampleInCol <- function(file, node){
-    f <- openfn.gds(file)
-    on.exit(closefn.gds(f))
-    rd <- names(get.attr.gdsn(index.gdsn(f, node)))
-    if ("snp.order" %in% rd) sampleInCol <- TRUE   ## snpfirstdim (in row)
-    if ("sample.order" %in% rd) sampleInCol <- FALSE
+.read_gdsdata_sampleInCol <- function(gdsfile, node, fileFormat){
+    stopifnot(inherits(gdsfile, "gds.class"))
+    if(fileFormat == "SNP_ARRAY"){
+        rd <- names(get.attr.gdsn(index.gdsn(gdsfile, node)))
+        if ("snp.order" %in% rd) sampleInCol <- TRUE   ## snpfirstdim (in row)
+        if ("sample.order" %in% rd) sampleInCol <- FALSE
+    }else if(fileFormat == "SEQ_ARRAY"){
+        sampleInCol <- FALSE
+    }
     sampleInCol
 }
 
-.get_gdsdata_dim <- function(file, node){
-    f <- openfn.gds(file)
-    on.exit(closefn.gds(f))
-    dim <- objdesp.gdsn(index.gdsn(f, node))$dim
+.get_gdsdata_dim <- function(gdsfile, node){
+    stopifnot(inherits(gdsfile, "gds.class"))
+    dim <- objdesp.gdsn(index.gdsn(gdsfile, node))$dim
     if (!is.integer(dim)) {
         if (any(dim > .Machine$integer.max)) {
             dim_in1string <- paste0(dim, collapse=" x ")
@@ -129,25 +138,27 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
                       "supports datasets with all dimensions <= 2^31-1",
                       " (this is ", .Machine$integer.max, ") at the moment."))
         }
-        dim <- as.integer(dim)
     }
+    dim <- as.integer(dim)
     dim
 }
 
-.get_gdsdata_dimnames <- function(file, node){
-    summ <- SNPRelate::snpgdsSummary(file, show=FALSE)
-    sample.id <- summ$sample.id
-    snp.id <- as.character(summ$snp.id)
-    f <- openfn.gds(file)
-    on.exit(closefn.gds(f))
-    rd <- names(get.attr.gdsn(index.gdsn(f, node))) ## ?
-    if ("snp.order" %in% rd){
-        dimnames <- list(snp.id = snp.id, sample.id = sample.id)
-    }else{
-        dimnames <- list(sample.id = sample.id, snp.id = snp.id)
+.get_gdsdata_dimnames <- function(gdsfile, node, fileFormat){
+    stopifnot(inherits(gdsfile, "gds.class"))
+    dims <- .get_gdsdata_dim(gdsfile, node)
+    sample.id <- read.gdsn(index.gdsn(gdsfile, "sample.id"))
+    if(fileFormat == "SNP_ARRAY"){
+        snp.id <- read.gdsn(index.gdsn(gdsfile, "snp.id"))
+        rd <- names(get.attr.gdsn(index.gdsn(gdsfile, node))) ## ?
+        if ("snp.order" %in% rd){
+            dimnames <- list(snp.id = snp.id, sample.id = sample.id)
+        }else{
+            dimnames <- list(sample.id = sample.id, snp.id = snp.id)
+        }
+    }else if(fileFormat == "SEQ_ARRAY"){
+        variant.id <- seqGetData(gdsfile, "variant.id")
+        dimnames <- list(ploidy.id = seq_len(dims[1]),sample.id = sample.id, variant.id = variant.id)
     }
-    dimnames
-    ## dimnames <- SNPRelate::snpgdsSummary(file, show=FALSE)
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
     }
@@ -155,10 +166,9 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 }
 ## if dimnames is shorter than the corresponding dimensions, use NULL to extend.??
 
-.read_gdsdata_first_val <- function(file, node){
-    f <- openfn.gds(file)
-    on.exit(closefn.gds(f))
-    first_val <- read.gdsn(index.gdsn(f, node), start=c(1,1), count=c(1,1))
+.read_gdsdata_first_val <- function(gdsfile, node){
+    dims <- .get_gdsdata_dim(gdsfile, node)
+    first_val <- readex.gdsn(index.gdsn(gdsfile, node), sel=as.list(rep(1, length(dims))))
     first_val
 }
 
@@ -169,42 +179,60 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ## f2 <- openfn.gds("test2.gds")
 ## closefn.gds(f2)
 
-#' @param gfile the gds file
-#' @param node the gds nodes to be read into GDSArray
+#' @param file the gds file
+#' @param name the gds array nodes to be read into GDSArray
 #' @export
 #' 
 ###
 ## GDSArraySeed constructor
 ###
-GDSArraySeed <- function(file, name){
+GDSArraySeed <- function(file, name=NA){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
-    file <- file_path_as_absolute(file)
     if (!isSingleStringOrNA(name))
         stop("'type' must be a single string or NA")
-    ## get the nodes that are array data. 
-    arrayNodes <- .get_gdsdata_arraynodes(file)
+    file <- file_path_as_absolute(file)
+
+    ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
+    ff <- .get_gdsdata_fileFormat(file)
+    if(ff == "SNP_ARRAY"){
+        f <- snpgdsOpen(file)
+        on.exit(snpgdsClose(f))
+        if(is.na(name)) name <- "genotype"
+    }else if(ff == "SEQ_ARRAY"){
+        f <- seqOpen(file)
+        on.exit(seqClose(f))
+        if(is.na(name)) name <- "genotype/data"
+        }
+
+    ## check if the node is array data. 
+    arrayNodes <- .get_gdsdata_arrayNodes(f)
     if(!name %in% arrayNodes){
         stop(wmsg("the `name` must be a rectangular array data."))
     }
-    ## force to read in data with variant * sample order.
-    ## file <- .write_gdsdata_sampleInCol(file, node = name)
-    dim <- .get_gdsdata_dim(file, node = name)
-    dimnames <- .get_gdsdata_dimnames(file, node = name)
-    first_val <- .read_gdsdata_first_val(file, node = name)
 
-    permute = !.read_gdsdata_sampleInCol(file, node = name)
+    dims <- .get_gdsdata_dim(f, node = name)
+    dimnames <- .get_gdsdata_dimnames(f, node = name, fileFormat = ff)
+
+    if(!identical(lengths(dimnames, use.names=FALSE), dims)){
+        stop(wmsg("the lengths of dimnames is not consistent with data dimensions."))
+    }
+
+    first_val <- .read_gdsdata_first_val(f, node = name)
+    permute = !.read_gdsdata_sampleInCol(f, node = name, fileFormat = ff)
+
     if(permute){
-        dim <- rev(dim)
+        dims <- rev(dims)
         dimnames <- dimnames[rev(seq_len(length(dimnames)))]
     }
     new2("GDSArraySeed", file=file,
          name=name,
-         dim=dim,
+         dim=dims,
          dimnames = dimnames,
          permute = permute,
-         first_val=first_val)
+         first_val = first_val
+         )
 }
 
 
@@ -223,6 +251,10 @@ setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
 ### Automatic coercion method from GDSArray to GDSMatrix
 setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
+
+### accessors
+setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))
+setMethod("gdsfile", "DelayedArray", function(x) gdsfile(seed(x)))
 
 ### For internal use only.
 ## setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
@@ -252,7 +284,6 @@ setAs("ANY", "GDSMatrix",
 setMethod("DelayedArray", "GDSArraySeed",
               function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
           )
-setMethod("gdsfile", "DelayedArray", function(x) gdsfile(seed(x)))
 
 #' @export
 ### Works directly on a GDSArraySeed object, in which case it must be called
@@ -269,4 +300,3 @@ GDSArray <- function(file, name=NA){
     as(DelayedArray(seed), "GDSMatrix")
 }
 
-setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))

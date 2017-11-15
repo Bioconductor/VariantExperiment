@@ -3,6 +3,10 @@
 ## f <- snpgdsOpen(file) ## "SNPGDSFileClass", "gds.class"
 ## fileSeqArray <- SeqArray::seqExampleFileName("gds")  ## "SeqVarGDSClass"
 
+setMethod("gdsfile", "SummarizedExperiment", function(x) {
+    vapply(assays(gse1), gdsfile, character(1))
+})
+
 #' @importFrom GenomicRanges GRanges
 .granges_snpgds <- function(gdsfile, ...){
     stopifnot(inherits(gdsfile, "gds.class"))
@@ -105,9 +109,6 @@ makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, frompkg = c("SNPRe
     SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
 
-setMethod("gdsfile", "SummarizedExperiment", function(x) {
-    vapply(assays(gse1), gdsfile, character(1))
-})
 
 ## file <- SNPRelate::sngdsExampleFileName()
 ## gdsa <- GDSArray(file)

@@ -1,32 +1,19 @@
 Friday mtg about rest of sprint: 
 
-Remove the `.write_gdsdata_sampInCol`, do not generate the temp file.
+## 1. Remove the `.write_gdsdata_sampInCol`, do not generate the temp file. (done)
 
-1. modify GDSArray-class.R with `GDSArray(frompkg=c("SNPRelate", "SeqArray"). )`
-2. modify `.write_gdsdata_sampleInCol` for `names(get.attr.gdsn())`. Not `snp.order` or `sample.order` for SeqVarGDSClass data. 
-3. SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
+## 2. modify GDSArray-class.R with `GDSArray(frompkg=c("SNPRelate", "SeqArray").)`
++ has implemented `.get_gdsdata_fileFormat(file)` to return `SNP_ARRAY` OR `SEQ_ARRAY` in `GDSArraySeed()`. Different functions will be used based on the file format. 
++ ?? `SeqArray` 
+## 3. For `SEQ_ARRAY` data, genotype are in 3 dimensions, ploidy X sample X variant. 
++ `DelayedArray` support >2 dimension data? if yes, would be great. 
++ `SummarizedExperiment` support >2 dimension data? 
 
-4. accessor `gdsfile` for GSE object. S4Vectors
+## 3. SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
 
-5. ??GDS based SE object, coerce to VRanges. 
-6. 
-```
-file <- system.file("VariantExperiment", "extdata", )
-se <- makeSu..(file)
-library(RSQLite)
-args(dbWriteTable)
-fl <- tempfile()
-conn <- dbConnect(RSQLite::SQLite(), fl)
-dbWriteTable(conn, "row_ranges", as.data.frame(rowRanges(se)))
-dbDisconnect(conn)
-db_readBin(fl)
+## 5. ??GDS based SE object, coerce to VRanges. 
 
-db
-add.gdsn(f, "sqlite", db, storage="")
-writeBin()
-$ sqlite3
-```
-7. update the seed setter for GDSArray. create a new GDSArraySeed. 
+## 7. update the seed setter for GDSArray. create a new GDSArraySeed. (done)
 
 
 ```{r}
@@ -55,9 +42,9 @@ f <- snpgdsOpen(file)
 colData <- .colData_snpgds(f)
 rowRange <- .rowRanges_snpgds(f)
 SummarizedExperiment(assay=gdsa, colData=colData, rowRanges= rowRange)
-## Error in FUN(X[[i]], ...) : 
-##   assay rownames() must be NULL or equal rowData rownames() / rowRanges
-##   names()
+### Error in FUN(X[[i]], ...) : 
+###   assay rownames() must be NULL or equal rowData rownames() / rowRanges
+###   names()
 head(rownames(gdsa))  ## integer
 head(names(rowRange))  ## character
 ```
@@ -66,11 +53,10 @@ head(names(rowRange))  ## character
 gds file path
 gse1.Rds
 
-
 data sharing in same location (shared dir on server)
 
 
-## RSQLite
+## 8. RSQLite
 ```{r}
 library(RSQLite)
 fl <- tempfile()
@@ -91,4 +77,58 @@ writeBin(inp, "/tmp/row_ranges.sql")
 conn <- dbConnect(RSQLite::RSQLite(), "/tmp/row_ranges.sql")
 conn <- dbConnect(RSQLite::SQLite(), "/tmp/row_ranges.sql")
 GRanges(dbReadTable(conn, "row_ranges"))
+```
+
+```{r, myNote}
+file <- system.file("VariantExperiment", "extdata", "")
+se <- makeSu..(file)
+library(RSQLite)
+args(dbWriteTable)
+fl <- tempfile()
+conn <- dbConnect(RSQLite::SQLite(), fl)
+dbWriteTable(conn, "row_ranges", as.data.frame(rowRanges(se)))
+dbDisconnect(conn)
+db_readBin(fl)
+
+db
+add.gdsn(f, "sqlite", db, storage="")
+writeBin()
+$ sqlite3
+
+```
+
+
+## 9. useful SeqArray functions. 
+```{r}
+## file <- system.file(package="VariantExperiment", "extdata", "CEU_Exon.gds")
+file <- SeqArray::seqExampleFileName("gds")
+f <- openfn.gds(file)
+f$filename
+a <- seqSummary(f)  ## 
+names(a)
+##  [1] "filename"     "version"      "reference"    "ploidy"       "num.sample"  
+##  [6] "num.variant"  "allele"       "annot_qual"   "filter"       "info"        
+## [11] "format"       "sample.annot"
+
+SeqArray:::.seldim(f)
+### seldim[1L] -- ploidy
+### seldim[2L] -- # of selected samples
+### seldim[3L] -- # of selected variants```
+SeqArray:::.AddVar()
+
+gtseq <- read.gdsn(index.gdsn(f, "genotype/data"))
+als <- read.gdsn(index.gdsn(f, "allele"))
+phase <- read.gdsn(index.gdsn(f, "phase/data"))
+```
+
+```{r}
+library(VariantAnnotation)
+vfile <- SeqArray::seqExampleFileName("vcf")
+gt <- readGT(vfile)
+gt[1:10, 1:5]
+gtn <- readGT(vfile, nucleotides=TRUE)
+gtn[1:10, 1:5]
+geno <- readGeno(vfile)
+
+
 ```

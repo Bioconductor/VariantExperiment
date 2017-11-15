@@ -249,8 +249,8 @@ GDSArraySeed <- function(file, name=NA){
 setClass("GDSArray", contains="DelayedArray")
 setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
-### Automatic coercion method from GDSArray to GDSMatrix
-setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
+### Automatic coercion method from GDSArray to GDSMatrix (muted for higher dimensions)
+## setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
 
 ### accessors
 setMethod("gdsfile", "GDSArray", function(x) gdsfile(seed(x)))

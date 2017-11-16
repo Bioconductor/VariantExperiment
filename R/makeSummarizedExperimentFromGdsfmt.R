@@ -116,7 +116,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         node <- index.gdsn(f, "sample.annotation", silent=TRUE)
     }
     stopifnot(inherits(f, "gds.class"))
-    ## stopifnot(inherits(f, "SNPGDSFileClass"))
     sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
 
     if (!is.null(node)){
@@ -171,34 +170,9 @@ makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, rowDataColumns=cha
     assay <- setNames(list(GDSArray(file, name)), name)
     colData <- .colData_gdsdata(file, fileFormat=ff, colDataColumns=colDataColumns)
     rowRange <- .rowRanges_gdsdata(file, fileFormat=ff, rowDataColumns = rowDataColumns)
-    ## if(ff == "SNP_ARRAY"){
-    ##     f <- snpgdsOpen(file)
-    ##     on.exit(snpgdsClose(f))
-    ##     colData <- .colData_snpgds(f)
-    ##     rowRange <- .rowRanges_snpgds(f)
-    ## }else if(ff == "SEQ_ARRAY"){
-    ##     f <- seqOpen(file)
-    ##     on.exit(seqClose(f))
-    ##     colData <- SeqArray::colData(f)
-    ##     rowRange <- SeqArray::rowRanges(f)
-    ## }
     SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
 
-
-## file <- SNPRelate::sngdsExampleFileName()
-## gdsa <- GDSArray(file)
-## f <- snpgdsOpen(file)
-## colData <- .colData_snpgds(f)
-## rowRange <- .rowRanges_snpgds(f)
-## SummarizedExperiment(assay = gdsa, colData = colData, rowRanges = rowRange)
-
-## file1 <- SeqArray::seqExampleFileName("gds")
-## gdsa1 <- GDSArray(file1)
-## f1 <- seqOpen(file1)
-## colData1 <- .colData_snpgds(f1)
-## rowRange1 <- .rowRanges_snpgds(f1)
-## SummarizedExperiment(assay = gdsa1, colData = colData1, rowRanges = rowRange1)
 
 
 

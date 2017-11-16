@@ -90,10 +90,6 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
 ### GDSArraySeed constructor
 ###
 
-## file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
-## snpgdsSummary(file)
-## f <- openfn.gds(file)
-
 .get_gdsdata_fileFormat <- function(file){
     f <- openfn.gds(file)
     on.exit(closefn.gds(f))
@@ -171,13 +167,6 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
     first_val <- readex.gdsn(index.gdsn(gdsfile, node), sel=as.list(rep(1, length(dims))))
     first_val
 }
-
-
-## vcf.fn <- system.file("extdata", "sequence.vcf", package="SNPRelate")
-## snpgdsVCF2GDS(vcf.fn, "test2.gds", method="biallelic.only", snpfirstdim=TRUE)
-## SNPRelate::snpgdsSummary("test2.gds")  ## 2snp X 3samples
-## f2 <- openfn.gds("test2.gds")
-## closefn.gds(f2)
 
 #' @param file the gds file
 #' @param name the gds array nodes to be read into GDSArray

@@ -151,13 +151,13 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
         snp.id <- read.gdsn(index.gdsn(gdsfile, "snp.id"))
         rd <- names(get.attr.gdsn(index.gdsn(gdsfile, node))) ## ?
         if ("snp.order" %in% rd){
-            dimnames <- list(snp.id = snp.id, sample.id = sample.id)
+            dimnames <- list(snp.id = as.character(snp.id), sample.id = sample.id)
         }else{
-            dimnames <- list(sample.id = sample.id, snp.id = snp.id)
+            dimnames <- list(sample.id = sample.id, snp.id = as.character(snp.id))
         }
     }else if(fileFormat == "SEQ_ARRAY"){
         variant.id <- seqGetData(gdsfile, "variant.id")
-        dimnames <- list(ploidy.id = seq_len(dims[1]),sample.id = sample.id, variant.id = variant.id)
+        dimnames <- list(ploidy.id = seq_len(dims[1]),sample.id = sample.id, variant.id = as.character(variant.id))
     }
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
@@ -199,11 +199,11 @@ GDSArraySeed <- function(file, name=NA){
     if(ff == "SNP_ARRAY"){
         f <- snpgdsOpen(file)
         on.exit(snpgdsClose(f))
-        if(is.na(name)) name <- "genotype"
+        ## if(is.na(name)) name <- "genotype"
     }else if(ff == "SEQ_ARRAY"){
         f <- seqOpen(file)
         on.exit(seqClose(f))
-        if(is.na(name)) name <- "genotype/data"
+        ## if(is.na(name)) name <- "genotype/data"
         }
 
     ## check if the node is array data. 
@@ -289,9 +289,12 @@ setMethod("DelayedArray", "GDSArraySeed",
 ### Works directly on a GDSArraySeed object, in which case it must be called
 ### with a single argument.
 GDSArray <- function(file, name=NA){
-    if (is.na(name)){
-        name <- "genotype"
-    } 
+   ff <- .get_gdsdata_fileFormat(file)
+    if(ff == "SNP_ARRAY"){
+        if(is.na(name)) name <- "genotype"
+    }else if(ff == "SEQ_ARRAY"){
+        if(is.na(name)) name <- "genotype/data"
+        }
     if (is(file, "GDSArraySeed")) {
         seed <- file
     } else {

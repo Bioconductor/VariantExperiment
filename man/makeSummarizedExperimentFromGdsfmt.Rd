@@ -4,8 +4,8 @@
 \alias{makeSummarizedExperimentFromGdsfmt}
 \title{makeSummarizedExperimentFromGdsfmt}
 \usage{
-makeSummarizedExperimentFromGdsfmt(file, name = NA, frompkg = c("SNPRelate",
-  "SeqArray"))
+makeSummarizedExperimentFromGdsfmt(file, name = NA,
+  rowDataColumns = character(), colDataColumns = character())
 }
 \arguments{
 \item{file}{the path to the gds.class file.}

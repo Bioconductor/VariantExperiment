@@ -48,14 +48,17 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }
     rowDataColumns <- toupper(rowDataColumns)
     if(length(rowDataColumns) == 0){
-        idx.id <- idx.allele <- idx.ref <- idx.alt <- idx.qual <- idx.filter <- TRUE
+        idx.var <- setNames(rep(TRUE, 6), c("id", "allele", "ref", "alt", "qual", "filter")) 
+        ## idx.id <- idx.allele <- idx.ref <- idx.alt <- idx.qual <- idx.filter <- TRUE
     }else{
-    idx.id <- any(grepl("ID", rowDataColumns))
-    idx.allele <- any(grepl("ALLELE", rowDataColumns))
-    idx.ref <- any(grepl("REF", rowDataColumns))
-    idx.alt <- any(grepl("ALT", rowDataColumns))
-    idx.qual <- any(grepl("QUAL", rowDataColumns))
-    idx.filter <- any(grepl("FILTER", rowDataColumns))
+        idx.var <- c(
+            id = any(grepl("ID", rowDataColumns)),
+            allele = any(grepl("ALLELE", rowDataColumns)),
+            ref = any(grepl("REF", rowDataColumns)),
+            alt = any(grepl("ALT", rowDataColumns)),
+            qual = any(grepl("QUAL", rowDataColumns)),
+            filter = any(grepl("FILTER", rowDataColumns))
+        )
     }
     if(inherits(f, "SNPGDSFileClass")){
         meta <- DataFrame(ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
@@ -63,12 +66,15 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                           ALLELE2 = DNAStringSet(.alleles_snpgds(f)$allele2)
                           ## DNAStringSetList class
                           )
-        if(!idx.allele) meta <- meta[-grep("ALLELE", names(meta))]
-        if(!idx.id) meta <- meta[-grep("ID", names(meta))]
+        idx.var <- idx.var[1:2]
+        if(any(!idx.var)){
+            rm.var <- names(idx.var[!idx.var])
+            meta <- meta[-match(toupper(rm.var), names(meta))]
+        }
         idx.other <- rowDataColumns %in% c("ID", "ALLELE")
         if(any(!idx.other)){
             warning("The snp annotation of '",
-                    tolower(paste(rowDataColumns[!idx.other], collapse = " , ")),
+                    tolower(paste(rowDataColumns[!idx.other], collapse = ", ")),
                     "' does not exist!")
         }
         rr <- .granges_snpgds(f)
@@ -79,15 +85,15 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                           ALT = SeqArray::alt(f),
                           QUAL = SeqArray::qual(f),
                           FILTER = SeqArray::filt(f))
-        if(!idx.ref) meta <- meta[-grep("REF", names(meta))]
-        if(!idx.alt) meta <- meta[-grep("ALT", names(meta))]
-        if(!idx.qual) meta <- meta[-grep("QUAL", names(meta))]
-        if(!idx.filter) meta <- meta[-grep("FILTER", names(meta))]
-        if(!idx.id) meta <- meta[-grep("ID", names(meta))]
+        idx.var <- idx.var[-2]
+        if(any(!idx.var)){
+            rm.var <- names(idx.var[!idx.var])
+            meta <- meta[-match(toupper(rm.var), names(meta))]
+        }
         idx.other <- rowDataColumns %in% c("ID", "REF", "ALT", "QUAL", "FILTER")
         if(any(!idx.other)){
             warning("The variant annotation of '",
-                    tolower(paste(rowDataColumns[!idx.other], collapse = " , ")),
+                    tolower(paste(rowDataColumns[!idx.other], collapse = ", ")),
                     "' does not exist!")
         }
         rr <- SeqArray::granges(f)

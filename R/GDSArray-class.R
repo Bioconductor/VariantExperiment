@@ -289,17 +289,17 @@ setMethod("DelayedArray", "GDSArraySeed",
 ### Works directly on a GDSArraySeed object, in which case it must be called
 ### with a single argument.
 GDSArray <- function(file, name=NA){
-   ff <- .get_gdsdata_fileFormat(file)
-    if(ff == "SNP_ARRAY"){
-        if(is.na(name)) name <- "genotype"
-    }else if(ff == "SEQ_ARRAY"){
-        if(is.na(name)) name <- "genotype/data"
-        }
     if (is(file, "GDSArraySeed")) {
         seed <- file
     } else {
         seed <- GDSArraySeed(file, name)
     }
+   ff <- .get_gdsdata_fileFormat(gdsfile(seed))
+    if(ff == "SNP_ARRAY"){
+        if(is.na(name)) name <- "genotype"
+    }else if(ff == "SEQ_ARRAY"){
+        if(is.na(name)) name <- "genotype/data"
+        }
     as(DelayedArray(seed), "GDSMatrix")
 }
 

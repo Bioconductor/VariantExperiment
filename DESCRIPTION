@@ -5,8 +5,8 @@ Version: 0.99.0
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
 Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS 
-    back-end for DelayedArray, so the assay data stored in the GDS file
-    could stick into the SummarizedExperiment.
+    back-end for DelayedArray, and store the GDSArray data into the 
+    SummarizedExperiment.
 Depends:
     R (>= 3.4.2)
 License: GPL-3

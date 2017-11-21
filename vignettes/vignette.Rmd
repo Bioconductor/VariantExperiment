@@ -1,3 +1,96 @@
+---
+title: "_VariantExperiment_: A Ranged Summarized Experiment container for GDS back end data"
+author: "Qian Liu, Martin Morgan"
+date: "Revised: 22 Nov, 2017"
+abstract: >
+
+VariantExperiment has implemented `GDSArraySeed` and `GDSArray` classes as GDS back-end for DelayedArray. The GDSArray data could stick into the SummarizedExperiment for on-disk reading, subsetting with SE common operation. 
+
+output:
+  BiocStyle::html_document:
+    toc: true
+Vignette: >
+  %\VignetteIndexEntry{VariantExperiment}
+  %\VignetteEngine{knitr::rmarkdown}
+  %\VignetteEncoding{UTF-8}
+---
+
+```{r style, echo=FALSE, results='asis'}
+BiocStyle::markdown()
+```
+
+# Introduction 
+
+The `SummarizedExperiment` class is used to store rectangular matrices of
+experimental results, which are commonly produced by sequencing and microarray
+experiments.  Each object stores observations of one or more samples, along
+with additional meta-data describing both the observations (features) and
+samples (phenotypes).
+
+A key aspect of the `SummarizedExperiment` class is the coordination of the
+meta-data and assays when subsetting. For example, if you want to exclude a
+given sample you can do for both the meta-data and assay in one operation,
+which ensures the meta-data and observed data will remain in sync.  Improperly
+accounting for meta and observational data has resulted in a number of
+incorrect results and retractions so this is a very desirable
+property.
+
+#  Anatomy of a `SummarizedExperiment`
+## Assays
+## 'Row' (regions-of-interest) data
+## 'Column' (sample) data
+## Experiment-wide metadata
+
+# Constructing a `SummarizedExperiment` 
+
+
+# Common operations on `SummarizedExperiment`
+
+## Subsetting
+
+- `[` Performs two dimensional subsetting, just like subsetting a matrix
+    or data frame.
+```{r 2d}
+# subset the first five transcripts and first three samples
+se[1:10, 1:5]
+```
+- `$` operates on `colData()` columns, for easy sample extraction.
+```{r colDataExtraction}
+se[, se$family == "1328"]
+```
+- subsetting by `rowData()` columns.
+```{r rowDataExtraction}
+se[rowData(se)$REF == "T",]
+```
+
+## Getters and setters
+
+- `rowRanges()` / (`rowData()`), `colData()`, `metadata()`
+```{r getSet}
+rowRanges(se)
+head(colData(se))
+head(rowData(se))
+metadata(se)
+```
+
+## Range-based operations
+
+- `subsetByOverlaps()`
+`SummarizedExperiment` objects support all of the `findOverlaps()` methods and
+associated functions.  This includes `subsetByOverlaps()`, which makes it easy
+to subset a `SummarizedExperiment` object by an interval.
+
+```{r overlap}
+subsetByOverlaps(se, GRanges("22:1:48958933"))
+### Subset for only rows which are in the interval 100,000 to 110,000 of
+# chromosome 1
+roi <- GRanges(seqnames="1", ranges=100000:1100000)
+subsetByOverlaps(se, roi)
+```
+
+
+
+
 Friday mtg about rest of sprint: 
 
 ## 1. Remove the `.write_gdsdata_sampInCol`, do not generate the temp file. (done)
@@ -17,20 +110,16 @@ file <- system.file(package="VariantExperiment", "extdata", "CEU_Exon.gds") ##se
 f <- seqOpen(file)
 node <- index.gdsn(f, "genotype/data")
 objdesp.gdsn(node)$dim
-### [1]    2   90 1348   (ploidy x sample x variants)- readex.gdsn(node, sel=list(1:2, 1:3, 1:5))
-closefn.gds(f)
-
+### [1]    2   90 1348   (ploidy x sample x variants)
+d <- readex.gdsn(node, sel=list(1:2, 1:3, 1:5))
 seqClose(f)
 seed <- GDSArraySeed(file, "genotype/data")
 slotNames(seed)
 seed@permute
 ga <- GDSArray(file)  ## or GDSArray(seed), identical
 ga[1:5, 1:3, ]
-aperm(as.array(ga[1:5, 1:3, ]), c(3,2,1)
-seqClose(f)
+aperm(as.array(ga[1:5, 1:3, ]), c(3,2,1))
 ```
-
-
 ## 2. modify `GDSArray-class.R`, by checking the file format of gds file. (done) 
 	
 Has implemented `.get_gdsdata_fileFormat(file)` to return `SNP_ARRAY` OR `SEQ_ARRAY` in `GDSArraySeed()`. Different functions will be used based on the file format. 
@@ -47,47 +136,7 @@ se2 <- makeSummarizedExperimentFromGdsfmt(file, rowDataColumns=c("ID", "REF", "A
 assay <- assay(se2)
 dim(assay)
 assay[1:5, 1:3, ]
-saveRDS(se, file="inst/extdata/CEU_Exon_gse.rds")
-rm(se1, se2, assay, node)
 ```
-## 5. save/loadGdsfmtSummarizedExperiment(x, dir, replace, verbose, allow.duplicate).
-
-- modify `GDSArraySeed` and `GDSArray` to accommodate ordinary gds format data, add `SE_ARRAY` in line with `SNP_ARRAY` or `SEQ_ARRAY`. 
-+ `.get_gdsdata_fileFormat` no change. But remember to add the `put.attr.gdsn(gfile$root, "FileFormat", "SE_ARRAY")` in `.write_gds_assays`.  -- done.   
-+ `.get_gdsdata_arrayNodes` no change.
-+ `.read_gdsdata_sampleInCol` adding `fileFormat =="SE_ARRAY"`. -- done.
-+ `.get_gdsdata_dim` no change. 
-+ `.get_gdsdata_dimnames` adding `fileFormat =="SE_ARRAY"` to accommodate the following change: add the `sample.id` and `row.id` in `.write_gds_assays` when creating the gds file from SE assay.  -- done.  
-```
-- modify `makeSummarizedExperimentFromGdsfmt`. -- done. 
-
-```{r, saveLoad}
-## rewrite the DelayedArray data to be an array.
-f <- openfn.gds(file)
-dat <- read.gdsn(index.gdsn(f, "genotype/data"))
-dat <- aperm(dat, perm=c(3,2,1))
-closefn.gds(f)
-assays(se)[[1]] <- dat
-asy <- assay(se, 1)
-dim(asy)
-class(asy)
-
-## save/loadGdsfmtSummarizedExperiment
-se1 <- saveGdsfmtSummarizedExperiment(se, replace=TRUE, verbose=TRUE)
-assay(se1, 1)
-se2 <- loadGdsfmtSummarizedExperiment()
-assay(se2, 1)
-all.equal(se1, se2)
-assay(subsetByOverlaps(se1, GRanges("22:1-48958933")))
-```
-
-## 6. rewrite function names, use "GDS" instead of "Gdsfmt". 
-- `save/loadGDSSummarizedExperiment()`
-- `makeSummarizedExperimentFromGDS()`
-
-## 7. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns. 
-coversion from SE to SeqVarGDSClass. to accommodate with SeqArray functions. 
-
 ## 5. ??GDS based SE object, coerce to VRanges. 
 
 ## 7. update the seed setter for GDSArray. create a new GDSArraySeed. (done)

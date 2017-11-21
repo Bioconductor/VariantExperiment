@@ -54,9 +54,14 @@
 ##     assays
 ## }
 
-### Save all the assays in HDF5 format, including in-memory assays.
-### Delayed assays with delayed operations on them are realized while they
-### are written to disk..
+#' saveGdsfmtSummarizedExperiment
+#' Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk..
+#' @param x A SummarizedExperiment object, with the array data being ordinary array structure.
+#' @param dir The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.
+#' @param replace Whether to replace the directory if it already exists. The default is FALSE.
+#' @param allow.duplicate Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.
+#' @param verbose whether to print the process messages. The default is FALSE.
+#' @export
 saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
                                            allow.duplicate=FALSE,
                                            verbose=FALSE){

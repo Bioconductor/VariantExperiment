@@ -155,10 +155,16 @@ setMethod("subset_seed_as_array", "GDSArraySeed",
         }
     }else if(fileFormat == "SEQ_ARRAY"){
         variant.id <- seqGetData(gdsfile, "variant.id")
-        dimnames <- list(ploidy.id = seq_len(dims[1]),sample.id = sample.id, variant.id = as.character(variant.id))
+        dimnames <- list(ploidy.id = seq_len(dims[1]), sample.id = sample.id, variant.id = as.character(variant.id))
     }else if(fileFormat == "SE_ARRAY"){
         row.id <- read.gdsn(index.gdsn(gdsfile, "row.id"))
-        dimname <- list(row.id = as.character(row.id), sample.id = sample.id)
+        dimnames <- list(row.id = as.character(row.id), sample.id = sample.id)
+        if(length(dims)>2){
+            for(i in seq_along(dims)[-c(1:2)]){
+                dimnames[[i]] <- as.character(seq_len(dims[i]))
+                names(dimnames)[i] <- paste0(sprintf("dim%02d", i), ".id")
+            }
+        }
     }
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
@@ -199,7 +205,8 @@ GDSArraySeed <- function(file, name=NA){
         on.exit(seqClose(f))
         ## if(is.na(name)) name <- "genotype/data"
     }else{
-        f <- openfn.gds(f)
+        f <- openfn.gds(file)
+        on.exit(closefn.gds(f))
     }
     
     ## check if the node is array data. 
@@ -290,12 +297,12 @@ GDSArray <- function(file, name=NA){
     } else {
         seed <- GDSArraySeed(file, name)
     }
-   ff <- .get_gdsdata_fileFormat(gdsfile(seed))
+    ff <- .get_gdsdata_fileFormat(gdsfile(seed))
     if(ff == "SNP_ARRAY"){
         if(is.na(name)) name <- "genotype"
     }else if(ff == "SEQ_ARRAY"){
         if(is.na(name)) name <- "genotype/data"
-        }
+    }
     as(DelayedArray(seed), "GDSMatrix")
 }
 

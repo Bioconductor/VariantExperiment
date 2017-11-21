@@ -20,21 +20,22 @@
 }
 
 ## do not return value, just rewrite the assay data into gds file.
-.write_gds_assays <- function(assays, gds_path, verbose, allow.duplicate){
-    nassay <- length(assays)
-    namesAssay <- names(assays)
+.write_gds_assays <- function(se, gds_path, verbose, allow.duplicate){
+    nassay <- length(assays(se))
+    namesAssay <- names(assays(se))
     namesAssay <- sub("/", "_", namesAssay)
+
+    gfile <- createfn.gds(filename=gds_path, allow.duplicate=allow.duplicate)
+    on.exit(closefn.gds(gfile))
+    put.attr.gdsn(gfile$root, "FileFormat", "SE_ARRAY")
+    add.gdsn(gfile, "sample.id", val=colnames(se))
+    add.gdsn(gfile, "row.id", val=rownames(se))
+    
     for (i in seq_len(nassay)) {
-        a <- assays[[i]]
-        ## gds_name <- sprintf("assay%03d", i)
+        a <- assays(se)[[i]]
         if (verbose)
             message("Start writing assay ", i, "/", nassay, " to '",
                     gds_path, "':")
-        gfile <- createfn.gds(filename=gds_path, allow.duplicate=allow.duplicate)
-        on.exit(closefn.gds(gfile))
-        put.attr.gdsn(t$root, "FileFormat", "SE_ARRAY")
-        add.gdsn(gfile, "sample.id", val=)
-        add.gdsn(gfile "row.id", val=)
         add.gdsn(gfile, namesAssay[i], val=a)
         ## a <- HDF5Array::writeHDF5Array(a, h5_path, h5_name, chunk_dim, level, verbose=verbose)
         if (verbose)
@@ -43,15 +44,15 @@
     }
 }
 
-.shorten_gds_paths <- function(assays){
-    nassay <- length(assays)
-    for (i in seq_len(nassay)) {
-        a <- assays[[i]]
-        a@seed@file <- basename(a@seed@file)
-        assays[[i]] <- a
-    }
-    assays
-}
+## .shorten_gds_paths <- function(assays){
+##     nassay <- length(assays)
+##     for (i in seq_len(nassay)) {
+##         a <- assays[[i]]
+##         a@seed@file <- basename(a@seed@file)
+##         assays[[i]] <- a
+##     }
+##     assays
+## }
 
 ### Save all the assays in HDF5 format, including in-memory assays.
 ### Delayed assays with delayed operations on them are realized while they
@@ -73,14 +74,19 @@ saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
     ## We try library(HDF5Array) before deleting or creating directory 'dir'.
     ## That way if HDF5Array is not installed then we will stop without having
     ## made changes to the file system.
-    library(HDF5Array)  # for writeHDF5Array()
+    ## library(HDF5Array)  # for writeHDF5Array()
     .create_dir(dir, replace)
   
     gds_path <- file.path(dir, "assays.gds")
-    nassay <- length(assays)
-    namesAssay <- names(assays)
+    
+    nassay <- length(assays(x))
+    namesAssay <- names(assays(x))
     namesAssay_new <- sub("/", "_", namesAssay)
-    .write_gds_assays(x@assays, gds_path, allow.duplicate, verbose)
+
+    ## write and save assay data as gds format.
+    .write_gds_assays(x, gds_path, allow.duplicate, verbose)
+
+    ## save assay data as GDSArray
     for (i in seq_len(nassay)){
         assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
     }
@@ -88,7 +94,7 @@ saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
     ## todo: write the gdsfile "makeSummarizeExperimentFromGdsfmt" and save as. 
     rds_path <- file.path(dir, "se.rds")
     ans <- x
-    x@assays <- .shorten_gds_paths(x@assays)
+    ## x@assays <- .shorten_gds_paths(x@assays)
     saveRDS(x, file=rds_path)
     
     invisible(ans)
@@ -105,31 +111,31 @@ saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
 
 ### Does a lot of checking and tries to fail graciously if the content
 ### of 'dir' doesn't look as expected.
-loadHDF5SummarizedExperiment <- function(dir="my_h5_se")
+loadGdsfmtSummarizedExperiment <- function(dir="my_gds_se")
 {
-    library(rhdf5)  # for h5ls()
-    library(HDF5Array)  # for the HDF5Array class
+    ## library(rhdf5)  # for h5ls()
+    ## library(HDF5Array)  # for the HDF5Array class
     if (!isSingleString(dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
                   "to the directory containing ", .THE_EXPECTED_STUFF))
-    h5_path <- file.path(dir, "assays.h5")
+    gds_path <- file.path(dir, "assays.gds")
     rds_path <- file.path(dir, "se.rds")
-    if (!file.exists(h5_path) || !file.exists(rds_path))
+    if (!file.exists(gds_path) || !file.exists(rds_path))
         .stop_if_bad_dir(dir)
-    h5_content <- try(rhdf5::h5ls(h5_path), silent=TRUE)
-    if (inherits(h5_content, "try-error"))
-        .stop_if_bad_dir(dir)
-    h5_datasets <- h5_content[ , "name"]
+    ## h5_content <- try(rhdf5::h5ls(gds_path), silent=TRUE)
+    ## if (inherits(h5_content, "try-error"))
+    ##     .stop_if_bad_dir(dir)
+    ## h5_datasets <- h5_content[ , "name"]
     ans <- readRDS(rds_path)
     if (!is(ans, "SummarizedExperiment"))
         .stop_if_bad_dir(dir)
     for (i in seq_along(assays(ans))) {
         a <- assay(ans, i, withDimnames=FALSE)
-        if (!is(a, "HDF5Array") || !identical(a@seed@file, "assays.h5") ||
-            !(a@seed@name %in% h5_datasets))
+        if (!is(a, "GDSArray") || !identical(basename(a@seed@file), "assays.gds"))
+            ## || !(a@seed@name %in% h5_datasets))
             .stop_if_bad_dir(dir)
-        a@seed@file <- file_path_as_absolute(file.path(dir, a@seed@file))
-        assay(ans, i, withDimnames=FALSE) <- a
+        ## a@seed@file <- file_path_as_absolute(file.path(dir, a@seed@file))
+        ## assay(ans, i, withDimnames=FALSE) <- a
     }
     ans
 }

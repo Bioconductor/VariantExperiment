@@ -16,7 +16,7 @@
 ### -------------------------------------------------------------------------
 
 #' @importClassesFrom DelayedArray Array
-#' @importFrom DelayedArray subset_seed_as_array
+#' @importFrom DelayedArray extract_array
 #' @export 
 setClass("GDSArraySeed",
          contains = "Array", ## from DelayedArray: A virtual class with no slots
@@ -59,10 +59,10 @@ setMethod(
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_seed_as_array()
+### extract_array()
 ###
 
-.subset_GDSArraySeed_as_array <- function(seed, index)
+.extract_array_from_GDSArraySeed <- function(seed, index)
 {
     ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(seed))
     if (any(ans_dim == 0L)) {
@@ -82,9 +82,7 @@ setMethod(
     ans
 }
 
-setMethod("subset_seed_as_array", "GDSArraySeed",
-    .subset_GDSArraySeed_as_array
-)
+setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
 ### GDSArraySeed constructor

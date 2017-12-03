@@ -1,8 +1,8 @@
 Friday mtg about rest of sprint: 
 
 ## 1. Remove the `.write_gdsdata_sampInCol`, do not generate the temp file. (done)
-Has implemented `permute = logical` in the `GDSArraySeed` slots. And have modified `extract_array()` function, to read the array data in gds file with corresponding indexes. e.g., For `SeqVarGDSClass` data from `SeqArray`, `permute = TRUE`, the `extract_array` will permute the 3 indexes for variants, samples and ploidy, read from the gds file, and then permute the extracted data back to be consistent with SE structure.   
-```{r, libraries}
+Has implemented `permute = logical` in the `GDSArraySeed` slots. And have modified `subset_seed_as_array()` function, to read the array data in gds file with corresponding indexes. e.g., For `SeqVarGDSClass` data from `SeqArray`, `permute = TRUE`, the `subset_seed_as_array` will permute the 3 indexes for variants, samples and ploidy, read from the gds file, and then permute the extracted data back to be consistent with SE structure.   
+```{r, libraries, echo=FALSE}
 library(tools)
 library(S4Vectors)
 library(SeqArray)
@@ -81,12 +81,129 @@ all.equal(se1, se2)
 assay(subsetByOverlaps(se1, GRanges("22:1-48958933")))
 ```
 
-## 6. rewrite function names, use "GDS" instead of "Gdsfmt". 
+## 6. rewrite function names, use "GDS" instead of "Gdsfmt".  -- done!
 - `save/loadGDSSummarizedExperiment()`
 - `makeSummarizedExperimentFromGDS()`
 
-## 7. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns. 
+## 7. todo: 
+- add `INFO` from `SeqArray` data for `rowDataColumns`. 
+- Remove the `allow.duplicate` from arguments. 
+- add more manual context for `GDSArray-class.R`. Why doesn't load packages???
+
+## 8. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns. 
 coversion from SE to SeqVarGDSClass. to accommodate with SeqArray functions. 
+
+11/27/2017, meeting with Martin
+```{r}
+x <- 1:10
+.Internal(inspect(x))
+setwd("home/R/R_Devel")
+grep("ALTREP")
+getClass("SE")
+structure(list(x=x, class="a")) ## ??
+dput(node)
+```
+DelayedVectorClass: virtual class. extends delayedRaw, delayedIntegerList... atomic factors. ?atomic: a vector for each of the atomic modes: logical, integer, numeric, complex, character, raw...
+
+put each of the col of colData into a DelayedVector (1-col DelayedArray), and represent them in DataFrame. 
+RangedSE: rowRanges (Vector?)
+SeqVarGDSClass: .S3Class. (setOldClass()) ## 
+
+```{r DFDelayedArray}
+sefile <- system.file(package="VariantExperiment", "extdata", "CEU_Exon_gse.rds")
+se <- readRDS(sefile) 
+coldat <- SummarizedExperiment::colData(se)
+cold <- DataFrame(DelayedArray(coldat))
+cold <- DataFrame(Samples = I(DelayedArray(coldat[,1, drop=FALSE])),
+                  family = I(DelayedArray(coldat[,2, drop=FALSE])))
+names(cold) <- c("Samples", "family")
+head(cold)  ## does not work: object of type 'S4' is not subsettable
+rr <- SummarizedExperiment::rowRanges(se)
+rowdat <- DataFrame(data.frame(rr))
+## should we retain the data type of GenomicRanges when save into DataFrame? (Rle, DNAStringSet, numeric, character...)
+## how to convert DataFrame columns into DelayedArray? by retaining the data type?
+## DataFrame(I(**)) To store an object of a class that does not support coercion to ‘DataFrame’, wrap it in ‘I()’. The class must still have methods for ‘length’ and ‘[’.
+## What did the "I()" does here? Any other paste option except for ":"?
+## show method of "DataFrame", could not use "head(DelayedMatrix)": object of type 'S4' is not subsettable. Error in `[.default`(<S4 object of class c("AsIs", "DelayedMatrix")
+## 
+
+rowd <- DataFrame(I(DelayedArray(rowdat[1:3])),
+                  strand = I(DelayedArray(rowdat[,"strand", drop=FALSE])),
+                  ID = I(DelayedArray(rowdat[, "ID", drop=FALSE])),
+                  REF = I(DelayedArray(rowdat[, "REF", drop=FALSE]))
+                  
+                  )
+
+## herve's example
+vars <- DelayedArray(matrix(round(runif(30), 2), ncol=3, dimnames=list(NULL, c("var1", "var2", "var3"))))
+vars
+cd <- DataFrame(vars)
+colData <- DataFrame(vars=I(vars))
+colData
+```
+
+## mtg with martin 11/29/2017
+```{r}
+m <- matrix(1:120, 30)
+da <- DelayedArray(m)
+df <- DataFrame(x1 = I(da[, 1, drop=FALSE]))
+
+## .DelayedVector_Validity <- function(object){
+##     msg <- character()
+##     if(ncol(object) != 1L)
+##        msg <- c(msg, "'seed' must have a single dimension")
+##     if(length(msg)) msg else TRUE    
+## }
+
+
+## implement a new method of "dim", need to rewrite DelayedArray for dim.
+## need to implement length(), "[" for DelayedVector.
+## reuse the DelayedArray ::: functions as much as possible.
+## showMethod, removeMethod(, "class"), selectMethod(, "class")
+## write a little helper function. where "dim_or_length".
+
+
+.DelayedVector <- setClass(
+    "DelayedVector",
+    contains="DelayedArray"
+    ## validity = .DelayedVector_Validity
+)
+
+DelayedVector <- function(seed){
+    if(is.vector(seed))
+        seed <- DelayedArray(matrix(seed, length(seed)))
+    else{
+        seed <- DelayedArray(seed)
+        stopifnot(ncol(seed) == 1L)
+    }
+    .DelayedVector(seed)
+}
+
+setMethod("dim", "DelayedVector", function(x){
+    DelayedArray:::.get_DelayedArray_dim_before_transpose(x)[[1]]
+})
+
+
+## setMethod("show", "DelayedVector", function(object){
+##     cat(class(object), "of", length(object), typeof(seed(object)), "s",
+##         "\n", sep=" ")
+##     if(length(object) > )
+## })
+
+dv <- DelayedVector(da[,1,drop=FALSE])
+```
+
+```
+seqSetFilter()  ### extract the GR, set a filter, create a gds class object, run `seqSummary()`
+seqAlleleFreq() ### functions accommodate with SE structure as input. 
+SeqArray::Summary_geno
+```
+is there any clever way to do that? 
+...
+seqSummary() ## trial to see 
+```
+S3Vectors. 
+```
 
 ## 5. ??GDS based SE object, coerce to VRanges. 
 

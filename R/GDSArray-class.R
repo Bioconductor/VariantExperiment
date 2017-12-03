@@ -4,19 +4,12 @@
 #' @import gdsfmt
 #' @importFrom tools file_path_as_absolute
 #' @import S4Vectors
-#' 
-
-## library(gdsfmt)
-## library(SNPRelate)
-## library(S4Vectors)
-## library(tools)
 
 ### =========================================================================
 ### GDSArray objects
 ### -------------------------------------------------------------------------
 
 #' @importClassesFrom DelayedArray Array
-#' @importFrom DelayedArray extract_array
 #' @export 
 setClass("GDSArraySeed",
          contains = "Array", ## from DelayedArray: A virtual class with no slots
@@ -59,29 +52,28 @@ setMethod(
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### extract_array()
+### subset_seed_as_array()
 ###
-
-.extract_array_from_GDSArraySeed <- function(seed, index)
+#' @importMethodsFrom DelayedArray subset_seed_as_array
+.extract_array_from_GDSArraySeed <- function(x, index)
 {
-    ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(seed))
+    ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
     if (any(ans_dim == 0L)) {
-        ans <- seed@first_val[0]
+        ans <- x@first_val[0]
         dim(ans) <- ans_dim
     } else {
-        f <- openfn.gds(seed@file)
+        f <- openfn.gds(x@file)
         on.exit(closefn.gds(f))
-        if(seed@permute){
+        if(x@permute){
             permdim <- rev(seq_len(length(index)))
-            index <- index[permdim] ## always 2 dimensional? SeqArray...
-            ans <- aperm(readex.gdsn(index.gdsn(f, seed@name), index), permdim)
+            index <- index[permdim] ## multi-dimensional supported
+            ans <- aperm(readex.gdsn(index.gdsn(f, x@name), index), permdim)
         }else{
-            ans <- readex.gdsn(index.gdsn(f, seed@name), index)
+            ans <- readex.gdsn(index.gdsn(f, x@name), index)
         }
     }
     ans
 }
-
 setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -177,7 +169,9 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
     first_val
 }
 
-#' @param file the gds file
+#' GDSAraySeed
+#' The function to generate a GDSArraySeed for the later converting from gds file into GDSARray. 
+#' @param file the gds file name.
 #' @param name the gds array nodes to be read into GDSArray
 #' @export
 #' 
@@ -251,6 +245,8 @@ setClass("GDSArray", contains="DelayedArray")
 setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
 ### Automatic coercion method from GDSArray to GDSMatrix (muted for higher dimensions)
+### this function works only when GDSArray is 2-dimensional, otherwise, it fails.
+
 ## setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
 
 ### accessors
@@ -286,20 +282,22 @@ setMethod("DelayedArray", "GDSArraySeed",
               function(seed) DelayedArray:::new_DelayedArray(seed, Class="GDSArray")
           )
 
+#' GDSArray
+#' The function to convert a gds file into the GDSArray data structure.
+#' @param file the gds file name.
+#' @param name the gds array nodes to be read into GDSArray
 #' @export
-### Works directly on a GDSArraySeed object, in which case it must be called
-### with a single argument.
 GDSArray <- function(file, name=NA){
     if (is(file, "GDSArraySeed")) {
         seed <- file
     } else {
+        ff <- .get_gdsdata_fileFormat(file)
+        if(ff == "SNP_ARRAY"){
+            if(is.na(name)) name <- "genotype"
+        }else if(ff == "SEQ_ARRAY"){
+            if(is.na(name)) name <- "genotype/data"
+        }
         seed <- GDSArraySeed(file, name)
-    }
-    ff <- .get_gdsdata_fileFormat(gdsfile(seed))
-    if(ff == "SNP_ARRAY"){
-        if(is.na(name)) name <- "genotype"
-    }else if(ff == "SEQ_ARRAY"){
-        if(is.na(name)) name <- "genotype/data"
     }
     as(DelayedArray(seed), "GDSMatrix")
 }

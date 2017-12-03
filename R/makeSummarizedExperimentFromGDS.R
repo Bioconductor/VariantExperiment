@@ -144,7 +144,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }
 }
 
-#' makeSummarizedExperimentFromGdsfmt
+#' makeSummarizedExperimentFromGDS
 #' 
 #' Conversion of gds file into SummarizedExperiment
 #' @param file the path to the gds.class file.
@@ -152,7 +152,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @param frompkg From which package the gds file is generated.
 #' @export
 #' 
-makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character()){
+makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character()){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
@@ -170,8 +170,11 @@ makeSummarizedExperimentFromGdsfmt <- function(file, name=NA, rowDataColumns=cha
     assay <- setNames(list(GDSArray(file, name)), name)
     colData <- .colData_gdsdata(file, fileFormat=ff, colDataColumns=colDataColumns)
     rowRange <- .rowRanges_gdsdata(file, fileFormat=ff, rowDataColumns = rowDataColumns)
+    ## add 2 functions here to convert DataFrame of colData and DataFrame(data.frame(rowRanges)) into DelayedArray, and save in SE.
+    
     SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
+
 
 
 

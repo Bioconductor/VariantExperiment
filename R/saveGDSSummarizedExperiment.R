@@ -54,15 +54,15 @@
 ##     assays
 ## }
 
-#' saveGdsfmtSummarizedExperiment
-#' Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk..
+#' saveGDSSummarizedExperiment
+#' Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.
 #' @param x A SummarizedExperiment object, with the array data being ordinary array structure.
 #' @param dir The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.
 #' @param replace Whether to replace the directory if it already exists. The default is FALSE.
 #' @param allow.duplicate Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.
 #' @param verbose whether to print the process messages. The default is FALSE.
 #' @export
-saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
+saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
                                            allow.duplicate=FALSE,
                                            verbose=FALSE){
     if (!is(x, "SummarizedExperiment"))
@@ -96,7 +96,7 @@ saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
         assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
     }
     names(assays(x)) <- namesAssay
-    ## todo: write the gdsfile "makeSummarizeExperimentFromGdsfmt" and save as. 
+    ## todo: write the gdsfile "makeSummarizeExperimentFromGDS" and save as. 
     rds_path <- file.path(dir, "se.rds")
     ans <- x
     ## x@assays <- .shorten_gds_paths(x@assays)
@@ -107,16 +107,18 @@ saveGdsfmtSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
 
 .THE_EXPECTED_STUFF <- c(
     "a GDS-based SummarizedExperiment object previously ",
-    "saved with saveGdsfmtSummarizedExperiment()"
+    "saved with saveGDSSummarizedExperiment()"
 )
 
 .stop_if_bad_dir <- function(dir)
     stop(wmsg("directory \"", dir, "\" does not seem to contain ",
               .THE_EXPECTED_STUFF))
 
-### Does a lot of checking and tries to fail graciously if the content
-### of 'dir' doesn't look as expected.
-loadGdsfmtSummarizedExperiment <- function(dir="my_gds_se")
+#' loadGDSSummarizedExperiment
+#' to load the GDS back-end SummarizedExperiment object into R console. 
+#' @param dir The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.
+#' @export
+loadGDSSummarizedExperiment <- function(dir="my_gds_se")
 {
     ## library(rhdf5)  # for h5ls()
     ## library(HDF5Array)  # for the HDF5Array class

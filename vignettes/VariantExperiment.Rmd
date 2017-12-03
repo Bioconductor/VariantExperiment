@@ -21,17 +21,7 @@ BiocStyle::markdown()
 
 # Introduction 
 
-```{r libraries, echo=FALSE}
-library(tools)
-library(S4Vectors)
-library(SeqArray)
-library(SNPRelate)
-library(DelayedArray)
-library(GenomicRanges)
-library(VariantAnnotation)
-library(SummarizedExperiment)
-```
-```{r getPackage, echo=FALSE}
+```{r getPackage, eval=FALSE}
 source("https://bioconductor.org/biocLite.R")
 biocLite("VariantExperiment")
 ```

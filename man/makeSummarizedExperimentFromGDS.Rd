@@ -12,7 +12,9 @@ makeSummarizedExperimentFromGDS(file, name = NA,
 
 \item{name}{the components of the gds file that will be represented as \code{GDSArray} file.}
 
-\item{frompkg}{From which package the gds file is generated.}
+\item{rowDataColumns}{which columns of \code{rowData} to import.}
+
+\item{colDataColumns}{which columns of \code{colData} to import.}
 }
 \description{
 Conversion of gds file into SummarizedExperiment

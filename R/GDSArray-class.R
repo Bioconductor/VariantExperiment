@@ -52,9 +52,9 @@ setMethod(
 )
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-### subset_seed_as_array()
+### extract_array()
 ###
-#' @importMethodsFrom DelayedArray subset_seed_as_array
+#' @importMethodsFrom DelayedArray extract_array
 .extract_array_from_GDSArraySeed <- function(x, index)
 {
     ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))

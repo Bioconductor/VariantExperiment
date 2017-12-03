@@ -149,7 +149,8 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' Conversion of gds file into SummarizedExperiment
 #' @param file the path to the gds.class file.
 #' @param name the components of the gds file that will be represented as \code{GDSArray} file.
-#' @param frompkg From which package the gds file is generated.
+#' @param rowDataColumns which columns of \code{rowData} to import.
+#' @param colDataColumns which columns of \code{colData} to import.
 #' @export
 #' 
 makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character()){

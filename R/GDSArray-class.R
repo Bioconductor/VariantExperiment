@@ -4,6 +4,7 @@
 #' @import gdsfmt
 #' @importFrom tools file_path_as_absolute
 #' @import S4Vectors
+#' @import methods
 
 ### =========================================================================
 ### GDSArray objects

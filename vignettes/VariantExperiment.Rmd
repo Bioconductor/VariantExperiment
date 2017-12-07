@@ -38,7 +38,7 @@ The package `gdsfmt` provides a high-level R interface to CoreArray Genomic Data
 ```{r, snpArray}
 file <- system.file("extdata", "hapmap_geno.gds", package = "SNPRelate")
 SNPRelate::snpgdsSummary(file)
-f <- snpgdsOpen(file)
+f <- SNPRelate::snpgdsOpen(file)
 f
 ### required gds nodes.
 ls.gdsn(f)

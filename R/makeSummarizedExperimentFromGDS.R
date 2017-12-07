@@ -37,7 +37,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 ## snpgds: snp.rs.id, snp.allele
 ## seqarray: allele, annotation/id, annotation/qual, annotation/filter.
 
-#' @import VariantAnnotation
+#' @importFrom Biostrings DNAStringSet
+#' @import SNPRelate
+#' @import SeqArray
 .rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns){
     if(fileFormat == "SNP_ARRAY"){
         f <- snpgdsOpen(file)
@@ -62,8 +64,8 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }
     if(inherits(f, "SNPGDSFileClass")){
         meta <- DataFrame(ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
-                          ALLELE1 = DNAStringSet(.alleles_snpgds(f)$allele1),
-                          ALLELE2 = DNAStringSet(.alleles_snpgds(f)$allele2)
+                          ALLELE1 = Biostrings::DNAStringSet(.alleles_snpgds(f)$allele1),
+                          ALLELE2 = Biostrings::DNAStringSet(.alleles_snpgds(f)$allele2)
                           ## DNAStringSetList class
                           )
         idx.var <- idx.var[1:2]
@@ -144,6 +146,23 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }
 }
 
+## for "DNAStringSetList", paste elements with "," for multiple alternative. (SE from "SeqArray", rowData column of "ALT", is "DNAStringSetList" format)
+.inmem_DF_to_DelayedArray_DF <- function(inmemdf){
+    classes <- sapply(inmemdf, class)
+    ind <- which(classes == "DNAStringSetList")
+    if(length(ind) > 0){
+        for(i in ind){
+            a <- inmemdf[[ind]]
+            t <- lapply(as.list(a), function(x)paste(x, collapse=","))
+            inmemdf[[ind]] <- unlist(t)
+        }
+    }
+    l <- lapply(inmemdf, function(x)DataFrame(I(DelayedArray(DataFrame(x)))))
+    dadf <- DataFrame(l)
+    names(dadf) <- names(inmemdf)
+    dadf
+}
+
 #' makeSummarizedExperimentFromGDS
 #' 
 #' Conversion of gds file into SummarizedExperiment
@@ -151,16 +170,22 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @param name the components of the gds file that will be represented as \code{GDSArray} file.
 #' @param rowDataColumns which columns of \code{rowData} to import.
 #' @param colDataColumns which columns of \code{colData} to import.
+#' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
+#' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE. 
+#' @importFrom tools file_path_as_absolute
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character()){
+makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), colDataOnDisk=TRUE, rowDataOnDisk=TRUE){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
-    file <- file_path_as_absolute(file)
+    file <- tools::file_path_as_absolute(file)
     if (!isSingleStringOrNA(name))
         stop("'name' must be a single string or NA")
-
+    if(!isTRUEorFALSE(colDataOnDisk))
+        stop("`colDataOnDisk` must be logical.")
+    if(!isTRUEorFALSE(rowDataOnDisk))
+        stop("`rowDataOnDisk` must be logical.")
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
     ff <- .get_gdsdata_fileFormat(file)
     if(is.na(name)){
@@ -172,7 +197,12 @@ makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=charac
     colData <- .colData_gdsdata(file, fileFormat=ff, colDataColumns=colDataColumns)
     rowRange <- .rowRanges_gdsdata(file, fileFormat=ff, rowDataColumns = rowDataColumns)
     ## add 2 functions here to convert DataFrame of colData and DataFrame(data.frame(rowRanges)) into DelayedArray, and save in SE.
-    
+    if(colDataOnDisk){
+        colData <- .inmem_DF_to_DelayedArray_DF(colData)
+    }
+    if(rowDataOnDisk){
+        mcols(rowRange) <- .inmem_DF_to_DelayedArray_DF(mcols(rowRange))
+    }
     SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 }
 

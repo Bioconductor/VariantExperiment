@@ -5,7 +5,8 @@
 \title{makeSummarizedExperimentFromGDS}
 \usage{
 makeSummarizedExperimentFromGDS(file, name = NA,
-  rowDataColumns = character(), colDataColumns = character())
+  rowDataColumns = character(), colDataColumns = character(),
+  colDataOnDisk = TRUE, rowDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
@@ -15,6 +16,10 @@ makeSummarizedExperimentFromGDS(file, name = NA,
 \item{rowDataColumns}{which columns of \code{rowData} to import.}
 
 \item{colDataColumns}{which columns of \code{colData} to import.}
+
+\item{colDataOnDisk}{whether to save the \code{colData} as DelayedArray object. The default is TRUE.}
+
+\item{rowDataOnDisk}{whether to save the \code{rowData} as DelayedArray object. The default is TRUE.}
 }
 \description{
 Conversion of gds file into SummarizedExperiment

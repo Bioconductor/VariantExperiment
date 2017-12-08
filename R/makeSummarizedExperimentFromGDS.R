@@ -162,7 +162,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     mdata
 }
 
-
 ## for "DNAStringSetList", paste elements with "," for multiple alternative. (SE from "SeqArray", rowData column of "ALT", is "DNAStringSetList" format)
 .inmem_DF_to_DelayedArray_DF <- function(inmemdf){
     classes <- sapply(inmemdf, class)
@@ -185,14 +184,33 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' Conversion of gds file into SummarizedExperiment
 #' @param file the path to the gds.class file.
 #' @param name the components of the gds file that will be represented as \code{GDSArray} file.
-#' @param rowDataColumns which columns of \code{rowData} to import.
-#' @param colDataColumns which columns of \code{colData} to import.
+#' @param rowDataColumns which columns of \code{rowData} to import. The default is ALL.
+#' @param colDataColumns which columns of \code{colData} to import. The default is ALL.
+#' @param info which columns of \code{info} to import. The default is ALL.
 #' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE. 
 #' @importFrom tools file_path_as_absolute
+#' @examples
+#' file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+#' se <- makeSummarizedExperimentFromGDS(file)
+#' rowData(se)
+#' colData(se)
+#' metadata(se)
+#' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c(""))
+#' file <- seqExampleFileName(type="gds")
+#' se <- makeSummarizedExperimentFromGDS(file)
+#' rowdatacols <- showAvailable(file, "rowDataColumns")
+#' coldatacols <- showAvailable(file, "colDataColumns")
+#' infocols <- showAvailable(file, "info")
+#' se1 <- makeSummarizedExperimentFromGDS(
+#'     file,
+#'     rowDataColumns=rowdatacols[1:3],
+#'     colDataColumns = coldatacols[1:3],
+#'     info = infocols[c(3,5,7)]
+#' )
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), info=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE){
+makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), info=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE, infoDataOnDisk=TRUE){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
@@ -220,14 +238,17 @@ makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=charac
     if(colDataOnDisk){
         colData <- .inmem_DF_to_DelayedArray_DF(colData)
     }
+    se <- SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
 
-    ## save INFO as metadata for SeqVarGDSClass
+    ## save INFO as metadata for SeqVarGDSClass, on-disk by default. 
     if(ff == "SEQ_ARRAY"){
         metadata <- .info_seqarray(file, info=info)
-    }else{
-        metadata <- list()
+        if(infoDataOnDisk){
+            metadata <- .inmem_DF_to_DelayedArray_DF(metadata)
+        }
+        metadata(se)$info <- metadata
     }
-    SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange, metadata = metadata)
+    se
 }
 
 

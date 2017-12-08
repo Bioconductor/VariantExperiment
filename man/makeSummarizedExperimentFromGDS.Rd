@@ -6,16 +6,19 @@
 \usage{
 makeSummarizedExperimentFromGDS(file, name = NA,
   rowDataColumns = character(), colDataColumns = character(),
-  info = character(), rowDataOnDisk = TRUE, colDataOnDisk = TRUE)
+  info = character(), rowDataOnDisk = TRUE, colDataOnDisk = TRUE,
+  infoDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
 
 \item{name}{the components of the gds file that will be represented as \code{GDSArray} file.}
 
-\item{rowDataColumns}{which columns of \code{rowData} to import.}
+\item{rowDataColumns}{which columns of \code{rowData} to import. The default is ALL.}
 
-\item{colDataColumns}{which columns of \code{colData} to import.}
+\item{colDataColumns}{which columns of \code{colData} to import. The default is ALL.}
+
+\item{info}{which columns of \code{info} to import. The default is ALL.}
 
 \item{rowDataOnDisk}{whether to save the \code{rowData} as DelayedArray object. The default is TRUE.}
 
@@ -23,4 +26,23 @@ makeSummarizedExperimentFromGDS(file, name = NA,
 }
 \description{
 Conversion of gds file into SummarizedExperiment
+}
+\examples{
+file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+se <- makeSummarizedExperimentFromGDS(file)
+rowData(se)
+colData(se)
+metadata(se)
+se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c(""))
+file <- seqExampleFileName(type="gds")
+se <- makeSummarizedExperimentFromGDS(file)
+rowdatacols <- showAvailable(file, "rowDataColumns")
+coldatacols <- showAvailable(file, "colDataColumns")
+infocols <- showAvailable(file, "info")
+se1 <- makeSummarizedExperimentFromGDS(
+    file,
+    rowDataColumns=rowdatacols[1:3],
+    colDataColumns = coldatacols[1:3],
+    info = infocols[c(3,5,7)]
+)
 }

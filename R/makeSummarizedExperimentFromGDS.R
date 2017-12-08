@@ -42,11 +42,11 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @import SeqArray
 .rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns){
     if(fileFormat == "SNP_ARRAY"){
-        f <- snpgdsOpen(file)
-        on.exit(snpgdsClose(f))
+        f <- SNPRelate::snpgdsOpen(file)
+        on.exit(SNPRelate::snpgdsClose(f))
     }else if(fileFormat == "SEQ_ARRAY"){
-        f <- seqOpen(file)
-        on.exit(seqClose(f))
+        f <- SeqArray::seqOpen(file)
+        on.exit(SeqArray::seqClose(f))
     }
     rowDataColumns <- toupper(rowDataColumns)
     if(length(rowDataColumns) == 0){
@@ -82,7 +82,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         rr <- .granges_snpgds(f)
         mcols(rr) <- meta
     }else if(inherits(f, "SeqVarGDSClass")){
-        meta <- DataFrame(ID = seqGetData(f, "annotation/id"),
+        meta <- DataFrame(ID = SeqArray::seqGetData(f, "annotation/id"),
                           REF = SeqArray::ref(f),
                           ALT = SeqArray::alt(f),
                           QUAL = SeqArray::qual(f),
@@ -146,6 +146,23 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }
 }
 
+.info_seqarray <- function(seqArrayFile, info){
+    f <- SeqArray::seqOpen(seqArrayFile)
+    on.exit(SeqArray::seqClose(f))
+    mdata <- SeqArray::info(f)
+    infonodes <- gdsfmt::ls.gdsn(index.gdsn(f, "annotation/info"))
+    if(length(info)>0){
+        if(any(! info %in% infonodes)){
+            warning("the `info` argument should be NULL ",
+                    "OR include only the following info: ",
+                    paste(infonodes, collapse=", "))
+        }
+        mdata <- mdata[names(mdata) %in% info]
+    }
+    mdata
+}
+
+
 ## for "DNAStringSetList", paste elements with "," for multiple alternative. (SE from "SeqArray", rowData column of "ALT", is "DNAStringSetList" format)
 .inmem_DF_to_DelayedArray_DF <- function(inmemdf){
     classes <- sapply(inmemdf, class)
@@ -175,7 +192,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @importFrom tools file_path_as_absolute
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), colDataOnDisk=TRUE, rowDataOnDisk=TRUE){
+makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), info=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
@@ -196,14 +213,21 @@ makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=charac
     assay <- setNames(list(GDSArray(file, name)), name)
     colData <- .colData_gdsdata(file, fileFormat=ff, colDataColumns=colDataColumns)
     rowRange <- .rowRanges_gdsdata(file, fileFormat=ff, rowDataColumns = rowDataColumns)
-    ## add 2 functions here to convert DataFrame of colData and DataFrame(data.frame(rowRanges)) into DelayedArray, and save in SE.
-    if(colDataOnDisk){
-        colData <- .inmem_DF_to_DelayedArray_DF(colData)
-    }
+    ## on-disk representation of row/colData in DelayedArray back-end of DataFrame.
     if(rowDataOnDisk){
         mcols(rowRange) <- .inmem_DF_to_DelayedArray_DF(mcols(rowRange))
     }
-    SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange)
+    if(colDataOnDisk){
+        colData <- .inmem_DF_to_DelayedArray_DF(colData)
+    }
+
+    ## save INFO as metadata for SeqVarGDSClass
+    if(ff == "SEQ_ARRAY"){
+        metadata <- .info_seqarray(file, info=info)
+    }else{
+        metadata <- list()
+    }
+    SummarizedExperiment(assay = assay, colData=colData, rowRanges = rowRange, metadata = metadata)
 }
 
 

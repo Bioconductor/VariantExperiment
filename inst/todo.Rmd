@@ -79,12 +79,12 @@ assay(subsetByOverlaps(se1, GRanges("22:1-48958933")))
 ## 7. todo: 
 - add `INFO` from `SeqArray` data for `rowDataColumns`. 
 - Remove the `allow.duplicate` from arguments. 
-- add more manual context for `GDSArray-class.R`. Why doesn't load packages???
+- add more manual context for `GDSArray-class.R`. Why doesn't load packages. -- done!
 
 ## 8. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns. 
 coversion from SE to SeqVarGDSClass. to accommodate with SeqArray functions. 
 
-11/27/2017, meeting with Martin
+## 9. 11/27/2017, meeting with Martin. (on-disk representation of col/rowData(SE) in `makeSummarizedExperimentFromGDS`) -- done!
 ```{r}
 x <- 1:10
 .Internal(inspect(x))
@@ -107,16 +107,16 @@ coldat <- SummarizedExperiment::colData(se)
 cold <- DataFrame(DelayedArray(coldat))
 cold <- DataFrame(Samples = I(DelayedArray(coldat[,1, drop=FALSE])),
                   family = I(DelayedArray(coldat[,2, drop=FALSE])))
-## names(cold) <- c("Samples", "family")
+names(cold) <- c("Samples", "family")
 head(cold)  ## does not work: object of type 'S4' is not subsettable
 rr <- SummarizedExperiment::rowRanges(se)
 rowdat <- DataFrame(data.frame(rr))
-## should we retain the data type of GenomicRanges when save into DataFrame? (Rle, DNAStringSet, numeric, character...)
-## how to convert DataFrame columns into DelayedArray? by retaining the data type?
-## DataFrame(I(**)) To store an object of a class that does not support coercion to ‘DataFrame’, wrap it in ‘I()’. The class must still have methods for ‘length’ and ‘[’.
-## What did the "I()" does here? Any other paste option except for ":"?
-## show method of "DataFrame", could not use "head(DelayedMatrix)": object of type 'S4' is not subsettable. Error in `[.default`(<S4 object of class c("AsIs", "DelayedMatrix")
-## 
+### should we retain the data type of GenomicRanges when save into DataFrame? (Rle, DNAStringSet, numeric, character...)
+### how to convert DataFrame columns into DelayedArray? by retaining the data type?
+### DataFrame(I(**)) To store an object of a class that does not support coercion to ‘DataFrame’, wrap it in ‘I()’. The class must still have methods for ‘length’ and ‘[’.
+### What did the "I()" does here? Any other paste option except for ":"?
+### show method of "DataFrame", could not use "head(DelayedMatrix)": object of type 'S4' is not subsettable. Error in `[.default`(<S4 object of class c("AsIs", "DelayedMatrix")
+
 
 rowd <- DataFrame(I(DelayedArray(rowdat[1:3])),
                   strand = I(DelayedArray(rowdat[,"strand", drop=FALSE])),
@@ -125,7 +125,7 @@ rowd <- DataFrame(I(DelayedArray(rowdat[1:3])),
                   
                   )
 
-## herve's example
+### herve's example
 vars <- DelayedArray(matrix(round(runif(30), 2), ncol=3, dimnames=list(NULL, c("var1", "var2", "var3"))))
 vars
 cd <- DataFrame(vars)
@@ -133,7 +133,7 @@ colData <- DataFrame(vars=I(vars))
 colData
 ```
 
-## mtg with martin 11/29/2017
+## 10. mtg with martin 11/29/2017, DelayedVector exploration
 ```{r}
 m <- matrix(1:120, 30)
 da <- DelayedArray(m)

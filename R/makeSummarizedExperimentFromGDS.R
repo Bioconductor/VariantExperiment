@@ -179,6 +179,41 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     dadf
 }
 
+#' @export
+showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info")){
+    ## check if character.
+    
+    args <- match.arg(args)
+    f <- gdsfmt::openfn.gds(file)
+    on.exit(gdsfmt::closefn.gds(f))
+    ff <- .get_gdsdata_fileFormat(file)
+    if("rowDataColumns" %in% args){
+        if(ff == "SNP_ARRAY"){
+            rdnodes <- c("ID", "ALLELE")
+        }else if(ff == "SEQ_ARRAY"){
+            rdnodes <- c("ID", "ALT", "REF", "QUAL", "FILTER")
+        }
+        message("rowDataColumns: ", "\n", paste(rdnodes, collapse=", "))
+    }
+    
+    if("colDataColumns" %in% args){
+        if(fileFormat == "SNP_ARRAY"){
+            cdnodes <- ls.gdsn(index.gdsn(f, "sample.annot"))
+        }else if(fileFormat == "SEQ_ARRAY"){
+            cdnodes <- ls.gdsn(index.gdsn(f, "sample.annotation"))
+        }
+        message("colDataColumns: ", "\n", paste(cdnodes, collapse=", "))
+    }
+    if("info" %in% args){
+        if(ff == "SNP_ARRAY"){
+            warning("for `SNP_ARRAY` data, there was no available 'info'.")
+        }else if(ff == "SEQ_ARRAY"){
+            infonodes <- gdsfmt::ls.gdsn(index.gdsn(f, "annotation/info"))
+        }
+        message("info: ", "\n", paste(infonodes, collapse=", "))
+    }
+}
+
 #' makeSummarizedExperimentFromGDS
 #' 
 #' Conversion of gds file into SummarizedExperiment

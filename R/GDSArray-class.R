@@ -59,7 +59,7 @@ setMethod(
 .extract_array_from_GDSArraySeed <- function(x, index)
 {
     ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
-    if (any(ans_dim == 0L)) {
+    if (any(ans_dim == 0L)){
         ans <- x@first_val[0]
         dim(ans) <- ans_dim
     } else {

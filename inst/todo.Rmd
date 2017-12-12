@@ -77,11 +77,11 @@ assay(subsetByOverlaps(se1, GRanges("22:1-48958933")))
 - `makeSummarizedExperimentFromGDS()`
 
 ## 7. todo: 
-- add `INFO` from `SeqArray` data for `rowDataColumns`. 
-- Remove the `allow.duplicate` from arguments. 
+- add `INFO` from `SeqArray` data for `rowDataColumns`.   -- done!
+- Remove the `allow.duplicate` from arguments.    --- done!
 - add more manual context for `GDSArray-class.R`. Why doesn't load packages. -- done!
 
-## 8. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns. 
+## 8. querable gds data. return the allowable values in the gds files for rowDataColumns and colDataColumns.    --- done!
 coversion from SE to SeqVarGDSClass. to accommodate with SeqArray functions. 
 
 ## 9. 11/27/2017, meeting with Martin. (on-disk representation of col/rowData(SE) in `makeSummarizedExperimentFromGDS`) -- done!
@@ -152,8 +152,8 @@ df <- DataFrame(x1 = I(da[, 1, drop=FALSE]))
 ## reuse the DelayedArray ::: functions as much as possible.
 ## showMethod, removeMethod(, "class"), selectMethod(, "class")
 ## write a little helper function. where "dim_or_length".
-
-
+```
+```{r}
 .DelayedVector <- setClass(
     "DelayedVector",
     contains="DelayedArray"
@@ -218,8 +218,60 @@ import(VariantAnnotation)
 import(gdsfmt)
 
 
-## demo
+## demo (12/12/2017)
+$info into mcols(rowRanges(se)). 
+fmt: array data into assays(se).
+fmt$length: SeqArray code. invisible? length of alt alleles? multiple obs per cell of the matrix in general. 
+fmt$DP, not changing it to be "depth". 
+Herve: 
+```
+DelayedArray(matrix(list(1:2), 2,3))
+DelayedMatrix object of 2 x 3 lists:
+Error in seq_len(ncol(ans)) : 
+  argument must be coercible to non-negative integer
+In addition: Warning message:
+In seq_len(ncol(ans)) : first element used of 'length.out' argument
+```
+GDSArray/GDSArraySeed for the row/colDataColumns/. 
+```{r}
+seedid <- new("GDSArraySeed", file=file, name="annotation/id", dim=1348L, dimnames=list(1:1348), permute=FALSE, first_val="rs111751804")
+DataFrame(seedid=I(DelayedArray(seedid)))
+### DataFrame(seedid=I(GDSArray(seedid)))
+```
 
+
+
+
+```{r}
+### SNPGDSFileClass
+### file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+file <- SNPRelate::snpgdsExampleFileName()
+se <- makeSummarizedExperimentFromGDS(file)
+rowData(se)
+SummarizedExperiment::colData(se)
+metadata(se)
+showAvailable(file)
+se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"), colDataColumns=c("family.id", "sex", "pop.group"))
+SummarizedExperiment::rowRanges(se1)
+SummarizedExperiment::colData(se1)
+### SeqVarGDSClass
+file <- SeqArray::seqExampleFileName(type="gds")
+se <- makeSummarizedExperimentFromGDS(file)
+showAvailable(file)
+rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
+coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
+infocols <- showAvailable(file, "info")$info
+fmt <- showAvailable(file, "fmt")$fmt
+se1 <- makeSummarizedExperimentFromGDS(
+file,
+rowDataColumns=rowdatacols[1:3],
+colDataColumns = coldatacols[1],
+info = infocols[c(3,5,7)],
+fmt = fmt
+)
+metadata(se1)
+SummarizedExperiment::rowRanges(se1)
+```
 ```{r}
 file <- SNPRelate::snpgdsExampleFileName()
 gdsa <- GDSArray(file)

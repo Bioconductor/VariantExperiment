@@ -6,8 +6,8 @@
 \usage{
 makeSummarizedExperimentFromGDS(file, name = NA,
   rowDataColumns = character(), colDataColumns = character(),
-  info = character(), rowDataOnDisk = TRUE, colDataOnDisk = TRUE,
-  infoDataOnDisk = TRUE)
+  info = character(), fmt = character(), rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE, infoDataOnDisk = TRUE, fmtDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
@@ -25,24 +25,31 @@ makeSummarizedExperimentFromGDS(file, name = NA,
 \item{colDataOnDisk}{whether to save the \code{colData} as DelayedArray object. The default is TRUE.}
 }
 \description{
-Conversion of gds file into SummarizedExperiment
+Conversion of gds file into SummarizedExperiment.
 }
 \examples{
 file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
 se <- makeSummarizedExperimentFromGDS(file)
 rowData(se)
-colData(se)
+SummarizedExperiment::colData(se)
 metadata(se)
-se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c(""))
+showAvailable(file)
+se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
+SummarizedExperiment::rowRanges(se1)
 file <- seqExampleFileName(type="gds")
 se <- makeSummarizedExperimentFromGDS(file)
-rowdatacols <- showAvailable(file, "rowDataColumns")
-coldatacols <- showAvailable(file, "colDataColumns")
-infocols <- showAvailable(file, "info")
+showAvailable(file)
+rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
+coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
+infocols <- showAvailable(file, "info")$info
+fmt <- showAvailable(file, "fmt")$fmt
 se1 <- makeSummarizedExperimentFromGDS(
-    file,
-    rowDataColumns=rowdatacols[1:3],
-    colDataColumns = coldatacols[1:3],
-    info = infocols[c(3,5,7)]
+file,
+rowDataColumns=rowdatacols[1:3],
+colDataColumns = coldatacols[1],
+info = infocols[c(3,5,7)],
+fmt = fmt
 )
+metadata(se1)
+SummarizedExperiment::rowRanges(se1)
 }

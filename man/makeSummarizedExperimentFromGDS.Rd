@@ -6,28 +6,40 @@
 \usage{
 makeSummarizedExperimentFromGDS(file, name = NA,
   rowDataColumns = character(), colDataColumns = character(),
-  info = character(), fmt = character(), rowDataOnDisk = TRUE,
-  colDataOnDisk = TRUE, infoDataOnDisk = TRUE, fmtDataOnDisk = TRUE)
+  infoColumns = character(), fmt = character(), rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE, fmtDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
 
-\item{name}{the components of the gds file that will be represented as \code{GDSArray} file.}
+\item{name}{the components of the gds file that will be represented
+as \code{GDSArray} file.}
 
-\item{rowDataColumns}{which columns of \code{rowData} to import. The default is ALL.}
+\item{rowDataColumns}{which columns of \code{rowData} to
+import. The default is ALL.}
 
-\item{colDataColumns}{which columns of \code{colData} to import. The default is ALL.}
+\item{colDataColumns}{which columns of \code{colData} to
+import. The default is ALL.}
 
-\item{info}{which columns of \code{info} to import. The default is ALL.}
+\item{infoColumns}{which columns of \code{info} to import. The default is
+ALL.}
 
-\item{rowDataOnDisk}{whether to save the \code{rowData} as DelayedArray object. The default is TRUE.}
+\item{fmt}{which data of \code{fmt} to import. The default is ALL.}
 
-\item{colDataOnDisk}{whether to save the \code{colData} as DelayedArray object. The default is TRUE.}
+\item{rowDataOnDisk}{whether to save the \code{rowData} as
+DelayedArray object. The default is TRUE.}
+
+\item{colDataOnDisk}{whether to save the \code{colData} as
+DelayedArray object. The default is TRUE.}
+
+\item{fmtDataOnDisk}{whether to save the \code{fmtData} as
+DelayedArray object. The default is TRUE.}
 }
 \description{
 Conversion of gds file into SummarizedExperiment.
 }
 \examples{
+\dontrun{
 file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
 se <- makeSummarizedExperimentFromGDS(file)
 rowData(se)
@@ -36,7 +48,7 @@ metadata(se)
 showAvailable(file)
 se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 SummarizedExperiment::rowRanges(se1)
-file <- seqExampleFileName(type="gds")
+file <- SeqArray::seqExampleFileName(type="gds")
 se <- makeSummarizedExperimentFromGDS(file)
 showAvailable(file)
 rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
@@ -52,4 +64,5 @@ fmt = fmt
 )
 metadata(se1)
 SummarizedExperiment::rowRanges(se1)
+}
 }

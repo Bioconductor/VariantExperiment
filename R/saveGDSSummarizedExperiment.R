@@ -61,6 +61,7 @@
 #' @param replace Whether to replace the directory if it already exists. The default is FALSE.
 #' @param allow.duplicate Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.
 #' @param verbose whether to print the process messages. The default is FALSE.
+#' @importFrom SummarizedExperiment assays assay "assays<-"
 #' @export
 saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
                                            allow.duplicate=FALSE,

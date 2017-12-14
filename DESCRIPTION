@@ -1,6 +1,6 @@
 Package: VariantExperiment
 Title: GDS back-end data for DelayedArray to represent gdsfmt using
-    standard SummarizedExperiment metaphor.
+    standard SummarizedExperiment metaphor
 Version: 0.99.0
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
@@ -23,6 +23,8 @@ Imports:
     gdsfmt, 
     SNPRelate,
     SeqArray, 
+    Biostrings, 
+    IRanges
 LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat

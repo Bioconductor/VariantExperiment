@@ -186,20 +186,16 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
             rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
         }
         if(fileFormat == "SNP_ARRAY"){
-            res <- lapply(rowDataColumns, function(x)
-                .varnode_snpgds_ondisk(file, name=x))
+            res <- DataFrame(
+                lapply(rowDataColumns, function(x)
+                    .varnode_snpgds_ondisk(file, name=x)))
             if("allele" %in% rowDataColumns){
-                ind <- match("ALLELE", sapply(res, names))
-                als <- res[[ind]]
-                res[[ind]] <- setNames(
-                    ## DataFrame(I(as(sub("/.$", "", als[[1]]), "GDSArray"))),
-                    DataFrame(I(sub("/.$", "", als[[1]]))),
-                    "ALLELE1")
-                res[[ind+1]] <- setNames(
-                    ## DataFrame(I(as(sub("[TCGA]*/", "", als[[1]]), "GDSArray"))),
-                    DataFrame(I(sub("[TCGA]*/", "", als[[1]]))),
-                    "ALLELE2")
-                }
+                res$ALLELE1 <- sub("/.$", "", res$ALLELE)
+                ## as(sub, "GDSArray")
+                res$ALLELE2 <- sub("[TCGA]*/", "", res$ALLELE)
+                ## as(sub, "GDSArray")
+                res[["ALLELE"]] <- NULL 
+            }
             mcols(rr) <- res
         }else if(fileFormat == "SEQ_ARRAY"){
             ## if(rowDataOnDisk){

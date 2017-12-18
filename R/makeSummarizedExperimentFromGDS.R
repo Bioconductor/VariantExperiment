@@ -62,8 +62,13 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 permute=FALSE,
                 first_val="ANY")
     da <- DelayedArray(seed)
+    ## if(name %in% "allele"){
+    ##     da1 <- sub("/.$", "", da)
+    ##     da2 <- sub("[TCGA]*/", "", da)
+    ##     setNames(DataFrame(I(da1), I(da2)), paste0(toupper(name), 1:2))
+    ## }else{
     setNames(DataFrame(I(da)), toupper(name))
-    ##### todo: if "allele", then output a DataFrame with 2 columns of GDSArray.
+    ## }
 }
 
 .varnode_seqgds_ondisk <- function(seqArrayFile, name){
@@ -72,24 +77,24 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     varnodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, "annotation"))
     if(name %in% varnodes) node <- paste0("annotation/", name)
     if(name %in% c("alt", "ref")) node <- "allele"
-    seed <- new("GDSArraySeed",
-                file=seqArrayFile,
-                name=node,  ## only good for 1-dimension variant related nodes.
-                            ## e.g., "annotation/id", "annotation/qual",
-                            ## "annotation/filter", "ref", "alt".
-                dim=.get_gdsdata_dim(f, node),
-                dimnames=list(SeqArray::seqGetData(f, "variant.id")),
-                ## for var nodes only.
-                permute=FALSE,
-                first_val="ANY")
+    seed = new("GDSArraySeed",
+               file=seqArrayFile,
+               name=node,  ## only good for 1-dimension variant related nodes.
+                           ## e.g., "annotation/id", "annotation/qual",
+                           ## "annotation/filter", "ref", "alt".
+               dim=.get_gdsdata_dim(f, node),
+               dimnames=list(SeqArray::seqGetData(f, "variant.id")),
+               ## for var nodes only.
+               permute=FALSE,
+               first_val="ANY")
     da <- DelayedArray(seed)
-    if(name %in% "ref"){
-        da <- sub(",.*", "", da)
-        ## da <- as(sub(",.*", "", da), "GDSAarray")
-    }else if(name %in% "alt"){
-        da <- sub("[TCGA]*,", "", da)
-        ## da <- as(sub("[TCGA]*,", "", da), "GDSArray")
-    }
+    ## if(name %in% "ref"){
+    ##     da <- sub(",.*", "", da)
+    ##     ## da <- as(sub(",.*", "", da), "GDSAarray")
+    ## }else if(name %in% "alt"){
+    ##     da <- sub("[TCGA]*,", "", da)
+    ##     ## da <- as(sub("[TCGA]*,", "", da), "GDSArray")
+    ## }
     setNames(DataFrame(I(da)), toupper(name)) ## maybe remove here?
 }
 
@@ -154,14 +159,13 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @importFrom Biostrings DNAStringSet
 #' @import SNPRelate
 #' @import SeqArray
-.rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns, infoColumns
-                               ## , rowDataOnDisk
-                               ){
+.rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns,
+                               infoColumns, rowDataOnDisk){
     rr <- .granges_gdsdata(file, fileFormat)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
     if(fileFormat == "SNP_ARRAY"){
         if(!is.null(rowDataColumns)){
-            rowDataColumns <- tolower(rowDataColumns)
+            ## rowDataColumns <- tolower(rowDataColumns)
             if(length(rowDataColumns) > 0){
                 ## meta <- DataFrame(
                 ##     ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
@@ -172,22 +176,29 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 if(any(!idx.within)){
                     warning('The snp annotation of "',
                             paste(rowDataColumns[!idx.within], collapse = ", "),
-                            '" does not exist!',
+                            '" does not exist!', "\n",
                             'Please use showAvailable(file, "colDataColumns") ',
                             'to get the available columns for "colData."', "\n")
                 }
+                rowDataColumns <- tolower(rowDataColumns[idx.within])
+                if(length(rowDataColumns)==0)
+                    ## rowDataColumns <- tolower(c("ID", "ALLELE"))
+                    rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
             }else{
-                rowDataColumns <- tolower(c("ID", "ALLELE"))
-                res <- lapply(rowDataColumns, function(x)
-                       .varnode_snpgds_ondisk(file, name=x))
-                mcols(rr) <- res
+                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
+                ## rowDataColumns <- tolower(c("ID", "ALLELE"))
+            }
+            res <- lapply(rowDataColumns, function(x)
+                .varnode_snpgds_ondisk(file, name=x))
+            mcols(rr) <- res
         }
     }else if(fileFormat == "SEQ_ARRAY"){
         if(!is.null(rowDataColumns)){
             ## rowDataColumns <- tolower(rowDataColumns)
             if(length(rowDataColumns) > 0){
                 idx.within <- toupper(rowDataColumns) %in%
-                    c("ID", "REF", "ALT", "QUAL", "FILTER")
+                    showAvailable(file)$rowDataColumns
+                    ## c("ID", "REF", "ALT", "QUAL", "FILTER")
                 if(any(!idx.within)){
                     warning('The variant annotation of "',
                             paste(rowDataColumns[!idx.within], collapse = ", "),
@@ -195,9 +206,12 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                             'Please use showAvailable(file, "rowDataColumns") ',
                             'to get the available columns for "rowData."', "\n")
                     rowDataColumns <- tolower(rowDataColumns[idx.within])
+                    if(length(rowDataColumns) == 0)   ## does it work or not? 
+                        rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
                 }
+                rowDataColumns <- tolower(rowDataColumns)
             }else{
-                rowDataColumns <- tolower(c("ID", "REF", "ALT", "QUAL", "FILTER"))
+                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
             }
             ## if(rowDataOnDisk){
             res <- DataFrame(
@@ -207,63 +221,88 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
             if(!is.null(infoColumns)){
                 info <- .info_seqgds_ondisk(file, infoColumns)
                 mcols(rr) <- DataFrame(res, info)
-                ## }
-                ## }else{ ## rowDataOnDisk = FALSE...
             }
+            ## }else{ ## rowDataOnDisk = FALSE...
+            ## }
         }else{
-            ## if(!is.null(infoColumns)){
-            if(rowDataOnDisk){
-                mcols(rr) <- .info_seqgds_ondisk(file, infoColumns)
-                ##  }else{## rowDataOnDisk == FALSE...
+            if(!is.null(infoColumns)){
+                if(rowDataOnDisk){
+                    mcols(rr) <- .info_seqgds_ondisk(file, infoColumns)
+                    ##  }else{## rowDataOnDisk == FALSE...
+                }
             }
         }
     }
-    }
     rr
 }
-    
+
+.sampnode_gdsdata_ondisk <- function(file, fileFormat, name){
+    pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
+           ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
+    f <- gdsfmt::openfn.gds(file)
+    on.exit(gdsfmt::closefn.gds(f))
+    sampnodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, pre))
+    if(name %in% sampnodes){
+        node <- paste0(pre, "/", name)
+    }else{
+        node <- name
+    }
+    seed <- new("GDSArraySeed",
+                file=file,
+                name=node,
+                dim=.get_gdsdata_dim(f, node),
+                dimnames=list(gdsfmt::read.gdsn(index.gdsn(f, "sample.id"))),
+                ## for sample-related nodes only.
+                permute=FALSE,
+                first_val="ANY")
+    da <- DelayedArray(seed)
+    setNames(DataFrame(I(da), check.names=FALSE), name)
+}
+
 ###
 ## colData for samples
 ###
 
-.colData_gdsdata <- function(file, fileFormat, colDataColumns){
-    if(fileFormat == "SNP_ARRAY"){
-        f <- snpgdsOpen(file)
-        on.exit(snpgdsClose(f))
-        node <- index.gdsn(f, "sample.annot", silent=TRUE)
-    }else if(fileFormat == "SEQ_ARRAY"){
-        f <- seqOpen(file)
-        on.exit(seqClose(f))
-        node <- index.gdsn(f, "sample.annotation", silent=TRUE)
-    }
-    stopifnot(inherits(f, "gds.class"))
-    sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-
-    if (!is.null(node)){
-        vars <- ls.gdsn(node)
+.colData_gdsdata <- function(file, fileFormat, colDataColumns, colDataOnDisk){
+    if(!is.null(colDataColumns)){
         if(length(colDataColumns) > 0){
-            vars <- vars[vars %in% colDataColumns]
-            idx <- colDataColumns %in% vars
-            if(any(!idx)){
+            idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
+            if(any(!idx.within)){
                 warning("\n", 'The sample annotation of "',
-                        paste(colDataColumns[!idx], collapse = ", "),
+                        paste(colDataColumns[!idx.within], collapse = ", "),
                         '" does not exist!', "\n",
                         'Please use showAvailable(file, "colDataColumns") ',
                         'to get the available columns for "colData."', "\n")
+                colDataColumns <- colDataColumns[idx.within]
+                if(length(colDataColumns) == 0)
+                    colDataColumns <- showAvailable(file)$colDataColumns
             }
+        }else{
+            colDataColumns <- showAvailable(file)$colDataColumns
+        }
+        if(colDataOnDisk){
+            sample.id <- .sampnode_gdsdata_ondisk(file, fileFormat, "sample.id")
+            annot <- lapply(colDataColumns, function(x)
+                .sampnode_gdsdata_ondisk(file, fileFormat, x))
+            DataFrame(annot, row.names=as.character(sample.id$sample.id))
+        }else{
+            f <- gdsfmt::openfn.gds(file)
+            on.exit(gdsfmt::closefn.gds(f))
+            stopifnot(inherits(f, "gds.class"))
+            sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+            pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
+                   ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
+            node <- paste0(pre, "/", colDataColumns)
+            annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
+            names(annot) <- colDataColumns
+            DataFrame(annot, row.names=sample.id)
         }
     }else{
-        vars <- character()
-    }
-    if (length(vars) > 0){
-        annot <- lapply(vars, function(v) {
-            ## read.gdsn(index.gdsn(f, paste0("sample.annot/", v))
-            read.gdsn(index.gdsn(node, v))
-        })
-        names(annot) <- vars
-        DataFrame(Samples=seq_along(sample.id), annot, row.names=sample.id)
-    } else {
-        DataFrame(Samples=seq_along(sample.id), row.names=sample.id)
+        f <- gdsfmt::openfn.gds(file)
+        on.exit(gdsfmt::closefn.gds(f))
+        stopifnot(inherits(f, "gds.class"))
+        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+        DataFrame(matrix(0, nrow=length(sample.id), ncol=0), row.names=sample.id)
     }
 }
 
@@ -407,10 +446,9 @@ makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=charac
                 ifelse(ff == "SEQ_ARRAY", "genotype/data", NA))
     }
     assay <- setNames(list(GDSArray(file, name)), name)
-    colData <- .colData_gdsdata(file, fileFormat=ff, colDataColumns=colDataColumns)
-    rowRange <- .rowRanges_gdsdata(file, fileFormat=ff, rowDataColumns = rowDataColumns, infoColumns = infoColumns
-                                   ##, rowDataOnDisk = rowDataOnDisk
-                                   )
+    colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
+    rowRange <- .rowRanges_gdsdata(
+        file, ff, rowDataColumns, infoColumns, rowDataOnDisk)
     ## on-disk representation of row/colData in DelayedArray back-end of DataFrame.
     ## if(rowDataOnDisk){
     ##     mcols(rowRange) <- .inmem_DF_to_DelayedArray_DF(mcols(rowRange))

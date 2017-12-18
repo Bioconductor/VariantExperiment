@@ -12,7 +12,7 @@ Depends:
     S4Vectors,
     SummarizedExperiment,
     GenomicRanges,
-    DelayedArray (>= 0.5.4)
+    DelayedArray (>= 0.5.9)
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/Bioconductor/VariantExperiment

@@ -163,56 +163,33 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                                infoColumns, rowDataOnDisk){
     rr <- .granges_gdsdata(file, fileFormat)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
-    if(fileFormat == "SNP_ARRAY"){
-        if(!is.null(rowDataColumns)){
-            ## rowDataColumns <- tolower(rowDataColumns)
-            if(length(rowDataColumns) > 0){
-                ## meta <- DataFrame(
-                ##     ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
-                ##     ALLELE1 = .alleles_snpgds(file)$allele1,
-                ##     ALLELE2 = .alleles_snpgds(file)$allele2  ## DNAStringSet class
-                ## )
-                idx.within <- toupper(rowDataColumns) %in% c("ID", "ALLELE")
-                if(any(!idx.within)){
-                    warning('The snp annotation of "',
-                            paste(rowDataColumns[!idx.within], collapse = ", "),
-                            '" does not exist!', "\n",
-                            'Please use showAvailable(file, "colDataColumns") ',
-                            'to get the available columns for "colData."', "\n")
-                }
-                rowDataColumns <- tolower(rowDataColumns[idx.within])
-                if(length(rowDataColumns)==0)
-                    ## rowDataColumns <- tolower(c("ID", "ALLELE"))
-                    rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-            }else{
-                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-                ## rowDataColumns <- tolower(c("ID", "ALLELE"))
+    if(!is.null(rowDataColumns)){
+        if(length(rowDataColumns) > 0){
+            ## meta <- DataFrame(
+            ##     ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
+            ##     ALLELE1 = .alleles_snpgds(file)$allele1,
+            ##     ALLELE2 = .alleles_snpgds(file)$allele2  ## DNAStringSet class
+            ## )
+            idx.within <- toupper(rowDataColumns) %in%
+                showAvailable(file)$rowDataColumns
+            if(any(!idx.within)){
+                warning('The snp annotation of "',
+                        paste(rowDataColumns[!idx.within], collapse = ", "),
+                        '" does not exist!', "\n",
+                        'Please use showAvailable(file, "colDataColumns") ',
+                        'to get the available columns for "colData."', "\n")
             }
+            rowDataColumns <- tolower(rowDataColumns[idx.within])
+            if(length(rowDataColumns)==0)
+                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
+        }else{
+            rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
+        }
+        if(fileFormat == "SNP_ARRAY"){
             res <- lapply(rowDataColumns, function(x)
                 .varnode_snpgds_ondisk(file, name=x))
             mcols(rr) <- res
-        }
-    }else if(fileFormat == "SEQ_ARRAY"){
-        if(!is.null(rowDataColumns)){
-            ## rowDataColumns <- tolower(rowDataColumns)
-            if(length(rowDataColumns) > 0){
-                idx.within <- toupper(rowDataColumns) %in%
-                    showAvailable(file)$rowDataColumns
-                    ## c("ID", "REF", "ALT", "QUAL", "FILTER")
-                if(any(!idx.within)){
-                    warning('The variant annotation of "',
-                            paste(rowDataColumns[!idx.within], collapse = ", "),
-                            '" does not exist!', "\n",
-                            'Please use showAvailable(file, "rowDataColumns") ',
-                            'to get the available columns for "rowData."', "\n")
-                    rowDataColumns <- tolower(rowDataColumns[idx.within])
-                    if(length(rowDataColumns) == 0)   ## does it work or not? 
-                        rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-                }
-                rowDataColumns <- tolower(rowDataColumns)
-            }else{
-                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-            }
+        }else if(fileFormat == "SEQ_ARRAY"){
             ## if(rowDataOnDisk){
             res <- DataFrame(
                 lapply(rowDataColumns, function(x)

@@ -201,12 +201,17 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                     "ALLELE2")
                 }
             mcols(rr) <- res
-
         }else if(fileFormat == "SEQ_ARRAY"){
             ## if(rowDataOnDisk){
             res <- DataFrame(
                 lapply(rowDataColumns, function(x)
                     .varnode_seqgds_ondisk(file, name=x)))
+            if("ref" %in% rowDataColumns){
+                res$REF <- sub(",.*", "", res$REF)
+            }
+            if("alt" %in% rowDataColumns){
+                res$ALT <- sub("[TCGA]*,", "", res$ALT)
+            }
             mcols(rr) <- res
             if(!is.null(infoColumns)){
                 info <- .info_seqgds_ondisk(file, infoColumns)

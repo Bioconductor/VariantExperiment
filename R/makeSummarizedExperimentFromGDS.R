@@ -5,16 +5,19 @@
 
 #' @rdname GDSArray
 #' @exportMethod gdsfile
+#' @import SeqArray
 setMethod("gdsfile", "SummarizedExperiment", function(x) {
     vapply(assays(x), gdsfile, character(1))
 })
 
 #' @importFrom GenomicRanges GRanges
 #' @importFrom IRanges IRanges
+#' @import SNPRelate
+#' @import SeqArray
 .granges_gdsdata <- function(gdsfile, fileFormat, ...){
     if(fileFormat == "SNP_ARRAY"){
-        f <- SNPRelate::snpgdsOpen(gdsfile)
-        on.exit(SNPRelate::snpgdsClose(f))
+        f <- snpgdsOpen(gdsfile)
+        on.exit(snpgdsClose(f))
         vid <- read.gdsn(index.gdsn(f, "snp.id"))
         chr <- read.gdsn(index.gdsn(f, "snp.chromosome"))
         pos <- read.gdsn(index.gdsn(f, "snp.position"))
@@ -26,18 +29,19 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                                      ...)
         names(gr) <- as.integer(vid)
     }else if(fileFormat == "SEQ_ARRAY"){
-        f <- SeqArray::seqOpen(gdsfile)
-        on.exit(SeqArray::seqClose(f))
-        gr <- SeqArray::granges(f)
+        f <- seqOpen(gdsfile)
+        on.exit(seqClose(f))
+        gr <- granges(f)
     }
     gr
 }
 
+#' @import SNPRelate
 .alleles_snpgds <- function(snpgdsfile){
     ff <- .get_gdsdata_fileFormat(snpgdsfile)
     stopifnot(ff == "SNP_ARRAY")
-    f <- SNPRelate::snpgdsOpen(snpgdsfile)
-    on.exit(SNPRelate::snpgdsClose(f))
+    f <- snpgdsOpen(snpgdsfile)
+    on.exit(snpgdsClose(f))
     als <- read.gdsn(index.gdsn(f, "snp.allele"))
     als.d <- data.frame(
         do.call(rbind, strsplit(als, split="/")), stringsAsFactors = FALSE)
@@ -49,11 +53,11 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 }
 
 .varnode_snpgds_inmem <- function(snpgdsfile, name){
-    f <- gdsfmt::openfn.gds(snpgdsfile)
-    on.exit(gdsfmt::closefn.gds(f))
+    f <- openfn.gds(snpgdsfile)
+    on.exit(closefn.gds(f))
     if(name %in% "id") node <- "snp.rs.id"
     if(name %in% "allele") node <- "snp.allele"
-    res <- gdsfmt::read.gdsn(gdsfmt::index.gdsn(f, node))
+    res <- read.gdsn(index.gdsn(f, node))
     resDF <- setNames(DataFrame(res), toupper(name))
     if(node == "snp.allele"){
         a <- strsplit(res, split="/")
@@ -65,30 +69,30 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 }
 
 .varnode_seqgds_inmem <- function(seqgdsfile, name){
-    f <- SeqArray::seqOpen(seqgdsfile)
-    on.exit(SeqArray::seqClose(f))
-    ## varnodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, "annotation"))
+    f <- seqOpen(seqgdsfile)
+    on.exit(seqClose(f))
+    ## varnodes <- ls.gdsn(index.gdsn(f, "annotation"))
     ## if(name %in% varnodes) node <- paste0("annotation/", name)
     ## if(name %in% c("alt", "ref")) node <- "allele"
-    if(name %in% "id") res <- SeqArray::seqGetData(f, paste0("annotation/", name))
-    if(name %in% "ref") res <- SeqArray::ref(f)
-    if(name %in% "alt") res <- SeqArray::alt(f)
-    if(name %in% "qual") res <- SeqArray::qual(f)
-    if(name %in% "filter") res <- SeqArray::filt(f)
+    if(name %in% "id") res <- seqGetData(f, paste0("annotation/", name))
+    if(name %in% "ref") res <- ref(f)
+    if(name %in% "alt") res <- alt(f)
+    if(name %in% "qual") res <- qual(f)
+    if(name %in% "filter") res <- filt(f)
     resDF <- setNames(DataFrame(res), toupper(name))
     resDF  ## returns a DataFrame with names. 
 }
 
 .varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
-    f <- gdsfmt::openfn.gds(gdsfile)
-    on.exit(gdsfmt::closefn.gds(f))
+    f <- openfn.gds(gdsfile)
+    on.exit(closefn.gds(f))
     if(fileFormat == "SNP_ARRAY"){
         varid <- read.gdsn(index.gdsn(f, "snp.id"))
         if(name %in% "id") node <- "snp.rs.id"
         if(name %in% "allele") node <- "snp.allele"
     }else if(fileFormat == "SEQ_ARRAY"){
         varid <- read.gdsn(index.gdsn(f, "variant.id"))
-        varnodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, "annotation"))
+        varnodes <- ls.gdsn(index.gdsn(f, "annotation"))
         if(name %in% varnodes) node <- paste0("annotation/", name)
         if(name %in% c("alt", "ref")) node <- "allele"
     }
@@ -106,9 +110,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 
 #' @importMethodsFrom SeqArray info
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
-    f <- SeqArray::seqOpen(seqArrayFile)
-    on.exit(SeqArray::seqClose(f))
-    infonodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, "annotation/info"))
+    f <- seqOpen(seqArrayFile)
+    on.exit(seqClose(f))
+    infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
     if(length(infoColumns) > 0){
         idx <- toupper(infoColumns) %in% infonodes
         if(any(!idx)){
@@ -132,12 +136,12 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                          file=seqArrayFile,
                          name=x,
                          dim=.get_gdsdata_dim(f, x), 
-                         dimnames=list(SeqArray::seqGetData(f, "variant.id")),
+                         dimnames=list(seqGetData(f, "variant.id")),
                          permute=FALSE,
                          first_val="ANY")))
         res1 <- DataFrame(lapply(res, function(x)DataFrame(I(x))))
     }else{
-        res1 <- SeqArray::info(f, info=infoColumns)
+        res1 <- info(f, info=infoColumns)
     }
     setNames(res1, paste0("info_", infoColumns))
     ## return a DataFrame with names.
@@ -145,9 +149,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 
 ## put fmt array data into assays(se).  -- todo!
 .fmt_seqarray <- function(seqArrayFile, fmt, fmtOnDisk){
-    f <- SeqArray::seqOpen(seqArrayFile)
-    on.exit(SeqArray::seqClose(f))
-    fmtnodes <- gdsfmt::ls.gdsn(index.gdsn(f, "annotation/format"))
+    f <- seqOpen(seqArrayFile)
+    on.exit(seqClose(f))
+    fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
     res <- seqGetData(f, "annotation/format/DP")  ## any other format nodes except DP?
     res$length <- as.matrix(res$length)
     res$data <- t(res$data)
@@ -229,9 +233,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 .sampnode_gdsdata_ondisk <- function(file, fileFormat, name){
     pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
            ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
-    f <- gdsfmt::openfn.gds(file)
-    on.exit(gdsfmt::closefn.gds(f))
-    sampnodes <- gdsfmt::ls.gdsn(gdsfmt::index.gdsn(f, pre))
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    sampnodes <- ls.gdsn(index.gdsn(f, pre))
     if(name %in% sampnodes){
         node <- paste0(pre, "/", name)
     }else{
@@ -241,7 +245,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 file=file,
                 name=node,
                 dim=.get_gdsdata_dim(f, node),
-                dimnames=list(gdsfmt::read.gdsn(index.gdsn(f, "sample.id"))),
+                dimnames=list(read.gdsn(index.gdsn(f, "sample.id"))),
                 ## for sample-related nodes only.
                 permute=FALSE,
                 first_val="ANY")
@@ -276,8 +280,8 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 .sampnode_gdsdata_ondisk(file, fileFormat, x))
             DataFrame(annot, row.names=as.character(sample.id$sample.id))
         }else{
-            f <- gdsfmt::openfn.gds(file)
-            on.exit(gdsfmt::closefn.gds(f))
+            f <- openfn.gds(file)
+            on.exit(closefn.gds(f))
             stopifnot(inherits(f, "gds.class"))
             sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
             pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
@@ -288,8 +292,8 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
             DataFrame(annot, row.names=sample.id)
         }
     }else{
-        f <- gdsfmt::openfn.gds(file)
-        on.exit(gdsfmt::closefn.gds(f))
+        f <- openfn.gds(file)
+        on.exit(closefn.gds(f))
         stopifnot(inherits(f, "gds.class"))
         sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
         ## DataFrame(matrix(0, nrow=length(sample.id), ncol=0), row.names=sample.id)
@@ -327,8 +331,8 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
                   "the gds file where the dataset is located."))
     args <- match.arg(args, several.ok=TRUE)
     ff <- .get_gdsdata_fileFormat(file)
-    f <- gdsfmt::openfn.gds(file)
-    on.exit(gdsfmt::closefn.gds(f))
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
     res <- list()
     if("rowDataColumns" %in% args){
         if(ff == "SNP_ARRAY"){
@@ -350,7 +354,7 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
         if(ff == "SNP_ARRAY"){
             infonodes <- NULL
         }else if(ff == "SEQ_ARRAY"){
-            infonodes <- gdsfmt::ls.gdsn(index.gdsn(f, "annotation/info"))
+            infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
             res$infoColumns <- infonodes
         }
     }
@@ -358,7 +362,7 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
         if(ff == "SNP_ARRAY"){
             fmtnodes <- NULL
         }else if(ff == "SEQ_ARRAY"){
-            fmtnodes <- gdsfmt::ls.gdsn(index.gdsn(f, "annotation/format"))
+            fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
             res$fmt <- fmtnodes
         }
     }

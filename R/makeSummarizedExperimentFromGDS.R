@@ -43,9 +43,40 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         do.call(rbind, strsplit(als, split="/")), stringsAsFactors = FALSE)
     res <- DataFrame(Biostrings::DNAStringSet(als.d[,1]),
                      Biostrings::DNAStringSet(als.d[,2]))
-    names(res) <- paste0("allele", 1:2)
+    names(res) <- paste0("ALLELE", 1:2)
     res
 }
+
+.varnode_snpgds_inmem <- function(snpgdsfile, name){
+    ## ff <- .get_gdsdata_fileFormat(snpgdsfile)
+    ## stopifnot(ff == "SNP_ARRAY")
+    ## f <- SNPRelate::snpgdsOpen(snpgdsfile)
+    ## on.exit(SNPRelate::snpgdsClose(f))
+    f <- gdsfmt::openfn.gds(snpgdsfile)
+    on.exit(gdsfmt::closefn.gds(f))
+    if(name %in% "id") node <- "snp.rs.id"
+    if(name %in% "allele") node <- "snp.allele"
+    res <- gdsfmt::read.gdsn(gdsfmt::index.gdsn(f, node))
+    resDF <- stats::setNames(DataFrame(res), toupper(name))
+    if(node == "snp.allele"){
+        a <- strsplit(res, split="/")
+        a1 <- Biostrings::DNAStringSet(unlist(a)[c(TRUE, FALSE)])
+        a2 <- Biostrings::DNAStringSet(unlist(a)[c(FALSE, TRUE)]) 
+        resDF <- stats::setNames(DataFrame(a1, a2), paste0("ALLELE", 1:2))
+    }
+    resDF  ## returns a DataFrame with names.
+}
+
+## #' @import gdsfmt
+## .varnode_snpgds_inmem <- function(snpgdsfile, name){
+##     f <- gdsfmt::openfn.gds(snpgdsfile)
+##     on.exit(gdsfmt::closefn.gds(f))
+##     ## gdsfmt::read.gdsn(gdsfmt::index.gdsn(f, name))
+##     varid <- read.gdsn(index.gdsn(f, "snp.id"))
+##     if(name %in% "id") node <- "snp.rs.id"
+##     if(name %in% "allele") node <- "snp.allele"
+##     gdsfmt::read.gdsn(gdsfmt::index.gdsn(f, node))
+## }
 
 .varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
     f <- gdsfmt::openfn.gds(gdsfile)
@@ -72,6 +103,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 
 ### delayedArray in each column in DF, have individual index, which does not save spaces almost......
 
+#' @importMethodsFrom SeqArray info
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
     f <- SeqArray::seqOpen(seqArrayFile)
     on.exit(SeqArray::seqClose(f))
@@ -106,7 +138,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     }else{
         res1 <- SeqArray::info(f, info=infoColumns)
     }
-    setNames(res1, paste0("info_", infoColumns))
+    stats::SetNames(res1, paste0("info_", infoColumns))
     ## return a DataFrame with names.
     }
 
@@ -147,11 +179,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
     if(!is.null(rowDataColumns)){
         if(length(rowDataColumns) > 0){
-            ## meta <- DataFrame(
-            ##     ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
-            ##     ALLELE1 = .alleles_snpgds(file)$allele1,
-            ##     ALLELE2 = .alleles_snpgds(file)$allele2  ## DNAStringSet class
-            ## )
             idx.within <- toupper(rowDataColumns) %in%
                 showAvailable(file)$rowDataColumns
             if(any(!idx.within)){
@@ -167,26 +194,38 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         }else{
             rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
         }
-        ## if(rowDataOnDisk){
-        res <- setNames(
-            lapply(rowDataColumns, function(x)
-                .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
-            toupper(rowDataColumns))
-        resDF <- DataFrame(lapply(res, I))
-        ## }else{ ## rowDataOnDisk = FALSE...
+        if(rowDataOnDisk){
+            res <- stats::setNames(
+                              lapply(rowDataColumns, function(x)
+                                  .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
+                              toupper(rowDataColumns))
+            resDF <- DataFrame(lapply(res, I))
+            if("ALLELE" %in% names(resDF)){
+                resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
+                resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
+                resDF[["ALLELE"]] <- NULL 
+            }
+            if("REF" %in% names(resDF)){
+                resDF$REF <- sub(",.*", "", resDF$REF)
+            }
+            if("ALT" %in% names(resDF)){
+                resDF$ALT <- sub("[TCGA]*,", "", resDF$ALT)
+            }
+        }else{ ## rowDataOnDisk = FALSE...
+            if(fileFormat == "SNP_ARRAY"){
+                resDF <- DataFrame(lapply(rowDataColumns, function(x)
+                                        .varnode_snpgds_inmem(file, x)))
+            }## else{
+                ## res <- 
+            ## }
+            ## meta <- DataFrame(
+        ##     ID = read.gdsn(index.gdsn(f, "snp.rs.id")),
+        ##     .alleles_snpgds(file)
+        ##     ALLELE1 = .alleles_snpgds(file)$allele1,
+        ##     ALLELE2 = .alleles_snpgds(file)$allele2  ## DNAStringSet class
+        ## )
         ## res
         ## resDF 
-        ## }
-        if("ALLELE" %in% names(resDF)){
-            resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
-            resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
-            resDF[["ALLELE"]] <- NULL 
-        }
-        if("REF" %in% names(resDF)){
-            resDF$REF <- sub(",.*", "", resDF$REF)
-        }
-        if("ALT" %in% names(resDF)){
-            resDF$ALT <- sub("[TCGA]*,", "", resDF$ALT)
         }
         mcols(rr) <- resDF
     }
@@ -213,7 +252,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 permute=FALSE,
                 first_val="ANY")
     da <- DelayedArray(seed)
-    setNames(DataFrame(I(da), check.names=FALSE), name)
+    stats::SetNames(DataFrame(I(da), check.names=FALSE), name)
 }
 
 ###
@@ -403,7 +442,7 @@ makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=charac
             ff == "SNP_ARRAY", "genotype",
                 ifelse(ff == "SEQ_ARRAY", "genotype/data", NA))
     }
-    assay <- setNames(list(GDSArray(file, name)), name)
+    assay <- stats::SetNames(list(GDSArray(file, name)), name)
     colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if(ff == "SEQ_ARRAY"){

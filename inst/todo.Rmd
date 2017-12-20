@@ -1,3 +1,9 @@
+```{r}
+showMethods("info", where=getNamespace("SeqArray"))
+## Function: info (package SeqArray)
+## x="SeqVarGDSClass"
+```
+
 Friday mtg about rest of sprint: 
 
 ## 1. Remove the `.write_gdsdata_sampInCol`, do not generate the temp file. (done)

@@ -4,8 +4,8 @@
 \alias{showAvailable}
 \title{ShowAvailable}
 \usage{
-showAvailable(file, args = c("rowDataColumns", "colDataColumns", "info",
-  "fmt"))
+showAvailable(file, args = c("rowDataColumns", "colDataColumns",
+  "infoColumns", "fmt"))
 }
 \arguments{
 \item{file}{the path to the gds.class file.}

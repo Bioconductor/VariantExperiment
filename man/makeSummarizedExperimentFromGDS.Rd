@@ -21,7 +21,7 @@ import. The default is ALL.}
 \item{colDataColumns}{which columns of \code{colData} to
 import. The default is ALL.}
 
-\item{infoColumns}{which columns of \code{info} to import. The default is
+\item{infoColumns}{which columns of \code{infoColumns} to import. The default is
 ALL.}
 
 \item{fmt}{which data of \code{fmt} to import. The default is ALL.}
@@ -53,13 +53,13 @@ se <- makeSummarizedExperimentFromGDS(file)
 showAvailable(file)
 rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
-infocols <- showAvailable(file, "info")$info
+infocols <- showAvailable(file, "infoColumns")$infoColumns
 fmt <- showAvailable(file, "fmt")$fmt
 se1 <- makeSummarizedExperimentFromGDS(
 file,
 rowDataColumns=rowdatacols[1:3],
 colDataColumns = coldatacols[1],
-info = infocols[c(3,5,7)],
+infoColumns = infocols[c(3,5,7)],
 fmt = fmt
 )
 metadata(se1)

@@ -128,8 +128,17 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         rd <- names(get.attr.gdsn(index.gdsn(gdsfile, node)))
         if ("snp.order" %in% rd) sampleInCol <- TRUE   ## snpfirstdim (in row)
         if ("sample.order" %in% rd) sampleInCol <- FALSE
-    }else if(fileFormat == "SEQ_ARRAY"){
-        sampleInCol <- FALSE
+    }else if(fileFormat == "SEQ_ARRAY"){ 
+        dimSumm <- c(ploidy = seqSumm$ploidy,
+                     sample = seqSumm$num.sample,
+                     variant = seqSumm$num.variant)
+        dims <- .get_gdsdata_dim(gdsfile, node)
+        ind <- match(dimSumm[c("variant", "sample")], dims)
+        if(ind[1] < ind[2]){
+            sampleInCol <- TRUE   ## rewrite for general cases: format/DP.
+        }else{
+            sampleInCol <- FALSE
+        }
     }else if(fileFormat =="SE_ARRAY"){
         sampleInCol <- TRUE
     }
@@ -165,12 +174,21 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
             dimnames <- list(sample.id = sample.id, snp.id = as.character(snp.id))
         }
     }else if(fileFormat == "SEQ_ARRAY"){
-        variant.id <- seqGetData(gdsfile, "variant.id")
+        ## variant.id <- seqGetData(gdsfile, "variant.id")
+        variant.id <- read.gdsn(index.gdsn(gdsfile, "variant.id"))
+        seqSumm <- seqSummary(gdsfile, verbose=FALSE)
+        dimSumm <- c(ploidy = seqSumm$ploidy,
+                     sample = seqSumm$num.sample,
+                     variant = seqSumm$num.variant)
+        stopifnot(length(variant.id) == dimSumm["variant"])
+        stopifnot(length(sample.id) == dimSumm["sample"])
         dimnames <- list(
-            ploidy.id = seq_len(dims[1]),
+            ploidy.id = seq_len(dimSumm[1]),
             sample.id = sample.id,
             variant.id = as.character(variant.id)
         )
+        ind <- match(dims, dimSumm)
+        dimnames <- dimnames[ind]
     }else if(fileFormat == "SE_ARRAY"){
         row.id <- read.gdsn(index.gdsn(gdsfile, "row.id"))
         dimnames <- list(row.id = as.character(row.id), sample.id = sample.id)

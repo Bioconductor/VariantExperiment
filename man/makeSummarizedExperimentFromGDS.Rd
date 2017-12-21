@@ -4,10 +4,9 @@
 \alias{makeSummarizedExperimentFromGDS}
 \title{makeSummarizedExperimentFromGDS}
 \usage{
-makeSummarizedExperimentFromGDS(file, name = NA,
+makeSummarizedExperimentFromGDS(file, name = NULL,
   rowDataColumns = character(), colDataColumns = character(),
-  infoColumns = character(), fmt = character(), rowDataOnDisk = TRUE,
-  colDataOnDisk = TRUE, fmtDataOnDisk = TRUE)
+  infoColumns = character(), rowDataOnDisk = TRUE, colDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
@@ -24,15 +23,10 @@ import. The default is ALL.}
 \item{infoColumns}{which columns of \code{infoColumns} to import. The default is
 ALL.}
 
-\item{fmt}{which data of \code{fmt} to import. The default is ALL.}
-
 \item{rowDataOnDisk}{whether to save the \code{rowData} as
 DelayedArray object. The default is TRUE.}
 
 \item{colDataOnDisk}{whether to save the \code{colData} as
-DelayedArray object. The default is TRUE.}
-
-\item{fmtDataOnDisk}{whether to save the \code{fmtData} as
 DelayedArray object. The default is TRUE.}
 }
 \description{

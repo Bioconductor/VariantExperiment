@@ -118,8 +118,14 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
     }
     isarray <- sapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
     dims <- lapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
-    names(dims) <- all.gdsn
-    names(dims)[unlist(isarray) & lengths(dims) > 1]
+    ## names(dims) <- all.gdsn
+    all.gdsn[isarray &
+             lengths(dims) > 1 &
+             !unlist(lapply(dims, function(x) any(x == 0L))) &
+             !grepl("~", all.gdsn)
+             ## what's the pattern with genotype/~data, phase/~data,
+             ## annotation/format/DP/~data
+             ]
 }
 
 .read_gdsdata_sampleInCol <- function(gdsfile, node, fileFormat){
@@ -128,7 +134,8 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         rd <- names(get.attr.gdsn(index.gdsn(gdsfile, node)))
         if ("snp.order" %in% rd) sampleInCol <- TRUE   ## snpfirstdim (in row)
         if ("sample.order" %in% rd) sampleInCol <- FALSE
-    }else if(fileFormat == "SEQ_ARRAY"){ 
+    }else if(fileFormat == "SEQ_ARRAY"){
+        seqSumm <- seqSummary(gdsfile, verbose=FALSE)
         dimSumm <- c(ploidy = seqSumm$ploidy,
                      sample = seqSumm$num.sample,
                      variant = seqSumm$num.variant)

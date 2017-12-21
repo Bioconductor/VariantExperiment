@@ -1,8 +1,3 @@
-## file <- SNPRelate::snpgdsExampleFileName()
-## f <- openfn.gds(file) ## "gds.class"
-## f <- snpgdsOpen(file) ## "SNPGDSFileClass", "gds.class"
-## fileSeqArray <- SeqArray::seqExampleFileName("gds")  ## "SeqVarGDSClass"
-
 #' @rdname GDSArray
 #' @exportMethod gdsfile
 #' @import SeqArray
@@ -71,9 +66,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 .varnode_seqgds_inmem <- function(seqgdsfile, name){
     f <- seqOpen(seqgdsfile)
     on.exit(seqClose(f))
-    ## varnodes <- ls.gdsn(index.gdsn(f, "annotation"))
-    ## if(name %in% varnodes) node <- paste0("annotation/", name)
-    ## if(name %in% c("alt", "ref")) node <- "allele"
     if(name %in% "id") res <- seqGetData(f, paste0("annotation/", name))
     if(name %in% "ref") res <- ref(f)
     if(name %in% "alt") res <- alt(f)
@@ -147,30 +139,30 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     ## return a DataFrame with names.
     }
 
-## put fmt array data into assays(se).  -- todo!
-.fmt_seqarray <- function(seqArrayFile, fmt, fmtOnDisk){
-    f <- seqOpen(seqArrayFile)
-    on.exit(seqClose(f))
-    fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
-    res <- seqGetData(f, "annotation/format/DP")  ## any other format nodes except DP?
-    res$length <- as.matrix(res$length)
-    res$data <- t(res$data)
-    if(fmtOnDisk){
-        res$length <- DelayedArray(res$length)
-        res$data <- DelayedArray(res$data)
-    }
-    if(length(fmt)>0){
-        idx <- fmt %in% fmtnodes
-        if(any(!idx)){
-            warning("\n", 'The "fmt" argument of "',
-                    paste(fmt[!idx], collapse = ", "),
-                    '" does not exist!', "\n",
-                    'Please use showAvailable(file, "fmt") ',
-                    'to get the available columns for "fmt."', "\n")
-        }
-    }
-    res      
-}
+## ## put fmt array data into assays(se).  -- todo!
+## .fmt_seqarray <- function(seqArrayFile, fmt, fmtOnDisk){
+##     f <- seqOpen(seqArrayFile)
+##     on.exit(seqClose(f))
+##     fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
+##     res <- seqGetData(f, "annotation/format/DP")  ## any other format nodes except DP?
+##     res$length <- as.matrix(res$length)
+##     res$data <- t(res$data)
+##     if(fmtOnDisk){
+##         res$length <- DelayedArray(res$length)
+##         res$data <- DelayedArray(res$data)
+##     }
+##     if(length(fmt)>0){
+##         idx <- fmt %in% fmtnodes
+##         if(any(!idx)){
+##             warning("\n", 'The "fmt" argument of "',
+##                     paste(fmt[!idx], collapse = ", "),
+##                     '" does not exist!', "\n",
+##                     'Please use showAvailable(file, "fmt") ',
+##                     'to get the available columns for "fmt."', "\n")
+##         }
+##     }
+##     res      
+## }
 
 ## snpgds: snp.rs.id, snp.allele
 ## seqarray: allele, annotation/id, annotation/qual, annotation/filter.
@@ -296,27 +288,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         on.exit(closefn.gds(f))
         stopifnot(inherits(f, "gds.class"))
         sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        ## DataFrame(matrix(0, nrow=length(sample.id), ncol=0), row.names=sample.id)
         DataFrame(row.names=sample.id)
     }
 }
-
-## for "DNAStringSetList", paste elements with "," for multiple alternative. (SE from "SeqArray", rowData column of "ALT", is "DNAStringSetList" format)
-## .inmem_DF_to_DelayedArray_DF <- function(inmemdf){
-##     classes <- sapply(inmemdf, class)
-##     ind <- which(classes == "DNAStringSetList")
-##     if(length(ind) > 0){
-##         for(i in ind){
-##             a <- inmemdf[[ind]]
-##             t <- lapply(as.list(a), function(x)paste(x, collapse=","))
-##             inmemdf[[ind]] <- unlist(t)
-##         }
-##     }
-##     l <- lapply(inmemdf, function(x)DataFrame(I(DelayedArray(DataFrame(x)))))
-##     dadf <- DataFrame(l)
-##     names(dadf) <- names(inmemdf)
-##     dadf
-## }
 
 #' ShowAvailable
 #' 
@@ -324,7 +298,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
 #' @param file the path to the gds.class file.
 #' @param args the arguments in \code{makeSummarizedExperimentFromGDS}.
 #' @export
-showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "infoColumns", "fmt")){
+showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
     ## check if character.
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
@@ -334,6 +308,14 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
     f <- openfn.gds(file)
     on.exit(closefn.gds(f))
     res <- list()
+    if("name" %in% args){
+        if(ff == "SNP_ARRAY"){
+            assaynodes <- "genotype"
+        }else if(ff == "SEQ_ARRAY"){
+            assaynodes <- .get_gdsdata_arrayNodes(f)
+        }
+        res$name <- assaynodes
+    }
     if("rowDataColumns" %in% args){
         if(ff == "SNP_ARRAY"){
             rdnodes <- c("ID", "ALLELE")
@@ -358,14 +340,6 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
             res$infoColumns <- infonodes
         }
     }
-    if("fmt" %in% args){
-        if(ff == "SNP_ARRAY"){
-            fmtnodes <- NULL
-        }else if(ff == "SEQ_ARRAY"){
-            fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
-            res$fmt <- fmtnodes
-        }
-    }
     res
 }
 
@@ -381,12 +355,9 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
 #'     import. The default is ALL.
 #' @param infoColumns which columns of \code{infoColumns} to import. The default is
 #'     ALL.
-#' @param fmt which data of \code{fmt} to import. The default is ALL.
 #' @param rowDataOnDisk whether to save the \code{rowData} as
 #'     DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as
-#'     DelayedArray object. The default is TRUE.
-#' @param fmtDataOnDisk whether to save the \code{fmtData} as
 #'     DelayedArray object. The default is TRUE.
 #' @importFrom tools file_path_as_absolute
 #' @importFrom SummarizedExperiment SummarizedExperiment
@@ -394,7 +365,7 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
 #' 
 #' @examples
 #' \dontrun{
-#' file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+#' file <- SNPRelate::snpgdsExampleFileName()
 #' se <- makeSummarizedExperimentFromGDS(file)
 #' rowData(se)
 #' SummarizedExperiment::colData(se)
@@ -403,65 +374,53 @@ showAvailable <- function(file, args=c("rowDataColumns", "colDataColumns", "info
 #' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
-#' file <- SeqArray::seqExampleFileName(type="gds")
-#' se <- makeSummarizedExperimentFromGDS(file)
-#' showAvailable(file)
-#' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
-#' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
-#' infocols <- showAvailable(file, "infoColumns")$infoColumns
-#' fmt <- showAvailable(file, "fmt")$fmt
-#' se1 <- makeSummarizedExperimentFromGDS(
-#' file,
-#' rowDataColumns=rowdatacols[1:3],
-#' colDataColumns = coldatacols[1],
-#' infoColumns = infocols[c(3,5,7)],
-#' fmt = fmt
-#' )
-#' metadata(se1)
-#' SummarizedExperiment::rowRanges(se1)
+file <- SeqArray::seqExampleFileName(type="gds")
+se <- makeSummarizedExperimentFromGDS(file)
+names(assays(se))
+showAvailable(file)
+names <- showAvailable(file, "name")$name
+rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
+coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
+infocols <- showAvailable(file, "infoColumns")$infoColumns
+se1 <- makeSummarizedExperimentFromGDS(
+file,
+name = names[2],
+rowDataColumns = rowdatacols[1:3],
+colDataColumns = coldatacols[1],
+infoColumns = infocols[c(3,5,7)])
+assay(se1)
+rowRanges(se1)
+colData(se1)
 #' }
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NA, rowDataColumns=character(), colDataColumns=character(), infoColumns=character(), fmt=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE, fmtDataOnDisk=TRUE){
+makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=character(), colDataColumns=character(), infoColumns=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
     file <- tools::file_path_as_absolute(file)
-    if (!isSingleStringOrNA(name))
-        stop("'name' must be a single string or NA")
+    stopifnot(is.character(name) | is.null(name))
+    ## if (!isSingleStringOrNA(name))
+    ##     stop("'name' must be a single string or NA")
     if(!isTRUEorFALSE(colDataOnDisk))
         stop("`colDataOnDisk` must be logical.")
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
     ff <- .get_gdsdata_fileFormat(file)
-    if(is.na(name)){
-        name <- ifelse(
-            ff == "SNP_ARRAY", "genotype",
-                ifelse(ff == "SEQ_ARRAY", "genotype/data", NA))
+    if(is.null(name)){
+        if(ff == "SNP_ARRAY"){
+            name <- "genotype"
+        }else if(ff == "SEQ_ARRAY"){
+            name <- showAvailable(file, "name")$name
+        }
     }
-    assay <- setNames(list(GDSArray(file, name)), name)
+    assays <- setNames(lapply(name, function(x) GDSArray(file, x)), name)
     colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if(ff == "SEQ_ARRAY"){
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
         }
-    ## on-disk representation of row/colData in DelayedArray back-end of DataFrame.
-    ## if(rowDataOnDisk){
-    ##     mcols(rowRange) <- .inmem_DF_to_DelayedArray_DF(mcols(rowRange))
-    ## }
-    ## if(colDataOnDisk){
-    ##     colData <- .inmem_DF_to_DelayedArray_DF(colData)
-    ## }
-    se <- SummarizedExperiment(assays = assay, colData=colData, rowRanges = rowRange)
-    ## save INFO as metadata for SeqVarGDSClass, on-disk by default. 
-    ## if(ff == "SEQ_ARRAY"){
-    ##     infodata <- .info_seqarray_ondisk(file, info=info)
-    ##     metadata(se)$info <- infodata
-    ##     fmtdata <- .fmt_seqarray(file, fmt=fmt, fmtOnDisk=fmtDataOnDisk)
-    ##     metadata(se)$depthLength <- fmtdata$length
-    ##     metadata(se)$depth <- fmtdata$data
-    ## }
-    se
+    SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)
 }

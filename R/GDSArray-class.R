@@ -100,15 +100,22 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
     ff <- get.attr.gdsn(f$root)$FileFormat
     ff
 }
+
 .get_gdsdata_arrayNodes <- function(gdsfile){
     stopifnot(inherits(gdsfile, "gds.class"))
     names.gdsn <- ls.gdsn(gdsfile)
-    a <- lapply(names.gdsn, function(x) ls.gdsn(index.gdsn(gdsfile, x)))
-    a[lengths(a)==0] <- ""
-    n <- rep(names.gdsn, lengths(a))
-    all.gdsn <- paste(n, unlist(a), sep="/")
-    all.gdsn <- sub("/$", "", all.gdsn)
-
+    repeat{
+        a <- lapply(names.gdsn, function(x) ls.gdsn(index.gdsn(gdsfile, x)))
+        if(all(lengths(a)==0L)){
+            break
+        }else{
+        a[lengths(a)==0] <- ""
+        n <- rep(names.gdsn, lengths(a))
+        all.gdsn <- paste(n, unlist(a), sep="/")
+        all.gdsn <- sub("/$", "", all.gdsn)
+        names.gdsn <- all.gdsn
+        }
+    }
     isarray <- sapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
     dims <- lapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
     names(dims) <- all.gdsn
@@ -159,7 +166,11 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         }
     }else if(fileFormat == "SEQ_ARRAY"){
         variant.id <- seqGetData(gdsfile, "variant.id")
-        dimnames <- list(ploidy.id = seq_len(dims[1]), sample.id = sample.id, variant.id = as.character(variant.id))
+        dimnames <- list(
+            ploidy.id = seq_len(dims[1]),
+            sample.id = sample.id,
+            variant.id = as.character(variant.id)
+        )
     }else if(fileFormat == "SE_ARRAY"){
         row.id <- read.gdsn(index.gdsn(gdsfile, "row.id"))
         dimnames <- list(row.id = as.character(row.id), sample.id = sample.id)
@@ -218,7 +229,7 @@ GDSArraySeed <- function(file, name=NA){
     ## check if the node is array data. 
     arrayNodes <- .get_gdsdata_arrayNodes(f)
     if(!name %in% arrayNodes){
-        stop(wmsg("the `name` must be a rectangular array data."))
+        stop(wmsg("the `name` node must be an array data."))
     }
 
     dims <- .get_gdsdata_dim(f, node = name)

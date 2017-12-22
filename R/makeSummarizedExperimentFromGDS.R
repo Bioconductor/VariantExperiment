@@ -31,22 +31,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     gr
 }
 
-#' @import SNPRelate
-.alleles_snpgds <- function(snpgdsfile){
-    ff <- .get_gdsdata_fileFormat(snpgdsfile)
-    stopifnot(ff == "SNP_ARRAY")
-    f <- snpgdsOpen(snpgdsfile)
-    on.exit(snpgdsClose(f))
-    als <- read.gdsn(index.gdsn(f, "snp.allele"))
-    als.d <- data.frame(
-        do.call(rbind, strsplit(als, split="/")), stringsAsFactors = FALSE)
-    ## genotype data, possible for >2 alt? if yes, use sub() here.
-    res <- DataFrame(Biostrings::DNAStringSet(als.d[,1]),
-                     Biostrings::DNAStringSet(als.d[,2]))
-    names(res) <- paste0("ALLELE", 1:2)
-    res
-}
-
 .varnode_snpgds_inmem <- function(snpgdsfile, name){
     f <- openfn.gds(snpgdsfile)
     on.exit(closefn.gds(f))
@@ -56,6 +40,8 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     resDF <- setNames(DataFrame(res), toupper(name))
     if(node == "snp.allele"){
         a <- strsplit(res, split="/")
+        ## genotype data, possible for >2 alt? if yes, use sub() here
+        ## and use DNAStringSetList class for "allele2"
         a1 <- Biostrings::DNAStringSet(unlist(a)[c(TRUE, FALSE)])
         a2 <- Biostrings::DNAStringSet(unlist(a)[c(FALSE, TRUE)]) 
         resDF <- setNames(DataFrame(a1, a2), paste0("ALLELE", 1:2))
@@ -139,34 +125,6 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     ## return a DataFrame with names.
     }
 
-## ## put fmt array data into assays(se).  -- todo!
-## .fmt_seqarray <- function(seqArrayFile, fmt, fmtOnDisk){
-##     f <- seqOpen(seqArrayFile)
-##     on.exit(seqClose(f))
-##     fmtnodes <- ls.gdsn(index.gdsn(f, "annotation/format"))
-##     res <- seqGetData(f, "annotation/format/DP")  ## any other format nodes except DP?
-##     res$length <- as.matrix(res$length)
-##     res$data <- t(res$data)
-##     if(fmtOnDisk){
-##         res$length <- DelayedArray(res$length)
-##         res$data <- DelayedArray(res$data)
-##     }
-##     if(length(fmt)>0){
-##         idx <- fmt %in% fmtnodes
-##         if(any(!idx)){
-##             warning("\n", 'The "fmt" argument of "',
-##                     paste(fmt[!idx], collapse = ", "),
-##                     '" does not exist!', "\n",
-##                     'Please use showAvailable(file, "fmt") ',
-##                     'to get the available columns for "fmt."', "\n")
-##         }
-##     }
-##     res      
-## }
-
-## snpgds: snp.rs.id, snp.allele
-## seqarray: allele, annotation/id, annotation/qual, annotation/filter.
-
 #' @importFrom Biostrings DNAStringSet
 #' @import SNPRelate
 #' @import SeqArray
@@ -193,9 +151,9 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         }
         if(rowDataOnDisk){
             res <- setNames(
-                              lapply(rowDataColumns, function(x)
-                                  .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
-                              toupper(rowDataColumns))
+                lapply(rowDataColumns, function(x)
+                    .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
+                toupper(rowDataColumns))
             resDF <- DataFrame(lapply(res, I))
             if("ALLELE" %in% names(resDF)){
                 resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
@@ -241,8 +199,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                 ## for sample-related nodes only.
                 permute=FALSE,
                 first_val="ANY")
-    da <- DelayedArray(seed)
-    setNames(DataFrame(I(da), check.names=FALSE), name)
+    DelayedArray(seed)  ## returns Delayed/GDSArray, not DF.
 }
 
 ###
@@ -268,9 +225,11 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
         }
         if(colDataOnDisk){
             sample.id <- .sampnode_gdsdata_ondisk(file, fileFormat, "sample.id")
-            annot <- lapply(colDataColumns, function(x)
-                .sampnode_gdsdata_ondisk(file, fileFormat, x))
-            DataFrame(annot, row.names=as.character(sample.id$sample.id))
+            annot <- setNames(
+                lapply(colDataColumns, function(x)
+                    .sampnode_gdsdata_ondisk(file, fileFormat, x)),
+                colDataColumns)
+            DataFrame(lapply(annot, I), row.names=as.character(sample.id))
         }else{
             f <- openfn.gds(file)
             on.exit(closefn.gds(f))
@@ -374,23 +333,26 @@ showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns
 #' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
-file <- SeqArray::seqExampleFileName(type="gds")
-se <- makeSummarizedExperimentFromGDS(file)
-names(assays(se))
-showAvailable(file)
-names <- showAvailable(file, "name")$name
-rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
-coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
-infocols <- showAvailable(file, "infoColumns")$infoColumns
-se1 <- makeSummarizedExperimentFromGDS(
-file,
-name = names[2],
-rowDataColumns = rowdatacols[1:3],
-colDataColumns = coldatacols[1],
-infoColumns = infocols[c(3,5,7)])
-assay(se1)
-rowRanges(se1)
-colData(se1)
+#' file <- SeqArray::seqExampleFileName(type="gds")
+#' se <- makeSummarizedExperimentFromGDS(file)
+#' names(assays(se))
+#' showAvailable(file)
+#' names <- showAvailable(file, "name")$name
+#' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
+#' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
+#' infocols <- showAvailable(file, "infoColumns")$infoColumns
+#' se1 <- makeSummarizedExperimentFromGDS(
+#' file,
+#' name = names[2],
+#' rowDataColumns = rowdatacols[1:3],
+#' colDataColumns = coldatacols[1],
+#' infoColumns = infocols[c(1,3,5,7)],
+#' rowDataOnDisk = FALSE,
+#' colDataOnDisk = FALSE)
+#' assay(se1)
+#' rowRanges(se1)
+#' colData(se1)
+#' print(object.size(se[TRUE, TRUE]), units="auto")
 #' }
 #' @export
 #' 

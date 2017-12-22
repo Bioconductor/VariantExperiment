@@ -34,7 +34,7 @@ Conversion of gds file into SummarizedExperiment.
 }
 \examples{
 \dontrun{
-file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+file <- SNPRelate::snpgdsExampleFileName()
 se <- makeSummarizedExperimentFromGDS(file)
 rowData(se)
 SummarizedExperiment::colData(se)
@@ -44,19 +44,23 @@ se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 SummarizedExperiment::rowRanges(se1)
 file <- SeqArray::seqExampleFileName(type="gds")
 se <- makeSummarizedExperimentFromGDS(file)
+names(assays(se))
 showAvailable(file)
+names <- showAvailable(file, "name")$name
 rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
 infocols <- showAvailable(file, "infoColumns")$infoColumns
-fmt <- showAvailable(file, "fmt")$fmt
 se1 <- makeSummarizedExperimentFromGDS(
 file,
-rowDataColumns=rowdatacols[1:3],
+name = names[2],
+rowDataColumns = rowdatacols[1:3],
 colDataColumns = coldatacols[1],
-infoColumns = infocols[c(3,5,7)],
-fmt = fmt
-)
-metadata(se1)
-SummarizedExperiment::rowRanges(se1)
+infoColumns = infocols[c(1,3,5,7)],
+rowDataOnDisk = FALSE,
+colDataOnDisk = FALSE)
+assay(se1)
+rowRanges(se1)
+colData(se1)
+print(object.size(se[TRUE, TRUE]), units="auto")
 }
 }

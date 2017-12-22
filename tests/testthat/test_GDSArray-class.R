@@ -1,3 +1,14 @@
+test_that("GDSArraySeed constructor works", {
+    file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
+    seed <- GDSArraySeed(file, "genotype")
+    expect_s4_class(seed, "GDSArraySeed")
+    expect_true(validObject(seed))
+    expect_equal(dim(seed), c(9088L, 279L))
+    expect_equal(class(dimnames(seed)), "list")
+    expect_equal(lengths(unname(dimnames(seed))), dim(seed))
+})
+
+
 test_that("GDSArray constructor works", {
     file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
     gds <- GDSArray(file)
@@ -6,12 +17,3 @@ test_that("GDSArray constructor works", {
     expect_equal(dim(gds), c(9088L, 279L))
 })
 
-test_that("info input works", {
-    .info_seqarray_ondisk <- VariantExperiment:::.info_seqarray_ondisk
-    file <- system.file(package="SeqArray", "extdata", "CEU_Exon.gds")
-
-    df <- .info_seqarray_ondisk(file, character())
-    expect_equal(dim(df), c(1348L, 9L))
-    expect_equal(names(df)[[1]], "info_AA")
-    expect_equal(class(df[["info_AA"]][[1]]), "character")
-})

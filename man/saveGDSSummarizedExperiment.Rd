@@ -6,7 +6,7 @@
 Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.}
 \usage{
 saveGDSSummarizedExperiment(x, dir = "my_gds_se", replace = FALSE,
-  allow.duplicate = FALSE, verbose = FALSE)
+  verbose = FALSE)
 }
 \arguments{
 \item{x}{A SummarizedExperiment object, with the array data being ordinary array structure.}
@@ -15,9 +15,9 @@ saveGDSSummarizedExperiment(x, dir = "my_gds_se", replace = FALSE,
 
 \item{replace}{Whether to replace the directory if it already exists. The default is FALSE.}
 
-\item{allow.duplicate}{Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.}
-
 \item{verbose}{whether to print the process messages. The default is FALSE.}
+
+\item{allow.duplicate}{Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.}
 }
 \description{
 saveGDSSummarizedExperiment

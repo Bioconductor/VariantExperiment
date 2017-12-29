@@ -1,11 +1,3 @@
-test_that("GDSArray constructor works", {
-    file <- system.file(package="SNPRelate", "extdata", "hapmap_geno.gds")
-    gds <- GDSArray(file)
-    expect_s4_class(gds, "GDSArray")
-    expect_true(validObject(gds))
-    expect_equal(dim(gds), c(9088L, 279L))
-})
-
 test_that("info input works", {
     .info_seqgds <- VariantExperiment:::.info_seqgds
     file <- system.file(package="SeqArray", "extdata", "CEU_Exon.gds")

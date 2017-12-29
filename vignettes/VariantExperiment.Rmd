@@ -28,7 +28,9 @@ biocLite("VariantExperiment")
 
 ```{r Load}
 library(VariantExperiment)
+library(gdsfmt)
 ```
+
 ## GDS format
 The package `gdsfmt` provides a high-level R interface to CoreArray Genomic Data Structure (GDS) data files, it has hierarchical structure and could store multiple scalable array-oriented data sets with metadata information. It is designed for large-scale datasets, especially for data which are much larger than the available random-access memory. The GDS format has been widely used in genetic/genomic research for high-throughput genotyping or sequencing data. There are two major classes that extends the `gds.class`: `SNPGDSFileClass` suited for genotyping data (e.g., GWAS), and `SeqVarGDSClass` that are designed specifically for DNA-sequencing data. The file format attribute in each data classes are set as `SNP_ARRAY` and `SEQ_ARRAY`. There are rich functions written based on these data classes for common data operation and statistical analysis. 
 
@@ -45,13 +47,13 @@ ls.gdsn(f)
 ### required attributes for SNPGDSFileClass. 
 get.attr.gdsn(f$root)
 get.attr.gdsn(index.gdsn(f, "genotype"))
-snpgdsClose(f)
+SNPRelate::snpgdsClose(f)
 ```
 ### SEQ_ARRAY
 `SEQ_ARRAY` file format is defined in the package of `SeqArray`, in the class of `SeqVarGDSClass`.
 ```{r, seqArray}
 file <- system.file(package="VariantExperiment", "extdata", "CEU_Exon.gds")
-f <- seqOpen(file)
+f <- SeqArray::seqOpen(file)
 ls.gdsn(f)
 ### required gds nodes: sample.id, variant.id, position, chromosome, allele, and genotype.
 get.attr.gdsn(index.gdsn(f, "description"))
@@ -59,7 +61,7 @@ node <- index.gdsn(f, "genotype/data")
 objdesp.gdsn(node)$dim
 ### [1]    2   90 1348   (ploidy x sample x variants)
 readex.gdsn(node, sel=list(1:2, 1:3, 1:3))
-seqClose(f)
+seqArray::seqClose(f)
 ```
 
 # VariantExperiment
@@ -102,6 +104,7 @@ dat <- read.gdsn(index.gdsn(f, "genotype/data"))
 dat <- aperm(dat, perm=c(3,2,1))
 closefn.gds(f)
 assays(se)[[1]] <- dat
+## assays(se) <- list(genotype_data=dat)
 asy <- assay(se, 1)
 dim(asy)
 class(asy)

@@ -20,12 +20,11 @@
 }
 
 ## do not return value, just rewrite the assay data into gds file.
-.write_gds_assays <- function(se, gds_path, verbose, allow.duplicate){
-    nassay <- length(assays(se))
-    namesAssay <- names(assays(se))
-    namesAssay <- sub("/", "_", namesAssay)
-
-    gfile <- createfn.gds(filename=gds_path, allow.duplicate=allow.duplicate)
+.write_gds_assays <- function(se, nassay, namesAssay, gds_path, verbose){
+    ## nassay <- length(assays(se))
+    ## namesAssay <- names(assays(se))
+    ## namesAssay <- gsub("/", "_", namesAssay)
+    gfile <- createfn.gds(filename=gds_path)
     on.exit(closefn.gds(gfile))
     put.attr.gdsn(gfile$root, "FileFormat", "SE_ARRAY")
     add.gdsn(gfile, "sample.id", val=colnames(se))
@@ -36,6 +35,9 @@
         if (verbose)
             message("Start writing assay ", i, "/", nassay, " to '",
                     gds_path, "':")
+        if(inherits(a, "GDSArray")){
+            a <- as.array(a)
+        }
         add.gdsn(gfile, namesAssay[i], val=a)
         ## a <- HDF5Array::writeHDF5Array(a, h5_path, h5_name, chunk_dim, level, verbose=verbose)
         if (verbose)
@@ -64,7 +66,7 @@
 #' @importFrom SummarizedExperiment assays assay "assays<-"
 #' @export
 saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
-                                           allow.duplicate=FALSE,
+                                           ## allow.duplicate=FALSE,
                                            verbose=FALSE){
     if (!is(x, "SummarizedExperiment"))
         stop("'x' must be a SummarizedExperiment object")
@@ -87,14 +89,15 @@ saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
     
     nassay <- length(assays(x))
     namesAssay <- names(assays(x))
-    namesAssay_new <- sub("/", "_", namesAssay)
+    namesAssay_new <- gsub("/", "_", namesAssay)
 
     ## write and save assay data as gds format.
-    .write_gds_assays(x, gds_path, allow.duplicate, verbose)
+    .write_gds_assays(x, nassay, namesAssay_new, gds_path, verbose)
 
-    ## save assay data as GDSArray
+    ## save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
     for (i in seq_len(nassay)){
-        assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
+        if(is.array(assays(x)[[i]]))
+            assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
     }
     names(assays(x)) <- namesAssay
     ## todo: write the gdsfile "makeSummarizeExperimentFromGDS" and save as. 
@@ -139,7 +142,8 @@ loadGDSSummarizedExperiment <- function(dir="my_gds_se")
         .stop_if_bad_dir(dir)
     for (i in seq_along(assays(ans))) {
         a <- assay(ans, i, withDimnames=FALSE)
-        if (!is(a, "GDSArray") || !identical(basename(a@seed@file), "assays.gds"))
+        if (!is(a, "GDSArray"))
+            ## if(!identical(basename(gdsfile(a)), "assays.gds"))
             ## || !(a@seed@name %in% h5_datasets))
             .stop_if_bad_dir(dir)
         ## a@seed@file <- file_path_as_absolute(file.path(dir, a@seed@file))

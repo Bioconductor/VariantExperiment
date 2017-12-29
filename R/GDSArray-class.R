@@ -116,13 +116,13 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         names.gdsn <- all.gdsn
         }
     }
-    isarray <- sapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
-    dims <- lapply(all.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
+    isarray <- sapply(names.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
+    dims <- lapply(names.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
     ## names(dims) <- all.gdsn
-    all.gdsn[isarray &
+    names.gdsn[isarray &
              lengths(dims) > 1 &
              !unlist(lapply(dims, function(x) any(x == 0L))) &
-             !grepl("~", all.gdsn)
+             !grepl("~", names.gdsn)
              ## what's the pattern with genotype/~data, phase/~data,
              ## annotation/format/DP/~data
              ]

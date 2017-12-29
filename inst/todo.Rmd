@@ -1,3 +1,5 @@
+## loadGDSSE(), if(identical(basename(gdsfile(a)), "assays.gds")) does not work.
+
 Look into "~data" in `SeqArray`. 
 ```{r}
 showMethods("info", where=getNamespace("SeqArray"))

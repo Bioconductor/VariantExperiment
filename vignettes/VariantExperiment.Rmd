@@ -60,61 +60,92 @@ get.attr.gdsn(index.gdsn(f, "description"))
 node <- index.gdsn(f, "genotype/data")
 objdesp.gdsn(node)$dim
 ### [1]    2   90 1348   (ploidy x sample x variants)
-readex.gdsn(node, sel=list(1:2, 1:3, 1:3))
-seqArray::seqClose(f)
+aperm(readex.gdsn(node, sel=list(1:2, 1:3, 1:5)), perm=c(3,2,1))
+SeqArray::seqClose(f)
 ```
 
 # VariantExperiment
-The package of `VariantExperiment` is implemented to represent GDS using standard SummarizedExperiment metaphor. It could save high-throughput genetic/genomic data (e.g., genotyping/sequencing data) within the `SummarizedExperiment` structure. It is more like a container right now. We are working to make it interoperable with the existing functions in `SNPRelate` and `SeqVarTools` designed for gds data. 
+The package of `VariantExperiment` is implemented to represent GDS using standard SummarizedExperiment metaphor. It could save high-throughput genetic/genomic data (e.g., genotyping/sequencing data) within the `SummarizedExperiment` structure. It is more like a container right now. We are working to make it more interoperable with the existing functions in `SNPRelate` and `SeqVarTools` designed for gds data. 
 
 ## GDSArraySeed, GDSArray, and DelayedArray
 
-GDSArray is the GDS back-end data for DelayedArray, which could be easily stick into SummarizedExperiment, and have on-disk reading and processing of the array data in SE. Common operations on `SummarizedExperiment` could be applied to the assays in GDSArray format, including the subsetting, getters and setters.  
+GDSArray is the GDS back-end data for DelayedArray, which could be easily stick into SummarizedExperiment, and have on-disk reading and processing of the assay data in SE. Common operations on `SummarizedExperiment` could be applied to the assays in GDSArray format, including the subsetting, getters and setters.  
 ```{r, GDSArray}
 seed <- GDSArraySeed(file, "genotype/data")
 slotNames(seed)
+```
+If the slot `permut` equals to `TRUE`, it means that the gdsnode inside the gds file is in a permuted dimension as in the `GDSArraySeed` and `GDSArray`. The first two dimensions of `GDSArraySeed` and `GDSArray` always corresponds to `genes/variants/snps` and `samples`. When using `[` for subsetting, it will read the on-disk gds data in a permuted way.   
+```{r, permute}
 seed@permute
 ga <- GDSArray(file)  
 ga <- GDSArray(seed)  ### equivalent
-ga[1:5, 1:3, ]
+ga[1:5, 1:3, ]  ## The genotype for first 5 variants, and first 3 samples.
+f <- openfn.gds(file)
+aperm(readex.gdsn(index.gdsn(f, "genotype/data"), sel=list(1:2, 1:3, 1:5)), perm=c(3,2,1))
+closefn.gds(f)
+```
+The `DelayedArray(GDSArraySeed)` will return the `GDSArray` data, which has the same content as the `GDSMatrix` returned from `GDSArray(GDSArraySeed)`.
+```{r, da}
 da <- DelayedArray(seed)
-### aperm(as.array(ga[1:5, 1:3, ]), c(3,2,1))
+class(da)
 ```
 
-## SummarizedExperiment with GDS back-end array data.
+## SummarizedExperiment with GDS back-end assay data.
 
 GDSArray is the GDS back-end DelayedArray, which could stick into the SummarizedExperiment by function `makeSummarizedExperimentFromGDS()`. 
 ```{r, SEGDSArray}
 se <- makeSummarizedExperimentFromGDS(file)
-se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ID", "REF", "ALT"), colDataColumns=c("family"))
-rm(se1)
-dim(assay(se))
-assay(se)[1:5, 1:3, ]
-## saveRDS(se, file="inst/extdata/CEU_Exon_gse.rds")
+se
+names(assays(se))
+assay(se, 1)
+```
+
+By default, the `rowData` and `colData` are also read into the SummarizedExperiment object in `GDSArray` format. User could use the arguments `rowDataOnDisk` and `colDataOnDisk` to change the setting.
+```{r, rowColData}
+rowData(se)
+colData(se)
+se1 <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=FALSE, colDataOnDisk=FALSE)
+rowData(se1)
+colData(se1)
+```
+User could also use the function `showAvailable` for available values for other arguments in the function of `makeSummarizedExperimentFromGDS`. Note that the `infoColumns` for `SEQ_ARRAY` data will save as columns inside the `rowData(SE)`, with the prefix of "info_".
+```{r, showAvail}
+args(makeSummarizedExperimentFromGDS)
+showAvailable(file)
+se2 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ID", "REF", "ALT"), infoColumns=c("AA", "DP", "OR", "GP"), rowDataOnDisk=FALSE)
+rowData(se2)
+rowRanges(se2)
 ```
 
 
 ## `save/loadGDSSummarizedExperiment`
-Use these 2 functions to save an SE object with ordinary array data into the SE object with GDSArray data, and load the newly generated GDSArray SE object. 
+Use the function `saveGDSSummarizedExperiment` to save an SE object with ordinary in-memory array data into the SE object with GDSArray data. 
+Question: Could we also save the `rowData` and `colData` as GDSArray? If that, the `rowData` and `colData` should also be saved as GDS node in the gds file, in order to use the function `GDSArray`. Create gds folder as `rowData` and `colData` to save the corresponding information. 
 
-```{r, saveLoad}
-### rewrite the DelayedArray data to be an array.
+```{r, save}
+### rewrite the DelayedArray data to be array/matrix.
+assays(se)
 f <- openfn.gds(file)
-dat <- read.gdsn(index.gdsn(f, "genotype/data"))
-dat <- aperm(dat, perm=c(3,2,1))
+a1 <- aperm(read.gdsn(index.gdsn(f, "genotype/data")), perm=c(3,2,1))
+a2 <- aperm(read.gdsn(index.gdsn(f, "phase/data")), perm=c(2,1))
+a3 <- aperm(read.gdsn(index.gdsn(f, "annotation/format/DP/data")), perm=c(2,1))
 closefn.gds(f)
-assays(se)[[1]] <- dat
-## assays(se) <- list(genotype_data=dat)
-asy <- assay(se, 1)
-dim(asy)
-class(asy)
+assays(se) <- setNames(list(a1, a2, a3), names(assays(se)))
+dim(assay(se, 1))
+class(assay(se,1))
 
 ## save/loadGDSSummarizedExperiment
 se1 <- saveGDSSummarizedExperiment(se, dir="my_gds_se", replace=TRUE, verbose=TRUE)
 assay(se1, 1)
+assay(se1, 2)
+assay(se1, 3)
+```
+
+Use the function `loadGDSSummarizedExperiment` to load the newly generated GDSArray SE object. 
+```{r, load}
 se2 <- loadGDSSummarizedExperiment(dir="my_gds_se")
 assay(se2, 1)
-all.equal(assay(se1), assay(se2))
+all.equal(assays(se1), assays(se2))
 ```
 
 ## VariantExperiment common SE operations
@@ -122,14 +153,14 @@ all.equal(assay(se1), assay(se2))
 - `rowRanges()` / (`rowData()`), `colData()`, `metadata()`
 ```{r getSet}
 library(SummarizedExperiment)
-SummarizedExperiment::rowRanges(se2)
-head(SummarizedExperiment::colData(se2))
-head(SummarizedExperiment::rowData(se2))
+rowRanges(se2)
+head(colData(se2))
+head(rowData(se2))
 metadata(se2)
 ```
 
 ### subsetting functions
-- two-dimension subsetting
+- two-dimensional subsetting
 ```{r, 2d}
 se2[1:10, 1:5]
 ```
@@ -157,7 +188,7 @@ rowData(subsetByOverlaps(se2, GRanges("22:1-48958933")))
 
 
 # Future work
-- Make the meta data for rows and cols on-disk reading. 
+- Make the meta data for rows and cols on-disk reading.  -- done!
 - More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis. 
 - Develop a pipeline for using `VariantExperiment` as the basic data structure for DNA-sequencing data analysis.  
 

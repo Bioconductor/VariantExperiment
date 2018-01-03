@@ -266,7 +266,7 @@ GDSArraySeed <- function(file, name=NA){
 
     first_val <- .read_gdsdata_first_val(f, node = name)
     permute = !.read_gdsdata_sampleInCol(f, node = name, fileFormat = ff)
-
+    ## ?? file instead of f here? 
     if(permute){
         dims <- rev(dims)
         dimnames <- dimnames[rev(seq_len(length(dimnames)))]

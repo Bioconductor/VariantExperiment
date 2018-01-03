@@ -20,10 +20,7 @@
 }
 
 ## do not return value, just rewrite the assay data into gds file.
-.write_gds_assays <- function(se, nassay, namesAssay, gds_path, verbose){
-    ## nassay <- length(assays(se))
-    ## namesAssay <- names(assays(se))
-    ## namesAssay <- gsub("/", "_", namesAssay)
+.write_assay_as_gds <- function(se, nassay, namesAssay, gds_path, verbose){
     gfile <- createfn.gds(filename=gds_path)
     on.exit(closefn.gds(gfile))
     put.attr.gdsn(gfile$root, "FileFormat", "SE_ARRAY")
@@ -31,13 +28,14 @@
     add.gdsn(gfile, "row.id", val=rownames(se))
     
     for (i in seq_len(nassay)) {
+        ## only consider the in-memory array in assay data.
         a <- assays(se)[[i]]
         if (verbose)
             message("Start writing assay ", i, "/", nassay, " to '",
                     gds_path, "':")
-        if(inherits(a, "GDSArray")){
-            a <- as.array(a)
-        }
+        ## if(inherits(a, "GDSArray")){
+        ##     a <- as.array(a)
+        ## }
         add.gdsn(gfile, namesAssay[i], val=a)
         ## a <- HDF5Array::writeHDF5Array(a, h5_path, h5_name, chunk_dim, level, verbose=verbose)
         if (verbose)
@@ -92,9 +90,10 @@ saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
     namesAssay_new <- gsub("/", "_", namesAssay)
 
     ## write and save assay data as gds format.
-    .write_gds_assays(x, nassay, namesAssay_new, gds_path, verbose)
+    .write_assay_as_gds(x, nassay, namesAssay_new, gds_path, verbose)
 
     ## save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
+    ## by default, the input SE should have in-memory array data for all assays.
     for (i in seq_len(nassay)){
         if(is.array(assays(x)[[i]]))
             assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
@@ -105,7 +104,6 @@ saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
     ans <- x
     ## x@assays <- .shorten_gds_paths(x@assays)
     saveRDS(x, file=rds_path)
-    
     invisible(ans)
 }
 

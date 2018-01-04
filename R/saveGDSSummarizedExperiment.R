@@ -44,6 +44,75 @@
     }
 }
 
+.write_rowData_into_gds <- function(se, gds_path, verbose){
+    gfile <- openfn.gds(gds_path, readonly=FALSE)
+    on.exit(closefn.gds(gfile))
+    rdnode <- addfolder.gdsn(gfile, name="rowData", type="directory")
+    ## lapply(rowData(se), function(x) add.gdsn(rdnode, val=x))
+    rd <- rowData(se)
+    for(i in seq_len(ncol(rd))){
+        name <- names(rd)[i]
+        a <- rd[[i]]
+        if (verbose)
+            message("Start writing rowData column ", i, "/", ncol(rd), " to '",
+                    gds_path, "':")
+        ## if(isS4(a))
+        ## Error in add.gdsn(rdnode, name, val = a) :
+        ## No support of the storage mode 'S4'.
+        if(is(a, "XStringSetList"))  ## DNAStringSetList
+            a <- sapply(a, function(x) paste(x, collapse="/"))
+        else if(is(a, "XStringSet") | is(a, "AtomicList"))
+            ## DNAStringSet|CharacterList is(a)
+            a <- as.character(a)
+        suppressWarnings(add.gdsn(rdnode, name, val=a, replace=TRUE))
+        if (verbose)
+            message("Finished writing rowData column ", i, "/", ncol(rd), " to '",
+                    gds_path, "':")
+    }
+}
+
+.write_annoData_into_gds <- function(se, gds_path, rowORcol, verbose){
+    gfile <- openfn.gds(gds_path, readonly=FALSE)
+    on.exit(closefn.gds(gfile))
+    annonode <- addfolder.gdsn(gfile, name=paste0(rowORcol, "Data"),
+                               type="directory", replace=TRUE)
+    if(rowORcol == "row") data <- rowData(se) else data <- colData(se)
+    for(i in seq_len(ncol(data))){
+        name <- names(data)[i]
+        a <- data[[i]]
+        if (verbose)
+            message("Start writing ", rowORcol, "Data column ", i, "/", ncol(data),
+                    " to '", gds_path, "':")
+        ## if(isS4(a))
+        ## Error in add.gdsn(datanode, name, val = a) :
+        ## No support of the storage mode 'S4'.
+        if(is(a, "XStringSetList"))  ## DNAStringSetList
+            a <- sapply(a, function(x) paste(x, collapse="/"))
+        else if(is(a, "XStringSet") | is(a, "AtomicList"))
+            ## DNAStringSet|CharacterList is(a)
+            a <- as.character(a)
+        suppressWarnings(add.gdsn(annonode, name, val=a, replace=TRUE))
+        if (verbose)
+            message("Finished writing rowData column ", i, "/", ncol(data), " to '",
+                    gds_path, "':")
+    }
+}
+
+.annodata_ondisk <- function(gdsfile, rowORsample, name){
+    gfile <- openfn.gds(gdsfile)
+    on.exit(closefn.gds(gfile))
+    anno.id <- read.gdsn(index.gdsn(gfile, paste0(rowORsample, ".id")))
+    node <- ifelse(rowORsample == "row", paste0("rowData/", name), paste0("colData/", name))
+    seed <- new("GDSArraySeed",
+                file=gdsfile,
+                name=node,
+                dim=.get_gdsdata_dim(gfile, node),
+                dimnames=list(anno.id),  ## for snp/variant nodes only.
+                permute=FALSE,
+                first_val="ANY")
+    DelayedArray(seed)  ## return a DelayedArray/GDSArray object without names.
+}
+
 ## .shorten_gds_paths <- function(assays){
 ##     nassay <- length(assays)
 ##     for (i in seq_len(nassay)) {
@@ -59,18 +128,17 @@
 #' @param x A SummarizedExperiment object, with the array data being ordinary array structure.
 #' @param dir The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.
 #' @param replace Whether to replace the directory if it already exists. The default is FALSE.
-#' @param allow.duplicate Whether to allow to open a GDS file with read-only mode when it has been opened in the same R session. The default is FALSE.
+#' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
+#' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default is FALSE.
 #' @importFrom SummarizedExperiment assays assay "assays<-"
 #' @export
-saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
-                                           ## allow.duplicate=FALSE,
-                                           verbose=FALSE){
-    if (!is(x, "SummarizedExperiment"))
-        stop("'x' must be a SummarizedExperiment object")
+saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, rowDataOnDisk=TRUE, colDataOnDisk=TRUE, verbose=FALSE){
+    if (!is(se, "SummarizedExperiment"))
+        stop("'se' must be a SummarizedExperiment object")
     if (!isSingleString(dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
-                  "to the directory where to save the ", class(x),
+                  "to the directory where to save the ", class(se),
                   " object (the directory will be created)"))
     if (!isTRUEorFALSE(replace))
         stop("'replace' must be TRUE or FALSE")
@@ -85,25 +153,45 @@ saveGDSSummarizedExperiment <- function(x, dir="my_gds_se", replace=FALSE,
   
     gds_path <- file.path(dir, "assays.gds")
     
-    nassay <- length(assays(x))
-    namesAssay <- names(assays(x))
+    nassay <- length(assays(se))
+    namesAssay <- names(assays(se))
     namesAssay_new <- gsub("/", "_", namesAssay)
 
     ## write and save assay data as gds format.
-    .write_assay_as_gds(x, nassay, namesAssay_new, gds_path, verbose)
+    .write_assay_as_gds(se, nassay, namesAssay_new, gds_path, verbose)
 
     ## save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
     ## by default, the input SE should have in-memory array data for all assays.
     for (i in seq_len(nassay)){
-        if(is.array(assays(x)[[i]]))
-            assays(x)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
+        if(is.array(assays(se)[[i]]))
+            assays(se)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
     }
-    names(assays(x)) <- namesAssay
-    ## todo: write the gdsfile "makeSummarizeExperimentFromGDS" and save as. 
+    names(assays(se)) <- namesAssay
+
+    if(rowDataOnDisk){
+        .write_annoData_into_gds(se, gds_path, "row", verbose)
+        res <- setNames(
+            lapply(names(rowData(se)), function(x)
+                .annodata_ondisk(gds_path, "row", name=x)),
+            names(rowData(se)))
+        resDF <- DataFrame(lapply(res, I))
+        rowData(se) <- resDF
+    }
+    
+    if(colDataOnDisk){
+        .write_annoData_into_gds(se, gds_path, "col", verbose)
+        res <- setNames(
+            lapply(names(colData(se)), function(x)
+                .annodata_ondisk(gds_path, "sample", name=x)),
+            names(colData(se)))
+        resDF <- DataFrame(lapply(res, I))
+        colData(se) <- resDF
+    }
+
     rds_path <- file.path(dir, "se.rds")
-    ans <- x
-    ## x@assays <- .shorten_gds_paths(x@assays)
-    saveRDS(x, file=rds_path)
+    ans <- se
+    ## se@assays <- .shorten_gds_paths(se@assays)
+    saveRDS(se, file=rds_path)
     invisible(ans)
 }
 

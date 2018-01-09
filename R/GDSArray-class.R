@@ -82,6 +82,7 @@ setMethod(
             permdim <- rev(seq_len(length(index)))
             index <- index[permdim] ## multi-dimensional supported
             ans <- aperm(readex.gdsn(index.gdsn(f, x@name), index), permdim)
+            ## same: ans <- aperm(readex.gdsn(index.gdsn(f, x@name), index))
         }else{
             ans <- readex.gdsn(index.gdsn(f, x@name), index)
         }

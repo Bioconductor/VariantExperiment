@@ -6,7 +6,8 @@
 Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.}
 \usage{
 saveGDSSummarizedExperiment(se, dir = "my_gds_se", replace = FALSE,
-  rowDataOnDisk = TRUE, colDataOnDisk = TRUE, verbose = FALSE)
+  compress = "LZMA_RA", chunk_size = 10000, rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{dir}{The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.}

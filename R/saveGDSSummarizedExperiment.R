@@ -19,33 +19,35 @@
         stop("cannot create directory \"", dir, "\"")
 }
 
-.create_seqgds <- function(se, gds_path){
+.create_seqgds <- function(se, gds_path, compress){
     gfile <- createfn.gds(filename=gds_path)
     on.exit(closefn.gds(gfile))
     put.attr.gdsn(gfile$root, "FileFormat", "SEQ_ARRAY")
     put.attr.gdsn(gfile$root, "FileVersion", "v1.0")
     dscp <- addfolder.gdsn(gfile, "description", replace=TRUE)
     put.attr.gdsn(dscp, "source.format", "GDSArray-based SummarizedExperiment")
-    add.gdsn(gfile, "sample.id", colnames(se), compress="LZMA_RA", closezip=TRUE)
+    add.gdsn(gfile, "sample.id", colnames(se), compress=compress, closezip=TRUE)
     add.gdsn(gfile, "variant.id", as.integer(rownames(se)),
-             compress="LZMA_RA", closezip=TRUE)
-    add.gdsn(gfile, "chromosome", as.character(seqnames(rowRanges(se))),
-             compress="LZMA_RA", closezip=TRUE)
-    add.gdsn(gfile, "position", ranges(rowRanges(se))@start,
-             compress="LZMA_RA", closezip=TRUE) ## ??
+             compress=compress, closezip=TRUE)
+    add.gdsn(gfile, "chromosome", as.character(seqnames(SummarizedExperiment::rowRanges(se))),
+             compress=compress, closezip=TRUE)
+    add.gdsn(gfile, "position", ranges(SummarizedExperiment::rowRanges(se))@start,
+             compress=compress, closezip=TRUE) ## ??
     if(all(c("REF", "ALT") %in% names(rowData(se)))){
-        ref <- mcols(rowRanges(se))$REF
-        alt <- mcols(rowRanges(se))$ALT
+        ## ref <- mcols(rowRanges(se))$REF
+        ## alt <- mcols(rowRanges(se))$ALT
+        ref <- rowData(se)$REF
+        alt <- rowData(se)$ALT
         if(is(ref, "List"))  ## "DNAStringSet" in-memory way
             ref <- unlist(lapply(ref, function(x) paste(x, collapse=",")))
         if(is(alt, "List"))  ## "DNAStringSetList" in-memory way
             alt <- unlist(lapply(alt, function(x) paste(x, collapse=",")))
         add.gdsn(gfile, "allele", val = paste(ref, alt, sep=","),
-                 compress="LZMA_RA", closezip=TRUE)
+                 compress=compress, closezip=TRUE)
     }
 }
 
-.create_snpgds <- function(se, gds_path){
+.create_snpgds <- function(se, gds_path, compress){
     ## use "LZMA_RA" as default "compress" argument
     gfile <- createfn.gds(filename=gds_path)
     on.exit(closefn.gds(gfile))
@@ -53,27 +55,28 @@
     dscp <- addfolder.gdsn(gfile, "description", replace=TRUE)
     put.attr.gdsn(dscp, "source.format", "GDSArray-based SummarizedExperiment")
     ## "description" not required for "SNP_ARRAY" gds file.
-    add.gdsn(gfile, "sample.id", colnames(se), compress="LZMA_RA", closezip=TRUE)
-    add.gdsn(gfile, "snp.id", as.integer(rownames(se)), compress="LZMA_RA",
+    add.gdsn(gfile, "sample.id", colnames(se), compress=compress, closezip=TRUE)
+    add.gdsn(gfile, "snp.id", as.integer(rownames(se)), compress=compress,
              closezip=TRUE, replace=T)
-    ## if("ID" %in% names(rowData(se)))
-    ##     add.gdsn(gfile, "snp.rs.id", rowData(se)$ID,
-    ##              compress="LZMA_RA", closezip=TRUE)
-    ## add.gdsn(gfile, "snp.rs.id", as.integer(rownames(se)), compress="LZMA_RA", replace=T)
+    if("ID" %in% names(rowData(se)))
+        add.gdsn(gfile, "snp.rs.id", as.character(rowData(se)$ID),
+                 compress=compress, closezip=TRUE)
     add.gdsn(gfile, "snp.chromosome", as.character(seqnames(SummarizedExperiment::rowRanges(se))),
-             compress="LZMA_RA", closezip=TRUE)
-    add.gdsn(gfile, "snp.position", ranges(rowRanges(se))@start,
-             compress="LZMA_RA", closezip=TRUE) ## ??
+             compress=compress, closezip=TRUE)
+    add.gdsn(gfile, "snp.position", ranges(SummarizedExperiment::rowRanges(se))@start,
+             compress=compress, closezip=TRUE) ## ??
     if(all(c("ALLELE1", "ALLELE2") %in% names(rowData(se))))
         add.gdsn(gfile, "snp.allele",
-                 val = paste(mcols(rowRanges(se))$ALLELE1,
-                             mcols(rowRanges(se))$ALLELE2,
+                 val = paste(## mcols(rowRanges(se))$ALLELE1,
+                             ## mcols(rowRanges(se))$ALLELE2,
+                             rowData(se)$ALLELE1,
+                             rowData(se)$ALLELE2,
                              sep="/"),
-                 compress="LZMA_RA", closezip=TRUE
+                 compress=compress, closezip=TRUE
                  )  ## "," separated.
 }
  
-.write_sedata_as_gds <- function(data, name, ff, gds_path, chunk_size = 1000, nrow, ncol) {
+.write_sedata_as_gds <- function(data, name, ff, gds_path, chunk_size, nrow, ncol, compress) {
     gfile <- openfn.gds(gds_path, readonly=FALSE)
     on.exit(closefn.gds(gfile))
 
@@ -82,7 +85,9 @@
         perm <- seed(data)@permute
     } else{
         if(length(data) == nrow) {
+            if(name %in% c("ID", "QUAL", "FILTER")) name <- tolower(name)
             name <- paste0("annotation/", sub("_", "/", name))
+            ## sub for "info_" nodes.
         } else if(length(data) == ncol){
             pre <- ifelse(ff=="SEQ_ARRAY", "sample.annotation", "sample.annot")
             name <- paste(pre, name, sep="/")
@@ -103,7 +108,7 @@
             dirnode <- index.gdsn(dirnode, directory)
         }
     }
-    ## FIXME: if a matrix / array, do this in 'chunks', e.g., of 10,000 rows
+    ## if a matrix / array, do this in 'chunks', e.g., of 10,000 rows
     idx <- seq(1, nrow(data), by = chunk_size)
     for (start in idx) {
         ridx = (start - 1) +
@@ -118,28 +123,18 @@
         if (perm) value = aperm(value)
         if(start == 1){
             datanode <- add.gdsn(dirnode, tail(datapath, 1),
-                                 val = value, compress = "LZMA_RA", check=T)
+                                 val = value, compress = compress, check=T)
         } else {
             datanode <- index.gdsn(gfile, name)
             append.gdsn(datanode, val=value, check=T) ##?? FIXME?
         }
     }
+    ## add attribute for "snp_array" genotype node. 
+    if(name == "genotype"){
+        ord <- ifelse(perm, "sample.order", "snp.order")
+        put.attr.gdsn(datanode, ord)
+    }
 }
-## .annodata_ondisk <- function(gds_path, name){
-##     gfile <- openfn.gds(gds_path)
-##     on.exit(closefn.gds(gfile))
-##     ## anno.id <- read.gdsn(index.gdsn(gfile, paste0(rowORsample, ".id")))
-##     ## node <- ifelse(rowORsample == "row", paste0("rowData/", name), paste0("colData/", name))
-##     seed <- new("GDSArraySeed",
-##                 file=gds_path,
-##                 name=node,
-##                 dim=.get_gdsdata_dim(gfile, node),
-##                 dimnames=list(anno.id),  ## for snp/variant nodes only.
-##                 permute=FALSE,
-##                 first_val="ANY")
-##     DelayedArray(seed)  ## return a DelayedArray/GDSArray object without names.
-## }
-
 ## .shorten_gds_paths <- function(assays){
 ##     nassay <- length(assays)
 ##     for (i in seq_len(nassay)) {
@@ -158,9 +153,9 @@
 #' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default is FALSE.
-#' @importFrom SummarizedExperiment assays assay "assays<-"
+#' @importFrom SummarizedExperiment colData rowRanges rowData assays assay "assays<-"
 #' @export
-saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, rowDataOnDisk=TRUE, colDataOnDisk=TRUE, verbose=FALSE){
+saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, compress="LZMA_RA", chunk_size=10000, rowDataOnDisk=TRUE, colDataOnDisk=TRUE, verbose=FALSE){
     if (!is(se, "SummarizedExperiment"))
         stop("'se' must be a SummarizedExperiment object")
     if (!isSingleString(dir))
@@ -173,77 +168,76 @@ saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, rowD
         stop("'verbose' must be TRUE or FALSE")
     
     .create_dir(dir, replace)
-    gds_path <- file.path(dir, "assays.gds")
+    gds_path <- file.path(dir, "se.gds")
     ff <- .get_gdsdata_fileFormat(gdsfile(se)[1])
 
-    ## write and save se data as gds format.
-    if(ff == "SEQ_ARRAY") .create_seqgds(se, gds_path)
-    if(ff == "SNP_ARRAY") .create_snpgds(se, gds_path)
+    ## write and save se data as gds file.
+    if(ff == "SEQ_ARRAY") .create_seqgds(se, gds_path, compress)
+    if(ff == "SNP_ARRAY") .create_snpgds(se, gds_path, compress)
     ## error: unable to find an inherited method for function ‘rowRanges’ for signature ‘"RangedSummarizedExperiment"
-   
+
+    ###
+    ## Write gds file from SE with all contents
+    ###
+
+    ### assays
     for (elt in seq_along(assays(se))){
         if(verbose) message("Assay ", elt, "/", length(assays(se)), ": ",
                             names(assays(se))[elt] )
-        .write_sedata_as_gds(assays(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se))
+        .write_sedata_as_gds(assays(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se), compress)
     }
+    ### rowRanges
     rnms <- names(rowData(se))
-    if(ff == "SEQ_ARRAY") id.al <- match(c("REF", "ALT"), rnms) ## test needed.
-    if(ff == "SNP_ARRAY") id.al <- grep("ALLELE", rnms) 
+    if(ff == "SEQ_ARRAY") id.al <- match(c("REF", "ALT"), rnms)
+    ## generated already with ".create_seqgds"
+    if(ff == "SNP_ARRAY") id.al <- grep("ALLELE", rnms)
+    ## generated already with ".create_snpgds"
     for (elt in rnms[-id.al]){
         if(verbose) message( "rowData: ", elt )
-        .write_sedata_as_gds(rowData(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se))
+        .write_sedata_as_gds(rowData(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se), compress)
     }
-    for (elt in names(colData(se))){
+    ### colData
+    for (elt in names(SummarizedExperiment::colData(se))){
         if(verbose) message( "colData: ", elt )
-        .write_sedata_as_gds(colData(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se))
+        .write_sedata_as_gds(colData(se)[[elt]], elt, ff, gds_path, chunk_size, nrow(se), ncol(se), compress)
     }
 
-    ## todo: refer to makeSEfromGDS:: .
-    colData <- .colData_gdsdata(gds_path, ff, names(colData(se)), colDataOnDisk)
-    rowRange <- .rowRanges_gdsdata(gds_path, ff, names(rowData(se)), rowDataOnDisk)
-    ## todo: remove info columns for rowData(se)
-    ## error: Invalid SNP GDS file: invalid dimension of 'genotype'.
     
-    if(ff == "SEQ_ARRAY"){
-        infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
-        mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
-    }
-    ## colData(se) <- colData
-    
-    
+    ###
+    ## save the new SE with new GDS file. 
+    ### 
+
+    ### save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
     nassay <- length(assays(se))
     namesAssay <- names(assays(se))
-    ## namesAssay_new <- gsub("/", "_", namesAssay)
-
-    ## save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
-    ## by default, the input SE should have in-memory array data for all assays.
     for (i in seq_len(nassay)){
         if(is.array(assays(se)[[i]]))
             assays(se)[[i]] <- GDSArray(gds_path, name=namesAssay[i])
-        ## assays(se)[[i]] <- GDSArray(gds_path, name=namesAssay_new[i])
     }
     names(assays(se)) <- namesAssay
 
-    ## if(rowDataOnDisk){
-    ##     .write_annoData_into_gds(se, gds_path, "row", verbose)
-    ##     res <- setNames(
-    ##         lapply(names(rowData(se)), function(x)
-    ##             .annodata_ondisk(gds_path, "row", name=x)),
-    ##         names(rowData(se)))
-    ##     resDF <- DataFrame(lapply(res, I))
-    ##     rowData(se) <- resDF
-    ## }
-    
-    ## if(colDataOnDisk){
-    ##     .write_annoData_into_gds(se, gds_path, "col", verbose)
-    ##     res <- setNames(
-    ##         lapply(names(colData(se)), function(x)
-    ##             .annodata_ondisk(gds_path, "sample", name=x)),
-    ##         names(colData(se)))
-    ##     resDF <- DataFrame(lapply(res, I))
-    ##     colData(se) <- resDF
-    ## }
-
+    ### save GDSArray-based colData if previous in-memory
+    if(colDataOnDisk & ! "GDSArray" %in% lapply(colData(se), class)){
+        colData <- .colData_gdsdata(gds_path, ff, names(colData(se)), colDataOnDisk)
+        colData(se) <- colData
+    }
+    ### save GDSArray-based rowData if previous in-memory
+    if(rowDataOnDisk & ! "GDSArray" %in% lapply(rowData(se), class)){
+        rowDataColumns <- sub("[0-9]", "", names(rowData(se)))
+        ## "snp_array", sub "ALLELE1/2" with "ALLELE"
+        rowDataColumns <- rowDataColumns[!grepl("info_", rowDataColumns)]
+        ## "seq_array", remove all "info_" columns.
+        rowRange <- .rowRanges_gdsdata(gds_path, ff, rowDataColumns, rowDataOnDisk)
+        ## add "info_" columns for "seq_array".
+        if(ff == "SEQ_ARRAY"){
+            infoColumns <- names(rowData(se))[grepl("info_", names(rowData(se)))]
+            infoColumns <- sub("info_", "", infoColumns)
+            infocols <- .info_seqgds(gdsfile(se)[1], infoColumns, rowDataOnDisk)
+            mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
+        }
+        rowRanges(se) <- rowRange
+    }
+    ## save new se file in ".rds"
     rds_path <- file.path(dir, "se.rds")
     ans <- se
     ## se@assays <- .shorten_gds_paths(se@assays)
@@ -266,30 +260,20 @@ saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, rowD
 #' @export
 loadGDSSummarizedExperiment <- function(dir="my_gds_se")
 {
-    ## library(rhdf5)  # for h5ls()
-    ## library(HDF5Array)  # for the HDF5Array class
     if (!isSingleString(dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
                   "to the directory containing ", .THE_EXPECTED_STUFF))
-    gds_path <- file.path(dir, "assays.gds")
+    gds_path <- file.path(dir, "se.gds")
     rds_path <- file.path(dir, "se.rds")
     if (!file.exists(gds_path) || !file.exists(rds_path))
         .stop_if_bad_dir(dir)
-    ## h5_content <- try(rhdf5::h5ls(gds_path), silent=TRUE)
-    ## if (inherits(h5_content, "try-error"))
-    ##     .stop_if_bad_dir(dir)
-    ## h5_datasets <- h5_content[ , "name"]
     ans <- readRDS(rds_path)
     if (!is(ans, "SummarizedExperiment"))
         .stop_if_bad_dir(dir)
     for (i in seq_along(assays(ans))) {
         a <- assay(ans, i, withDimnames=FALSE)
         if (!is(a, "GDSArray"))
-            ## if(!identical(basename(gdsfile(a)), "assays.gds"))
-            ## || !(a@seed@name %in% h5_datasets))
             .stop_if_bad_dir(dir)
-        ## a@seed@file <- file_path_as_absolute(file.path(dir, a@seed@file))
-        ## assay(ans, i, withDimnames=FALSE) <- a
     }
     ans
 }

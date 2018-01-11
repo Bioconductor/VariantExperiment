@@ -92,7 +92,7 @@
             pre <- ifelse(ff=="SEQ_ARRAY", "sample.annotation", "sample.annot")
             name <- paste(pre, name, sep="/")
         }
-        perm <- FALSE  ## for im-memory assay data, write to gds as same dimension.
+        perm <- TRUE  ## for im-memory assay data, write to gds as reverse dimension.
         ## convert XList into array with dim.
         if(is(data, "List"))
             data <- unlist(lapply(data, function(x) paste(x, collapse=",")))
@@ -228,7 +228,7 @@ saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, file
         if(is.array(assays(se)[[i]]))
             assays(se)[[i]] <- GDSArray(gds_path, name=names(assays(se))[i])
     }
-    names(assays(se)) <- namesAssay
+    names(assays(se)) <- names(assays(se))
 
     ### save GDSArray-based colData if previous in-memory
     if(colDataOnDisk & ! "GDSArray" %in% lapply(colData(se), class)){

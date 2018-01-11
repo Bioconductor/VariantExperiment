@@ -6,13 +6,15 @@
 Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.}
 \usage{
 saveGDSSummarizedExperiment(se, dir = "my_gds_se", replace = FALSE,
-  compress = "LZMA_RA", chunk_size = 10000, rowDataOnDisk = TRUE,
-  colDataOnDisk = TRUE, verbose = FALSE)
+  fileFormat = NULL, compress = "LZMA_RA", chunk_size = 10000,
+  rowDataOnDisk = TRUE, colDataOnDisk = TRUE, verbose = FALSE)
 }
 \arguments{
 \item{dir}{The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.}
 
 \item{replace}{Whether to replace the directory if it already exists. The default is FALSE.}
+
+\item{fileFormat}{File format for the output gds file. See details.}
 
 \item{rowDataOnDisk}{whether to save the \code{rowData} as DelayedArray object. The default is TRUE.}
 
@@ -25,4 +27,7 @@ saveGDSSummarizedExperiment(se, dir = "my_gds_se", replace = FALSE,
 \description{
 saveGDSSummarizedExperiment
 Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.
+}
+\details{
+If the input \code{SummarizedExperiment} object has GDSArray-based assay data, there is no need to specify the argument \code{fileFomat}. Otherwise, it takes values of \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP array data.
 }

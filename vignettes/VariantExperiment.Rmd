@@ -1,7 +1,7 @@
 ---
 title: "_VariantExperiment_: A Ranged Summarized Experiment container for GDS back end data"
 author: "Qian Liu, Martin Morgan"
-date: "Revised: 22 Nov, 2017"
+date: "Revised: 12 Jan, 2017"
 abstract: >
   
   VariantExperiment is a Bioconductor package for saving the GDS format data into SummarizedExperiment object. The high-throughput genetic/genomic data saved in GDS format is converted into GDSArray object, which is an GDS back-end DelayedArray, and then stick into SummarizedExperiment to achieve on-disk reading and processing of array data with common SummarizedExperiment operation. 
@@ -119,33 +119,48 @@ rowRanges(se2)
 
 
 ## `save/loadGDSSummarizedExperiment`
-Use the function `saveGDSSummarizedExperiment` to save an SE object with ordinary in-memory array data into the SE object with GDSArray data. 
-Question: Could we also save the `rowData` and `colData` as GDSArray? If that, the `rowData` and `colData` should also be saved as GDS node in the gds file, in order to use the function `GDSArray`. Create gds folder as `rowData` and `colData` to save the corresponding information. 
+Use the function `saveGDSSummarizedExperiment` to save any SE object (with ordinary in-memory / GDSArray-based assay data) into the GDSArray-based SE object. Arguments of `rowDataOnDisk` and `colDataOnDisk` are supplied for users to save the `rowData(se) / colData(se)` with GDSArray-based `DataFrame`. By default, all the data slots of `SummarizedExperiment` objects (`assays()`, `rowData()`, `colData()`) are saved with GDSArray-based data.
 
 ```{r, save}
-### rewrite the DelayedArray data to be array/matrix.
-assays(se)
-f <- openfn.gds(file)
-a1 <- aperm(read.gdsn(index.gdsn(f, "genotype/data")), perm=c(3,2,1))
-a2 <- aperm(read.gdsn(index.gdsn(f, "phase/data")), perm=c(2,1))
-a3 <- aperm(read.gdsn(index.gdsn(f, "annotation/format/DP/data")), perm=c(2,1))
-closefn.gds(f)
-assays(se) <- setNames(list(a1, a2, a3), names(assays(se)))
-dim(assay(se, 1))
-class(assay(se,1))
+## save se1 as ordinary in-memory for all data slots
+file <- SeqArray::seqExampleFileName("gds")
+se <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=F, colDataOnDisk=F)
+se1 <- se
+for(i in seq_along(assays(se1))){
+    assays(se1)[[i]] <- unname(as.array(assays(se1)[[i]]))
+}
+lapply(assays(se1), class)
+rowData(se1)
+colData(se1)
 
-## save/loadGDSSummarizedExperiment
-se1 <- saveGDSSummarizedExperiment(se, dir="my_gds_se", replace=TRUE, verbose=TRUE)
-assay(se1, 1)
-assay(se1, 2)
-assay(se1, 3)
+## saveGDSSummarizedExperiment
+## drty <- tempdir()
+se2 <- saveGDSSummarizedExperiment(se1, replace=T, fileFormat="SEQ_ARRAY")
+se2
+lapply(assays(se2), class)
+assays(se2)[[1]]
+rowData(se2)
+colData(se2)
 ```
 
-Use the function `loadGDSSummarizedExperiment` to load the newly generated GDSArray SE object. 
+```{r, object_size}
+print(object.size(se[TRUE, TRUE]), units="auto")
+print(object.size(se), units="auto")  ## assays on-disk, row/colData in-memory
+print(object.size(se1), units="auto") ## assays/row/colData in-memory
+print(object.size(assays(se)), units="auto")
+## 280.7 Kb
+print(object.size(assays(se1)), units="auto")
+## 2.1 Mb
+print(object.size(se2), units="auto")  ## row/colData on-disk
+print(object.size(assays(se2)), units="auto")
+```
+
+Use the function `loadGDSSummarizedExperiment` to load the newly generated GDSArray-based SE object. 
 ```{r, load}
-se2 <- loadGDSSummarizedExperiment(dir="my_gds_se")
-assay(se2, 1)
-all.equal(assays(se1), assays(se2))
+se3 <- loadGDSSummarizedExperiment()
+se3
+all.equal(assays(se2), assays(se3))
+rm(se3)
 ```
 
 ## VariantExperiment common SE operations
@@ -156,7 +171,6 @@ library(SummarizedExperiment)
 rowRanges(se2)
 head(colData(se2))
 head(rowData(se2))
-metadata(se2)
 ```
 
 ### subsetting functions
@@ -166,13 +180,13 @@ se2[1:10, 1:5]
 ```
 - `$` operates on `colData()` columns, for easy sample extraction.
 ```{r colDataExtraction}
-head(SummarizedExperiment::colData(se2))
-se2[, se2$family == "1328"]
+head(colData(se2))
+se2[, as.logical(se2$family == "1328")]   ## FIXME
 ```
 - subsetting by `rowData()` columns.
 ```{r rowDataExtraction}
-head(SummarizedExperiment::rowData(se2))
-se2[rowData(se2)$REF == "T",]
+head(rowData(se2))
+se2[as.logical(rowData(se2)$REF == "T"),]   ## FIXME
 ```
 
 ### Range-based operations
@@ -189,7 +203,7 @@ rowData(subsetByOverlaps(se2, GRanges("22:1-48958933")))
 
 # Future work
 - Make the meta data for rows and cols on-disk reading.  -- done!
-- More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis. 
+- More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis.   -- next sprint!
 - Develop a pipeline for using `VariantExperiment` as the basic data structure for DNA-sequencing data analysis.  
 
 # Session Info

@@ -30,6 +30,8 @@ LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
-    GDSArray-class.R
+    AllUtilities.R
+    GDSArray-classes.R
+    GDSArray-methods.R
     makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R

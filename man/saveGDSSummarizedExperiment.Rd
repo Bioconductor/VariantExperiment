@@ -10,19 +10,23 @@ saveGDSSummarizedExperiment(se, dir = "my_gds_se", replace = FALSE,
   rowDataOnDisk = TRUE, colDataOnDisk = TRUE, verbose = FALSE)
 }
 \arguments{
+\item{se}{A SummarizedExperiment object, with the array data being ordinary array structure.}
+
 \item{dir}{The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.}
 
 \item{replace}{Whether to replace the directory if it already exists. The default is FALSE.}
 
 \item{fileFormat}{File format for the output gds file. See details.}
 
+\item{compress}{the compression method for writing the gds file. The default is "LZMA_RA".}
+
+\item{chunk_size}{The chunk size (number of rows) when reading GDSArray-based assays from input \code{se} into memory and then write into a new gds file.}
+
 \item{rowDataOnDisk}{whether to save the \code{rowData} as DelayedArray object. The default is TRUE.}
 
 \item{colDataOnDisk}{whether to save the \code{colData} as DelayedArray object. The default is TRUE.}
 
 \item{verbose}{whether to print the process messages. The default is FALSE.}
-
-\item{x}{A SummarizedExperiment object, with the array data being ordinary array structure.}
 }
 \description{
 saveGDSSummarizedExperiment

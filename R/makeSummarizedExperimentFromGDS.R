@@ -1,11 +1,5 @@
-#' @rdname GDSArray
-#' @exportMethod gdsfile
-#' @import SeqArray
-setMethod("gdsfile", "SummarizedExperiment", function(x) {
-    vapply(assays(x), gdsfile, character(1))
-})
 
-#' @importFrom GenomicRanges GRanges
+#' @importFrom GenomicRanges GRanges ranges seqnames 
 #' @importFrom IRanges IRanges
 #' @import SNPRelate
 #' @import SeqArray
@@ -119,7 +113,7 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
                          first_val="ANY")))
         res1 <- DataFrame(lapply(res, function(x)DataFrame(I(x))))
     }else{
-        res1 <- info(f, info=infoColumns)
+        res1 <- SeqArray::info(f, info=infoColumns)
     }
     setNames(res1, paste0("info_", infoColumns))
     ## return a DataFrame with names.

@@ -147,8 +147,6 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         }else{
             sampleInCol <- FALSE
         }
-    }else if(fileFormat =="SE_ARRAY"){
-        sampleInCol <- TRUE
     }
     sampleInCol
 }
@@ -182,7 +180,6 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
             dimnames <- list(sample.id = sample.id, snp.id = as.character(snp.id))
         }
     }else if(fileFormat == "SEQ_ARRAY"){
-        ## variant.id <- seqGetData(gdsfile, "variant.id")
         variant.id <- read.gdsn(index.gdsn(gdsfile, "variant.id"))
         seqSumm <- seqSummary(gdsfile, verbose=FALSE)
         dimSumm <- c(ploidy = seqSumm$ploidy,
@@ -197,15 +194,6 @@ setMethod("extract_array", "GDSArraySeed", .extract_array_from_GDSArraySeed)
         )
         ind <- match(dims, dimSumm)
         dimnames <- dimnames[ind]
-    }else if(fileFormat == "SE_ARRAY"){
-        row.id <- read.gdsn(index.gdsn(gdsfile, "row.id"))
-        dimnames <- list(row.id = as.character(row.id), sample.id = sample.id)
-        if(length(dims)>2){
-            for(i in seq_along(dims)[-c(1:2)]){
-                dimnames[[i]] <- as.character(seq_len(dims[i]))
-                names(dimnames)[i] <- paste0(sprintf("dim%02d", i), ".id")
-            }
-        }
     }
     if (!is.list(dimnames)) {
         stop(wmsg("The dimnames of GDS dataset '", file, "' should be a list!"))
@@ -237,16 +225,13 @@ GDSArraySeed <- function(file, name=NA){
         stop("'type' must be a single string or NA")
     file <- file_path_as_absolute(file)
 
-    ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
     ff <- .get_gdsdata_fileFormat(file)
     if(ff == "SNP_ARRAY"){
         f <- snpgdsOpen(file)
         on.exit(snpgdsClose(f))
-        ## if(is.na(name)) name <- "genotype"
     }else if(ff == "SEQ_ARRAY"){
         f <- seqOpen(file)
         on.exit(seqClose(f))
-        ## if(is.na(name)) name <- "genotype/data"
     }else{
         f <- openfn.gds(file)
         on.exit(closefn.gds(f))
@@ -267,7 +252,6 @@ GDSArraySeed <- function(file, name=NA){
 
     first_val <- .read_gdsdata_first_val(f, node = name)
     permute = !.read_gdsdata_sampleInCol(f, node = name, fileFormat = ff)
-    ## ?? file instead of f here? 
     if(permute){
         dims <- rev(dims)
         dimnames <- dimnames[rev(seq_len(length(dimnames)))]

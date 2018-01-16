@@ -53,6 +53,7 @@ SNPRelate::snpgdsClose(f)
 `SEQ_ARRAY` file format is defined in the package of `SeqArray`, in the class of `SeqVarGDSClass`.
 ```{r, seqArray}
 file <- system.file(package="VariantExperiment", "extdata", "CEU_Exon.gds")
+SeqArray::seqSummary(file)
 f <- SeqArray::seqOpen(file)
 ls.gdsn(f)
 ### required gds nodes: sample.id, variant.id, position, chromosome, allele, and genotype.
@@ -144,12 +145,19 @@ colData(se2)
 ```
 
 ```{r, object_size}
-print(object.size(se[TRUE, TRUE]), units="auto")
+## global parameter for showing less rows in each R output
+options()
+se0 <- makeSummarizedExperimentFromGDS(file)
+print(object.size(se0), units="auto")  ## assays on-disk, row/colData on-disk
 print(object.size(se), units="auto")  ## assays on-disk, row/colData in-memory
-print(object.size(se1), units="auto") ## assays/row/colData in-memory
+print(object.size(se0[TRUE, TRUE]), units="auto")
+print(object.size(se[TRUE, TRUE]), units="auto")
+
 print(object.size(assays(se)), units="auto")
 ## 280.7 Kb
+print(object.size(se1), units="auto") ## assays/row/colData in-memory
 print(object.size(assays(se1)), units="auto")
+print(object.size(assays(se1, withDimnames=FALSE)), units="auto")
 ## 2.1 Mb
 print(object.size(se2), units="auto")  ## row/colData on-disk
 print(object.size(assays(se2)), units="auto")

@@ -20,7 +20,7 @@
     }else if(fileFormat == "SEQ_ARRAY"){
         f <- seqOpen(gdsfile)
         on.exit(seqClose(f))
-        gr <- granges(f)
+        gr <- SeqArray::granges(f)
     }
     gr
 }

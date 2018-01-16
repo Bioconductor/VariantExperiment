@@ -33,5 +33,6 @@ Collate:
     AllUtilities.R
     GDSArray-classes.R
     GDSArray-methods.R
+    DelayedDataFrame-class.R
     makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R

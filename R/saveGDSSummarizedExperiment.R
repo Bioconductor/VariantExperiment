@@ -133,14 +133,15 @@
         }
     }
     ## permute back if permute == FALSE
+    datanode <- index.gdsn(gfile, name)
     if(!perm){
-        datanode <- index.gdsn(gfile, name)
         readmode.gdsn(datanode)
         permdim.gdsn(datanode, rev(seq_along(dim(data))))
     }
     ## add attribute for "snp_array" genotype node. 
     if(name == "genotype"){
         ord <- ifelse(perm, "sample.order", "snp.order")
+        ## genotype should be a matrix. 
         put.attr.gdsn(datanode, ord)
     }
 }
@@ -167,7 +168,8 @@
     rnms <- names(rowData(se))
     if(fileFormat == "SEQ_ARRAY") id.al <- match(c("REF", "ALT"), rnms)
     ## generated already with ".initiate_seqgds"
-    if(fileFormat == "SNP_ARRAY") id.al <- grep("ALLELE", rnms)
+    ## if(fileFormat == "SNP_ARRAY") id.al <- grep("ALLELE", rnms)
+    if(fileFormat == "SNP_ARRAY") id.al <- match(c("ID", "ALLELE1","ALLELE2"), rnms)
     ## generated already with ".initiate_snpgds"
     for (elt in rnms[-id.al]){
         if(verbose) message( "rowData: ", elt )
@@ -197,33 +199,50 @@
 }
 
 .write_se_as_newse <- function(se, gds_path, fileFormat, colDataOnDisk, rowDataOnDisk){
-    ### save assay data as GDSArray, skip when assay is already GDSArray or on-disk.
+    ### save assay data as GDSArray. if assay is already GDSArray or on-disk, only change the "file" slot to be newly generated gds file path.
     for (i in seq_along(assays(se))){
-        if(is.array(assays(se)[[i]]))
-            assays(se)[[i]] <- GDSArray(gds_path, name=names(assays(se))[i])
+        if(is(assays(se)[[i]], "GDSArray")){
+            ## gdsfile(assays(se)[[i]]) <- gds_path
+            assays(se)[[i]]@seed@file <- gds_path
+        }else{
+        assays(se)[[i]] <- GDSArray(gds_path, name=names(assays(se))[i])
+        }
     }
     names(assays(se)) <- names(assays(se))
 
-    ## save GDSArray-based colData if previous in-memory
-    if(colDataOnDisk & ! "GDSArray" %in% lapply(colData(se), class)){
-        colData <- .colData_gdsdata(gds_path, fileFormat, names(colData(se)), colDataOnDisk)
-        colData(se) <- colData
-    }
-    ## save GDSArray-based rowData if previous in-memory
-    if(rowDataOnDisk & ! "GDSArray" %in% lapply(rowData(se), class)){
-        rowDataColumns <- sub("[0-9]", "", names(rowData(se)))
-        ## "snp_array", sub "ALLELE1/2" with "ALLELE"
-        rowDataColumns <- rowDataColumns[!grepl("info_", rowDataColumns)]
-        ## "seq_array", remove all "info_" columns.
-        rowRange <- .rowRanges_gdsdata(gds_path, fileFormat, rowDataColumns, rowDataOnDisk)
-        ## add "info_" columns for "seq_array".
-        if(fileFormat == "SEQ_ARRAY"){
-            infoColumns <- names(rowData(se))[grepl("info_", names(rowData(se)))]
-            infoColumns <- sub("info_", "", infoColumns)
-            infocols <- .info_seqgds(gds_path, infoColumns, rowDataOnDisk)
-            mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
+    ## save GDSArray-based colData if previous in-memory. If colData already GDSArray, only change the "file" slot to be the newly generated gds file path.
+    if(colDataOnDisk){
+        if(all(vapply(colData(se), function(x) is(x, "DelayedArray"), logical(1)))){
+            for (i in seq_len(ncol(colData(se)))){
+                colData(se)[[i]]@seed@file <- gds_path
+            }
+        }else{
+            coldata <- .colData_gdsdata(
+                gds_path, fileFormat, names(colData(se)), colDataOnDisk)
+            colData(se) <- coldata
         }
-        rowRanges(se) <- rowRange
+    }
+    ## save GDSArray-based rowData if previous in-memory. If rowData already GDSArray, only change the "file" slot to be the newly generated gds file path.
+    if(rowDataOnDisk){
+        if(all(vapply(rowData(se), function(x) is(x, "DelayedArray"), logical(1)))){
+            for (i in seq_len(ncol(rowData(se)))){
+                rowData(se)[[i]]@seed@file <- gds_path
+            }
+        }else{
+            rowDataColumns <- sub("[0-9]", "", names(rowData(se)))
+            ## "snp_array", sub "ALLELE1/2" with "ALLELE"
+            rowDataColumns <- rowDataColumns[!grepl("info_", rowDataColumns)]
+            ## "seq_array", remove all "info_" columns.
+            rowRange <- .rowRanges_gdsdata(gds_path, fileFormat, rowDataColumns, rowDataOnDisk)
+            ## add "info_" columns for "seq_array".
+            if(fileFormat == "SEQ_ARRAY"){
+                infoColumns <- names(rowData(se))[grepl("info_", names(rowData(se)))]
+                infoColumns <- sub("info_", "", infoColumns)
+                infocols <- .info_seqgds(gds_path, infoColumns, rowDataOnDisk)
+                mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
+            }
+            rowRanges(se) <- rowRange
+        }
     }
     se
 }
@@ -239,7 +258,7 @@
 #' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default is FALSE.
-#' @importFrom SummarizedExperiment colData "colData<-" rowRanges "rowRanges<-" rowData assays assay "assays<-"
+#' @importFrom SummarizedExperiment colData "colData<-" rowRanges "rowRanges<-" rowData "rowData<-" assays assay "assays<-"
 #' @export
 #' @details If the input \code{SummarizedExperiment} object has GDSArray-based assay data, there is no need to specify the argument \code{fileFomat}. Otherwise, it takes values of \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP array data. 
 
@@ -257,14 +276,15 @@ saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, file
     
     .create_dir(dir, replace)
     gds_path <- file.path(dir, "se.gds")
-
+    
     if(is(assay(se, 1), "GDSArray"))
         fileFormat <- .get_gdsdata_fileFormat(gdsfile(se)[1])
     
     ## initiate gds file.
     if(fileFormat == "SEQ_ARRAY") .initiate_seqgds(se, gds_path, compress)
     if(fileFormat == "SNP_ARRAY") .initiate_snpgds(se, gds_path, compress)
-
+    gds_path <- tools::file_path_as_absolute(gds_path)
+    
     ## write se data into gds file.
     .write_se_as_gds(se, fileFormat, gds_path, chunk_size, compress, verbose)
     
@@ -296,8 +316,8 @@ loadGDSSummarizedExperiment <- function(dir="my_gds_se")
     if (!isSingleString(dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
                   "to the directory containing ", .THE_EXPECTED_STUFF))
-    gds_path <- file.path(dir, "se.gds")
-    rds_path <- file.path(dir, "se.rds")
+    gds_path <- tools::file_path_as_absolute(file.path(dir, "se.gds"))
+    rds_path <- tools::file_path_as_absolute(file.path(dir, "se.rds"))
     if (!file.exists(gds_path) || !file.exists(rds_path))
         .stop_if_bad_dir(dir)
     ans <- readRDS(rds_path)

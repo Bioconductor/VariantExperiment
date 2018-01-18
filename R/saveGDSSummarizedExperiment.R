@@ -201,9 +201,8 @@
 .write_se_as_newse <- function(se, gds_path, fileFormat, colDataOnDisk, rowDataOnDisk){
     ### save assay data as GDSArray. if assay is already GDSArray or on-disk, only change the "file" slot to be newly generated gds file path.
     for (i in seq_along(assays(se))){
-        if(is(assays(se)[[i]], "GDSArray")){
-            ## gdsfile(assays(se)[[i]]) <- gds_path
-            assays(se)[[i]]@seed@file <- gds_path
+        if(is(assays(se)[[i]], "DelayedArray")){
+            gdsfile(seed(assays(se)[[i]])) <- gds_path
         }else{
         assays(se)[[i]] <- GDSArray(gds_path, name=names(assays(se))[i])
         }
@@ -214,7 +213,7 @@
     if(colDataOnDisk){
         if(all(vapply(colData(se), function(x) is(x, "DelayedArray"), logical(1)))){
             for (i in seq_len(ncol(colData(se)))){
-                colData(se)[[i]]@seed@file <- gds_path
+                gdsfile(seed(colData(se)[[i]])) <- gds_path
             }
         }else{
             coldata <- .colData_gdsdata(
@@ -226,7 +225,7 @@
     if(rowDataOnDisk){
         if(all(vapply(rowData(se), function(x) is(x, "DelayedArray"), logical(1)))){
             for (i in seq_len(ncol(rowData(se)))){
-                rowData(se)[[i]]@seed@file <- gds_path
+                gdsfile(seed(rowData(se)[[i]])) <- gds_path
             }
         }else{
             rowDataColumns <- sub("[0-9]", "", names(rowData(se)))

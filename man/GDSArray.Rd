@@ -3,30 +3,33 @@
 \docType{methods}
 \name{GDSArray}
 \alias{GDSArray}
-\alias{gdsfile}
-\alias{gdsfile,GDSArraySeed-method}
 \alias{dim,GDSArraySeed-method}
 \alias{dimnames,GDSArraySeed-method}
+\alias{gdsfile}
+\alias{gdsfile,GDSArraySeed-method}
 \alias{gdsfile,GDSArray-method}
 \alias{gdsfile,DelayedArray-method}
 \alias{gdsfile,SummarizedExperiment-method}
+\alias{gdsfile<-}
 \title{GDSArray}
 \usage{
 GDSArray(file, name = NA)
 
-gdsfile(x)
-
-\S4method{gdsfile}{GDSArraySeed}(x)
-
 \S4method{dim}{GDSArraySeed}(x)
 
 \S4method{dimnames}{GDSArraySeed}(x)
+
+gdsfile(x)
+
+\S4method{gdsfile}{GDSArraySeed}(x)
 
 \S4method{gdsfile}{GDSArray}(x)
 
 \S4method{gdsfile}{DelayedArray}(x)
 
 \S4method{gdsfile}{SummarizedExperiment}(x)
+
+gdsfile(x) <- value
 }
 \arguments{
 \item{file}{the gds file name.}
@@ -38,9 +41,9 @@ gdsfile(x)
 \description{
 \code{GDSArray}: The function to convert a gds file into the GDSArray data structure.
 
-\code{gdsfile}: on-disk location of GDS file
-    represented by this object.
-
 \code{dim}, \code{dimnames}: dimension and dimnames of
     object contained in the GDS file.
+
+\code{gdsfile}: on-disk location of GDS file
+    represented by this object.
 }

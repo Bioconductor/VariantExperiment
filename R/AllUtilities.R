@@ -5,7 +5,7 @@
     ff
 }
 
-.get_gdsdata_arrayNodes <- function(gdsfile){
+.get_gdsdata_allNodes <- function(gdsfile){
     stopifnot(inherits(gdsfile, "gds.class"))
     names.gdsn <- ls.gdsn(gdsfile)
     repeat{
@@ -20,6 +20,12 @@
         names.gdsn <- all.gdsn
         }
     }
+    names.gdsn
+}
+
+.get_gdsdata_arrayNodes <- function(gdsfile){
+    stopifnot(inherits(gdsfile, "gds.class"))
+    names.gdsn <- .get_gdsdata_allNodes(gdsfile)
     isarray <- sapply(names.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$is.array)
     dims <- lapply(names.gdsn, function(x)objdesp.gdsn(index.gdsn(gdsfile, x))$dim)
     ## names(dims) <- all.gdsn

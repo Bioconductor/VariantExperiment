@@ -144,6 +144,14 @@
         ## genotype should be a matrix. 
         put.attr.gdsn(datanode, ord)
     }
+    ## add attribute for "seq_array" genotype folder node.
+    if(length(directories) == 1L & all(directories == "genotype")){
+        put.attr.gdsn(dirnode, "VariableName", "GT")
+        put.attr.gdsn(dirnode, "Description", "Genotype")
+        if(! "@data" %in% ls.gdsn(dirnode))
+            add.gdsn(dirnode, "@data", val=rep(1L, nrow), storage="uint8", compress=compress, visible=FALSE)
+        ## n <- .AddVar(storage.option, varGeno, "@data", storage="uint8", visible=FALSE)
+    }
 }
 
 ###
@@ -276,7 +284,7 @@ saveGDSSummarizedExperiment <- function(se, dir="my_gds_se", replace=FALSE, file
     .create_dir(dir, replace)
     gds_path <- file.path(dir, "se.gds")
     
-    if(is(assay(se, 1), "GDSArray"))
+    if(is(assay(se, 1), "DelayedArray"))
         fileFormat <- .get_gdsdata_fileFormat(gdsfile(se)[1])
     
     ## initiate gds file.

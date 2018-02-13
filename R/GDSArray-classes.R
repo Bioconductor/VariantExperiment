@@ -183,7 +183,7 @@ setMethod("DelayedArray", "GDSArraySeed",
 #' @param file the gds file name.
 #' @param name the gds array node to be read into GDSArray
 #' @export
-GDSArray <- function(file, name=NA){
+GDSArray <- function(file, name=NA, index=c("list", "IndexList")){
     if (is(file, "GDSArraySeed")) {
         seed <- file
     } else {
@@ -195,6 +195,6 @@ GDSArray <- function(file, name=NA){
         }
         seed <- GDSArraySeed(file, name)
     }
-    as(DelayedArray(seed), "GDSMatrix")
+    as(DelayedArray(seed, index=index), "GDSMatrix")
 }
 

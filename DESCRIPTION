@@ -8,11 +8,11 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
     back-end for DelayedArray, and store the GDSArray data into the 
     SummarizedExperiment.
 Depends:
-    R (>= 3.4.2),
+    R (>= 3.5.0),
     S4Vectors,
     SummarizedExperiment,
     GenomicRanges,
-    DelayedArray (>= 0.5.9)
+    DelayedArray (>= 0.5.18)
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/Bioconductor/VariantExperiment
@@ -23,7 +23,8 @@ Imports:
     methods,
     gdsfmt, 
     SNPRelate,
-    SeqArray, 
+    SeqArray,
+    SeqVarTools,
     Biostrings, 
     IRanges
 LazyData: true
@@ -36,3 +37,6 @@ Collate:
     DelayedDataFrame-class.R
     makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R
+    VariantExperiment.R
+    AllGenerics.R
+    VariantExperiment-stats.R

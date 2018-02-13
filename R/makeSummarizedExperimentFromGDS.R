@@ -75,7 +75,9 @@
                 dimnames=list(varid),  ## for snp/variant nodes only.
                 permute=FALSE,
                 first_val="ANY")
-    DelayedArray(seed)  ## return a DelayedArray/GDSArray object without names.
+    DelayedArray(seed
+                 ## , index="IndexList"
+                 )  ## return a DelayedArray/GDSArray object without names.
 }
 
 ### delayedArray in each column in DF, have individual index, which does not save spaces almost......
@@ -102,6 +104,7 @@
     }
     infonodes <- paste0("annotation/info/", infoColumns)
     if(rowDataOnDisk){
+        
         res <- lapply(infonodes, function(x)
             DelayedArray(
                 seed=new("GDSArraySeed",
@@ -110,7 +113,10 @@
                          dim=.get_gdsdata_dim(f, x), 
                          dimnames=list(seqGetData(f, "variant.id")),
                          permute=FALSE,
-                         first_val="ANY")))
+                         first_val="ANY") ## ,
+                ## index="IndexList"
+            )
+            )
         res1 <- DataFrame(lapply(res, function(x)DataFrame(I(x))))
     }else{
         res1 <- SeqArray::info(f, info=infoColumns)
@@ -134,8 +140,8 @@
                 warning('The snp annotation of "',
                         paste(rowDataColumns[!idx.within], collapse = ", "),
                         '" does not exist!', "\n",
-                        'Please use showAvailable(file, "colDataColumns") ',
-                        'to get the available columns for "colData."', "\n")
+                        'Please use showAvailable(file, "rowDataColumns") ',
+                        'to get the available columns for "rowData."', "\n")
             }
             rowDataColumns <- tolower(rowDataColumns[idx.within])
             if(length(rowDataColumns)==0)
@@ -160,6 +166,13 @@
             if("ALT" %in% names(resDF)){
                 resDF$ALT <- sub("[TCGA]*,", "", resDF$ALT)
             }
+            ## add a pre-specified "IndexList" object for shared indexes.
+            ## index <- IndexList(list(NULL))
+            ## for(i in seq_along(resDF)){
+            ##     resDF[[i]]@index <- index
+            ## }
+            ## resDF1 <- lapply(resDF, function(x) x@index <- index)
+            ## resDF1 <- DataFrame(lapply(resDF1, I))
         }else{ ## rowDataOnDisk = FALSE...
             if(fileFormat == "SNP_ARRAY"){
                 resDF <- DataFrame(lapply(rowDataColumns, function(x)
@@ -193,7 +206,9 @@
                 ## for sample-related nodes only.
                 permute=FALSE,
                 first_val="ANY")
-    DelayedArray(seed)  ## returns Delayed/GDSArray, not DF.
+    DelayedArray(seed
+                 ## , index="IndexList"
+                 )  ## returns Delayed/GDSArray, not DF.
 }
 
 ###
@@ -376,6 +391,9 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=char
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if(ff == "SEQ_ARRAY"){
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
+        ## add refClass indexes for infocols.
+        ## infocols1 <- lapply(infocols, function(x) x@index <- mcols(rowRange)[[1]]@index)
+        ## infocols1 <- DataFrame(lapply(infocols1, I))
         mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
         }
     SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)

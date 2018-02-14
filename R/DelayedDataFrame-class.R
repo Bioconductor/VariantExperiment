@@ -1,166 +1,145 @@
-## ## set class 
-## setClass(
-##     "GDSDataFrameSeed",
-##     contains = "Array",
-##     slots = c(
-##         file = "character",
-##         names = "character",
-##         dim = "integer",
-##         dimnames = "list",
-##         first_val = "ANY"
-##     )
-## 0)
+## library(DelayedArray)
 
-## ## methods
-## setMethod("dim", "GDSDataFrameSeed", function(x) x@dim)
-## setMethod("dimnames", "GDSDataFrameSeed", function(x) x@dimnames)
-## setMethod("gdsfile", "GDSDataFrameSeed", function(x) x@file)
+.lazyList <- setClass(
+    "lazyList",
+    slots = c(
+        indexes = "list",
+        has_index = "integer"
+    )
+)
 
-## ## show method
-## setMethod("show", "GDSDataFrameSeed",
-##           function(object){
-##               cat("GDSDataFrameSeed\n",
-##                   "gds file: ", object@file, "\n",
-##                   "annotation data: ", paste(object@names, collapse=", "), "\n",
-##                   ## "dim: ", nrow(object), " x ", ncol(object), "\n",
-##                   "dim: ", paste(dim(object), collapse=" x "), "\n",
-##                   "first value: ", object@first_val, "\n",
-##                   sep="")
-##           }
-##           )
+update_index <- function(lazyList, j, value) {
+    for (i in seq_along(lazyList@indexes)){
+        index <- lazyList@indexes[[i]]$index[[1]]
+        if(!is.null(index)){
+            if (all(value == index)) {
+                lazyList@has_index[j] = i
+                return(lazyList)
+            }
+        }
+    }
+    ## clone (refClass clone, different from ordinary S4 class)
+    new_index_id <- length(lazyList@indexes) + 1L
+    lazyList@has_index[j] = new_index_id
+    index = IndexList(index=list(value))
+    lazyList@indexes[[new_index_id]] = index
+    lazyList
+}
 
-## ## seed constructor
-## GDSDataFrameSeed <- function(file, names){
-##     if (!isSingleString(file))
-##         stop(wmsg("'file' must be a single string specifying the path to ",
-##                   "the gds file where the dataset is located."))
-##     if (!is.character(names))
-##         stop("'type' must be a single string or NA")
-##     file <- file_path_as_absolute(file)
-    
-##     ff <- .get_gdsdata_fileFormat(file)
-##     if(ff == "SNP_ARRAY"){
-##         f <- snpgdsOpen(file)
-##         on.exit(snpgdsClose(f))
-##     }else if(ff == "SEQ_ARRAY"){
-##         f <- seqOpen(file)
-##         on.exit(seqClose(f))
-##     }else{
-##         f <- openfn.gds(file)
-##         on.exit(closefn.gds(f))
-##     }
-##     dim <- c(.get_gdsdata_dim(f, names[1]), length(names))
-##     dimnames <- .get_gdsdata_dimnames(f, names[1], "SEQ_ARRAY")
-##     dimnames$annotation.id <- names
-##     first_val <- .read_gdsdata_first_val(f, names[1])
+update_row <- function(lazyList, value) {
+    lazyList@indexes <- lapply(lazyList@indexes, function(index) {
+        index <- DelayedArray:::.clone(index)
+        if (is.null(index$index[[1]]))
+            index$index[[1]] <- value
+        else {
+            if (length(value) > length(index$index[[1]]) )
+                stop("the subscripts are out of bound")
+            index$index[[1]] <- index$index[[1]][value]
+        }
+        index
+    })
+    lazyList
+}
 
-##     new("GDSDataFrameSeed",
-##         file = file,
-##         names = names,
-##         dim = dim,
-##         dimnames = dimnames,
-##         first_val = first_val
-##         )
-## }
+.DelayedDataFrame = setClass(
+    "DelayedDataFrame",
+    contains = "DataFrame",
+    slots = c(lazyIndex = "lazyList")
+)
 
-## .extract_DF_from_GDSDataFrameSeed <- function(x, index)
-## {
-##     ans_dim <- DelayedArray:::get_Nindex_lengths(index, dim(x))
-##     if (any(ans_dim == 0L)){
-##         ans <- x@first_val[0]
-##         dim(ans) <- ans_dim
-##     } else {
-##         f <- openfn.gds(x@file)
-##         on.exit(closefn.gds(f))
-##         ## take the cidx for gdsnodes to apply the subsetting.
-##         ## cidx <- index[[2]]
-##         ## names <- x@names[cidx]
-##         ## only take the row index, and apply to all names.
-##         ridx <- index[[1]]  
-##         ans <- lapply(x@names, function(node) readex.gdsn(index.gdsn(f, node), ridx))
-##         ans <- setNames(DataFrame(ans), x@names)
-##     }
-##     ans
-## }
-## setMethod("extract_array", "GDSDataFrameSeed", .extract_DF_from_GDSDataFrameSeed)
+DelayedDataFrame <- function(x) {
+    ## check column seed dimension
+    ## (DelayedDF only works for DelayedArray with different backend)
+    ndim <- length(dim(x[[1]]))
+    if (ndim == 1)
+        indexList = IndexList(index=list(NULL))
+    else if (ndim == 2)
+        indexList = IndexList(index = list(NULL, NULL))
+    for (i in seq_along(x))
+        x[[i]]@index = indexList
+    lazyIndex <- .lazyList(
+        indexes = list(indexList),
+        has_index = rep(1L, length(x))
+    )
+    .DelayedDataFrame(x, lazyIndex = lazyIndex)
+}
+
+.validate_delayedDF <- function(x)
+{
+    ## indexes class must be "IndexList"
+    indexes <- x@lazyIndex@indexes
+    indexClass <- vapply(indexes,
+                         function(index) is(index, "IndexList"),
+                         logical(1))
+    if (!all(indexClass))
+        return(wmsg("'x@lazyIndex' must be a list of 'IndexList'"))
+
+    ## indexes length must be same
+    indexLength <- vapply(indexes,
+                          function(index) length(index$index[[1]]),
+                          integer(1))
+    if (length(unique(indexLength)) > 1 & all(unique(indexLength) > 0))
+        return(wmsg("'x@lazyIndex' must be of same length or 'NULL'"))
+
+    ## col classes (must be DelayedArray with different back-end)
+    colClass <- vapply(x,
+                       function(col) is(col, "DelayedArray"),
+                       logical(1))
+    if (!all(colClass))
+        return(wmsg("`DelayedDataFrame` columns must be",
+                    "inherited from 'DelayedArray'"))
+
+    TRUE
+}
+
+#' @importFrom S4Vectors setValidity2
+setValidity2("DelayedDataFrame", .validate_delayedDF)
+
+.get_index <- function(x, j) {
+    j <- x@lazyIndex@has_index[[j]]
+    x@lazyIndex@indexes[[j]]
+}
+
+#' @exportMethod extractROWS
+.extractROWS_DelayedDataFrame <- function(x, i)
+{
+    i <- normalizeSingleBracketSubscript(i, x, exact = FALSE, 
+                                         allow.NAs = TRUE
+                                         , as.NSBS = TRUE
+                                         )
+    x@lazyIndex <- update_row(x@lazyIndex, i@subscript)
+    slot(x, "nrows", check = FALSE) <- length(i)
+    if (!is.null(rownames(x))) {
+        slot(x, "rownames", check = FALSE) <- make.unique(extractROWS(rownames(x), 
+            i))
+    }
+    ## copy updated lazy index to each column
+    for (j in seq_along(x))
+        DelayedArray:::.index(x[[j]]) <- .get_index(x, j)
+    x
+}
+setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
 
 
-## #######################################################
-## ### example
-## #######################################################
-
+#################### VariantExperiment example  ####################################
 ## file <- SeqArray::seqExampleFileName("gds")
-## f <- seqOpen(file)
-## allnodes <- .get_gdsdata_allNodes(f)
-## alldims <- lapply(allnodes, function(x) .get_gdsdata_dim(f, x))
-## var.id <- vapply(alldims, function(x) length(x) == 1 & all(x == 1348), logical(1))
-## var.node <- allnodes[var.id]
-## names <- c("variant.id", "annotation/id", "annotation/info/AA")
+## library(VariantExperiment)
+## se <- makeSummarizedExperimentFromGDS(file)
+## rd <- rowData(se)
+## rd[[1]]@index  ## ordinary list.
+## ddf <- DelayedDataFrame(rd)
+## ddf@lazyIndex
+## a <- ddf[c(1,3,5), c(TRUE, FALSE), drop=FALSE]
 
-## seed <- GDSDataFrameSeed(file, names) 
-## extract_array(seed, list(1:5, 1:3))
-## DelayedArray(seed)
+## ############################################ bk ####################################
+## object.size(rd[TRUE, ])
+## ## 1407656 bytes
 
-## seed1 <- GDSDataFrameSeed(file, c("variant.id", "position", "chromosome"))
-## extract_array(seed1, list(1:5, 1:2))
-## DelayedArray(seed1)
-## ## <1348 x 3> DelayedMatrix object of type "integer":
-## ## Error in prettyNum(.Internal(format(x, trim, digits, nsmall, width, 3L,  : 
-## ##   first argument must be atomic
+## se1 <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=FALSE)
+## object.size(rowData(se1)[TRUE,])
+## ## 335152 bytes
 
-## seed2 <- GDSDataFrameSeed(file, c("variant.id", "position"))
-## extract_array(seed2, list(1:5, 1:3))
-## DelayedArray(seed1)
-
-#######################################
-## Martin's example
-#######################################
-
-## setMethod(
-##     "extract_array", "DataFrameSeed",
-##     function(x, index)
-##     {
-##         data(list=x@name)
-##         object <- get(x@name)
-##         rowidx <- index[[1]]
-##         colidx <- index[[2]]
-##         answer <- lapply(object[colidx], `[`, rowidx)
-##         ## as(answer, "DataFrame")  ## DataFrame / data.frame both work.
-##                                     ## only DelayedDataFrame(seed) does not
-##                                     ## show properly. 
-##         as.data.frame(answer)
-##         ## array(as.data.frame(answer))
-##         ## answer
-##     })
-
-## obj <- new("DataFrameSeed", name="mtcars", dim=dim(mtcars), dimnames=dimnames(mtcars))
-## ## obj <- .DataFrameSeed(name="mtcars", dim=dim(mtcars), dimnames=dimnames(mtcars))
-## a <- extract_array(obj, list(1:5, 2:5))
-## DelayedDataFrame(obj)
-
-## obj <- new("DataFrameSeed", name="iris", dim=dim(iris), dimnames=dimnames(iris))
-## extract_array(obj, list(1:5, 2:4))
+## object.size(as.list(rowData(se1)[["ALT"]]))
+## ## 7300816 bytes
 
 
-## ## .DelayedDataFrame <- setClass("DelayedDataFrame", contains = "DelayedArray")
-## ## setClass("GDSArray", contains="DelayedArray")
-## ## setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
-## setClass("DelayedDataFrame", contains = "DelayedArray")
-## setGeneric("DelayedDataFrame", function(x) standardGeneric("DelayedDataFrame"))
-## setMethod("DelayedDataFrame", "DataFrameSeed",
-##           function(x)
-##               DelayedArray:::new_DelayedArray(x, Class="DelayedDataFrame")
-##           )
-## ddf <- DelayedDataFrame(obj)
-
-## ddf = DelayedDataFrame(DelayedArray(obj))
-## as(obj, "DelayedDataFrame")
-
-## str(DelayedArray(obj))
-## str(.DelayedDataFrame(DelayedArray(obj)))
-
-## obj1 <- .DataFrameSeed(name="iris", dim=dim(iris), dimnames=dimnames(iris))
-## extract_array(obj1, list(1:5, 2:5))
-## ddf1 <- .DelayedDataFrame(DelayedArray(obj1))
-## ddf1 <- .DelayedDataFrame(obj1)
-## ddf1 <- DelayedArray(obj1)

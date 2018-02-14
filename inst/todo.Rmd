@@ -1,3 +1,11 @@
+2/14/2018, 
+- define `VariantExperiment` class, contains `SummarizedExperiment`, has gds file related, row/colData in `DelayedDataFrame` class. 
+- return `VariantExperiment` from `makeSummarizedExperimentFromGDS` and `saveGDSSummarizedExperiment`. 
+- when VE rowData/colData() updated with additional columns, write them into gds file with `saveGDSSummarizedExperiment`. 
+ 
+- stat functions, export all methods? 
+ 
+
 ## loadGDSSE(), if(identical(basename(gdsfile(a)), "assays.gds")) does not work.
 
 Look into "~data" in `SeqArray`. 

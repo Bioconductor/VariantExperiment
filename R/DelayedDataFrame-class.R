@@ -8,6 +8,7 @@
     )
 )
 
+## "update_index" not actually used in constructing "DelayedDataFrame"...
 update_index <- function(lazyList, j, value) {
     for (i in seq_along(lazyList@indexes)){
         index <- lazyList@indexes[[i]]$index[[1]]
@@ -41,30 +42,47 @@ update_row <- function(lazyList, value) {
     lazyList
 }
 
+.get_index <- function(x, j) {
+    j <- x@lazyIndex@has_index[[j]]
+    x@lazyIndex@indexes[[j]]
+}
+
+#' @exportClass DelayedDataFrame
 .DelayedDataFrame = setClass(
     "DelayedDataFrame",
     contains = "DataFrame",
     slots = c(lazyIndex = "lazyList")
 )
 
-DelayedDataFrame <- function(x) {
-    ## check column seed dimension
-    ## (DelayedDF only works for DelayedArray with different backend)
-    ndim <- length(dim(x[[1]]))
-    if (ndim == 1)
-        indexList = IndexList(index=list(NULL))
-    else if (ndim == 2)
-        indexList = IndexList(index = list(NULL, NULL))
-    for (i in seq_along(x))
-        x[[i]]@index = indexList
-    lazyIndex <- .lazyList(
-        indexes = list(indexList),
-        has_index = rep(1L, length(x))
-    )
-    .DelayedDataFrame(x, lazyIndex = lazyIndex)
+#' @exportMethod extractROWS
+.extractROWS_DelayedDataFrame <- function(x, i)
+{
+    i <- normalizeSingleBracketSubscript(i, x, exact = FALSE, 
+                                         allow.NAs = TRUE
+                                         , as.NSBS = TRUE
+                                         )
+    x@lazyIndex <- update_row(x@lazyIndex, i@subscript)
+    slot(x, "nrows", check = FALSE) <- length(i)
+    if (!is.null(rownames(x))) {
+        slot(x, "rownames", check = FALSE) <- make.unique(extractROWS(rownames(x), 
+            i))
+    }
+    ## copy updated lazy index to each column
+    for (j in seq_along(x))
+        DelayedArray:::.index(x[[j]]) <- .get_index(x, j)
+    x
+}
+setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
+
+## DelayedDataFrame constructor
+
+DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE){
+    df <- DataFrame(..., row.names=row.names, check.names=check.names)
+    as(df, "DelayedDataFrame")
 }
 
-.validate_delayedDF <- function(x)
+## validity check
+.validate_DelayedDataFrame <- function(x)
 {
     ## indexes class must be "IndexList"
     indexes <- x@lazyIndex@indexes
@@ -93,32 +111,62 @@ DelayedDataFrame <- function(x) {
 }
 
 #' @importFrom S4Vectors setValidity2
-setValidity2("DelayedDataFrame", .validate_delayedDF)
+setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 
-.get_index <- function(x, j) {
-    j <- x@lazyIndex@has_index[[j]]
-    x@lazyIndex@indexes[[j]]
-}
+### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+### Coercion.
+###
 
-#' @exportMethod extractROWS
-.extractROWS_DelayedDataFrame <- function(x, i)
-{
-    i <- normalizeSingleBracketSubscript(i, x, exact = FALSE, 
-                                         allow.NAs = TRUE
-                                         , as.NSBS = TRUE
-                                         )
-    x@lazyIndex <- update_row(x@lazyIndex, i@subscript)
-    slot(x, "nrows", check = FALSE) <- length(i)
-    if (!is.null(rownames(x))) {
-        slot(x, "rownames", check = FALSE) <- make.unique(extractROWS(rownames(x), 
-            i))
+## DelayedDataFrame has inherited from DataFrame, so it inherits coercion methods of DataFrame to matrix/data.frame/list (as.matrix, as.list, as.data.frame/as(x, "data.frame/list")). Will only need to define set("ANY", "DelayedDataFrame"). 
+
+## .as.DelayedDataFrame.DataFrame <- function(from){
+setAs("DataFrame", "DelayedDataFrame", function(from){
+
+    delayed_ops <- vapply(from, function(x) is(x, "DelayedArray"), logical(1))
+    delayed_ops <- vapply(from, is, logical(1), "DelayedArray")
+    
+    ## (DelayedDF only works for DelayedArray with different backend)
+    if(any(!delayed_ops)){
+        if (sum(!delayed_ops) == 1){
+            words <- c("column", "is", "object")
+        } else {
+            words <- c("columns", "are", "objects")
+        }
+        stop("\n", "All columns should be inherited from DelayedArray. ",
+             "\n", "The ", words[1], " of '",
+             paste(names(from)[!delayed_ops], collapse=", "), "' ",
+             words[2], " not DelayedArray ",
+             words[3], ". \n")
     }
-    ## copy updated lazy index to each column
-    for (j in seq_along(x))
-        DelayedArray:::.index(x[[j]]) <- .get_index(x, j)
-    x
+
+    ## the dimension of each column must be the same (for lazyIndex)
+    ndims <- vapply(from, function(x) length(dim(x)), integer(1))
+    uniq_ndims <- unique(ndims)
+
+    indexes <- list()
+    for (i in seq_along(uniq_ndims)){
+        indexes[[i]] <- IndexList(index=vector("list", uniq_ndims[i]))
+    }
+
+    has_index <- unname(vapply(ndims, match, integer(1), uniq_ndims))
+    lazyIndex <- .lazyList(indexes = indexes, has_index = has_index)
+
+    ## FIXME: if any column already has @index with values, not NULL,
+    ##        should include into the indexes and has_index.
+    
+    for (i in seq_along(from))
+        from[[i]]@index <- indexes[[has_index[i]]]
+
+    .DelayedDataFrame(from, lazyIndex = lazyIndex)
 }
-setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
+)
+
+## setMethod("DelayedDataFrame", "DataFrame", .as.DelayedDataFrame.DataFrame)
+###
+setAs("ANY", "DelayedDataFrame", function(from){
+    df <- as(from, "DataFrame")
+    as(df, "DelayedDataFrame")
+})
 
 
 #################### VariantExperiment example  ####################################

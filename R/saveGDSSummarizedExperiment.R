@@ -265,7 +265,7 @@
 #' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default is FALSE.
-#' @importFrom SummarizedExperiment colData "colData<-" rowRanges "rowRanges<-" rowData "rowData<-" assays assay "assays<-"
+#' @importFrom SummarizedExperiment colData "colData<-" rowRanges "rowRanges<-" rowData "rowData<-" assays assay "assays<-" mcols "mcols<-"
 #' @export
 #' @details If the input \code{SummarizedExperiment} object has GDSArray-based assay data, there is no need to specify the argument \code{fileFomat}. Otherwise, it takes values of \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP array data. 
 

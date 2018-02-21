@@ -101,11 +101,11 @@ GDSArraySeed <- function(file, name=NA){
         on.exit(closefn.gds(f))
     }
     
-    ## check if the node is array data. 
-    arrayNodes <- .get_gdsdata_arrayNodes(f)
-    if(!name %in% arrayNodes){
-        stop(wmsg("the `name` node must be an array data."))
-    }
+    ## ## check if the node is array data. 
+    ## arrayNodes <- .get_gdsdata_arrayNodes(f)
+    ## if(!name %in% arrayNodes){
+    ##     stop(wmsg("the `name` node must be an array data."))
+    ## }
 
     dims <- .get_gdsdata_dim(f, node = name)
     dimnames <- .get_gdsdata_dimnames(f, node = name, fileFormat = ff)
@@ -115,7 +115,12 @@ GDSArraySeed <- function(file, name=NA){
     }
 
     first_val <- .read_gdsdata_first_val(f, node = name)
-    permute = !.read_gdsdata_sampleInCol(f, node = name, fileFormat = ff)
+
+    if (length(dims) == 1)
+        permute = FALSE
+    else 
+        permute = !.read_gdsdata_sampleInCol(f, node = name, fileFormat = ff)
+
     if(permute){
         dims <- rev(dims)
         dimnames <- dimnames[rev(seq_len(length(dimnames)))]
@@ -145,11 +150,10 @@ setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
 ### Automatic coercion method from GDSArray to GDSMatrix (muted for higher dimensions)
 ### this function works only when GDSArray is 2-dimensional, otherwise, it fails.
-
-## setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
+setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
 
 ### For internal use only.
-## setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
+setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")
 
 .validate_GDSArray <- function(x)
 {
@@ -163,9 +167,9 @@ setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 #' @importFrom S4Vectors setValidity2
 setValidity2("GDSArray", .validate_GDSArray)
 
-setAs("ANY", "GDSMatrix",
-      function(from) as(as(from, "GDSArray"), "GDSMatrix")
-    )
+## setAs("ANY", "GDSMatrix",
+##       function(from) as(as(from, "GDSArray"), "GDSMatrix")
+##     )
 
 
 ### - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -195,6 +199,9 @@ GDSArray <- function(file, name=NA){
         }
         seed <- GDSArraySeed(file, name)
     }
-    as(DelayedArray(seed), "GDSMatrix")
+    to <- "GDSArray"
+    if (length(dim(seed)) == 2L)
+        to <- "GDSMatrix"
+    as(DelayedArray(seed), to)
 }
 

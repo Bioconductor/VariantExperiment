@@ -111,7 +111,7 @@
                          dimnames=list(seqGetData(f, "variant.id")),
                          permute=FALSE,
                          first_val="ANY")))
-        res1 <- DataFrame(lapply(res, function(x)DataFrame(I(x))))
+        res1 <- DelayedDataFrame(lapply(res, function(x)DataFrame(I(x))))
     }else{
         res1 <- SeqArray::info(f, info=infoColumns)
     }
@@ -148,7 +148,7 @@
                 lapply(rowDataColumns, function(x)
                     .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
                 toupper(rowDataColumns))
-            resDF <- DataFrame(lapply(res, I))
+            resDF <- DelayedDataFrame(lapply(res, I))
             if("ALLELE" %in% names(resDF)){
                 resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
                 resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
@@ -223,7 +223,7 @@
                 lapply(colDataColumns, function(x)
                     .sampnode_gdsdata_ondisk(file, fileFormat, x)),
                 colDataColumns)
-            DataFrame(lapply(annot, I), row.names=as.character(sample.id))
+            DelayedDataFrame(lapply(annot, I), row.names=as.character(sample.id))
         }else{
             f <- openfn.gds(file)
             on.exit(closefn.gds(f))
@@ -376,7 +376,17 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=char
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if(ff == "SEQ_ARRAY"){
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
-        mcols(rowRange) <- DataFrame(mcols(rowRange), infocols)
-        }
-    SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)
+        mcols(rowRange) <- DelayedDataFrame(mcols(rowRange), infocols)
+    }
+    ## mcols(rowRanges) <- DelayedDataFrame(mcols(rowRanges))
+    ## SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)
+    SummarizedExperiment(
+        assays = assays,
+        colData = colData,
+        rowRanges = rowRange)
 }
+
+## 1. mcols(.rowRange_gdsdata)
+## 2. colData(se) returns DataFrame
+## 3. rowData(se) returns DataFrame, == mcols(rowRanges(se))
+## 4. mcols(rowRange) returns DataFrame, even when the input is DelayedDataFrame.

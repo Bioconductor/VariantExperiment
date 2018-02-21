@@ -23,6 +23,7 @@
     names.gdsn
 }
 
+## array data with >1 dimensions to pass into assays(se)
 .get_gdsdata_arrayNodes <- function(gdsfile){
     stopifnot(inherits(gdsfile, "gds.class"))
     names.gdsn <- .get_gdsdata_allNodes(gdsfile)

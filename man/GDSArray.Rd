@@ -13,7 +13,7 @@
 \alias{gdsfile<-}
 \title{GDSArray}
 \usage{
-GDSArray(file, name = NA)
+GDSArray(file, name = NA, index = c("list", "IndexList"))
 
 \S4method{dim}{GDSArraySeed}(x)
 

@@ -134,8 +134,8 @@
                 warning('The snp annotation of "',
                         paste(rowDataColumns[!idx.within], collapse = ", "),
                         '" does not exist!', "\n",
-                        'Please use showAvailable(file, "colDataColumns") ',
-                        'to get the available columns for "colData."', "\n")
+                        'Please use showAvailable(file, "rowDataColumns") ',
+                        'to get the available columns for "rowData."', "\n")
             }
             rowDataColumns <- tolower(rowDataColumns[idx.within])
             if(length(rowDataColumns)==0)
@@ -385,8 +385,3 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=char
         colData = colData,
         rowRanges = rowRange)
 }
-
-## 1. mcols(.rowRange_gdsdata)
-## 2. colData(se) returns DataFrame
-## 3. rowData(se) returns DataFrame, == mcols(rowRanges(se))
-## 4. mcols(rowRange) returns DataFrame, even when the input is DelayedDataFrame.

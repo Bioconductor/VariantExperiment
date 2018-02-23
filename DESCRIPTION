@@ -23,7 +23,8 @@ Imports:
     methods,
     gdsfmt, 
     SNPRelate,
-    SeqArray, 
+    SeqArray,
+    SeqVarTools,
     Biostrings, 
     IRanges
 LazyData: true
@@ -37,3 +38,6 @@ Collate:
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R
+    VariantExperiment.R
+    AllGenerics.R
+    VariantExperiment-stats.R

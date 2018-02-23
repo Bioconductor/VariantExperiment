@@ -75,9 +75,9 @@
 {
     i <- normalizeSingleBracketSubscript(i, x, exact = FALSE, 
                                          allow.NAs = TRUE
-                                         , as.NSBS = TRUE
+                                         , as.NSBS = FALSE
                                          )
-    x@lazyIndex <- .update_row(x@lazyIndex, i@subscript)
+    x@lazyIndex <- .update_row(x@lazyIndex, i)
     slot(x, "nrows", check = FALSE) <- length(i)
     if (!is.null(rownames(x))) {
         slot(x, "rownames", check = FALSE) <- make.unique(extractROWS(rownames(x), 

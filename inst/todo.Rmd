@@ -1,3 +1,8 @@
+2/22/2018
+- DelayedDataFrame construction. -- done!
+- GDSMatrix (2-dim GDSArray). 
+- GDSArray@index, list of named vector? 
+
 2/14/2018, 
 - define `VariantExperiment` class, contains `SummarizedExperiment`, has gds file related, row/colData in `DelayedDataFrame` class. 
 - return `VariantExperiment` from `makeSummarizedExperimentFromGDS` and `saveGDSSummarizedExperiment`. 

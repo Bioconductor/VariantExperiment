@@ -31,6 +31,11 @@ setMethod("gdsfile", "SummarizedExperiment", function(x) {
     vapply(assays(x), gdsfile, character(1))
 })
 
+## #' @rdname GDSArray
+## setMethod("gdsfile", "VariantExperiment", function(x) {
+##     x@gdsfile
+## })
+
 #' @rdname GDSArray
 #' @exportMethod "gdsfile<-"
 setGeneric("gdsfile<-",

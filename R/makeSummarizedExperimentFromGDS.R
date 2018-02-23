@@ -380,7 +380,7 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=char
     }
     ## mcols(rowRanges) <- DelayedDataFrame(mcols(rowRanges))
     ## SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)
-    SummarizedExperiment(
+    se <- SummarizedExperiment(
         assays = assays,
         colData = colData,
         rowRanges = rowRange)

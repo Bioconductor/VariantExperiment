@@ -150,7 +150,8 @@ setClass("GDSMatrix", contains=c("DelayedMatrix", "GDSArray"))
 
 ### Automatic coercion method from GDSArray to GDSMatrix (muted for higher dimensions)
 ### this function works only when GDSArray is 2-dimensional, otherwise, it fails.
-setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))
+setAs("GDSArray", "GDSMatrix", function(from) new("GDSMatrix", from))    
+setAs("GDSMatrix", "GDSArray", function(from) from)
 
 ### For internal use only.
 setMethod("matrixClass", "GDSArray", function(x) "GDSMatrix")

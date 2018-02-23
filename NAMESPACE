@@ -2,6 +2,7 @@
 
 export(GDSArray)
 export(GDSArraySeed)
+export(VariantExperiment)
 export(loadGDSSummarizedExperiment)
 export(makeSummarizedExperimentFromGDS)
 export(saveGDSSummarizedExperiment)

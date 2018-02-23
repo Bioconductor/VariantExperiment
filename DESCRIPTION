@@ -9,10 +9,10 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
     SummarizedExperiment.
 Depends:
     R (>= 3.4.2),
-    S4Vectors,
-    SummarizedExperiment,
+    S4Vectors (>= 0.17.34),
+    SummarizedExperiment (>= 1.9.14),
     GenomicRanges,
-    DelayedArray (>= 0.5.9)
+    DelayedArray (>= 0.5.20)
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/Bioconductor/VariantExperiment

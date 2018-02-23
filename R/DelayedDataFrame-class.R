@@ -9,25 +9,41 @@
 )
 
 ## "update_index" not actually used in constructing "DelayedDataFrame"...
-update_index <- function(lazyList, j, value) {
+.update_index <- function(lazyList, j, value) {
     for (i in seq_along(lazyList@indexes)){
-        index <- lazyList@indexes[[i]]$index[[1]]
-        if(!is.null(index)){
-            if (all(value == index)) {
-                lazyList@has_index[j] = i
-                return(lazyList)
-            }
+        index <- lazyList@indexes[[i]]$index
+        if (identical(value, index)){
+            lazyList@has_index[j] <- i
+            return(lazyList)
         }
     }
     ## clone (refClass clone, different from ordinary S4 class)
     new_index_id <- length(lazyList@indexes) + 1L
     lazyList@has_index[j] = new_index_id
-    index = IndexList(index=list(value))
+    index = IndexList(index=value)
     lazyList@indexes[[new_index_id]] = index
     lazyList
 }
 
-update_row <- function(lazyList, value) {
+## FIXME: how to simplify these code? 
+.update_lazyIndex <- function(lazyIndex, from){
+    if(!is(from, "DelayedDataFrame")){
+        for (i in seq_len(length(from))){
+            index <- from[[i]]@index
+            lazyIndex <- .update_index(lazyIndex, i, index)
+        }
+    }
+    index_inuse <- seq_len(length(lazyIndex@indexes)) %in% unique(lazyIndex@has_index)
+    lazyIndex@indexes <- lazyIndex@indexes[index_inuse]
+    
+    for (i in seq_len(length(from))){
+        index <- from[[i]]@index
+        lazyIndex <- .update_index(lazyIndex, i, index)
+    }
+    lazyIndex
+}
+    
+.update_row <- function(lazyList, value) {
     lazyList@indexes <- lapply(lazyList@indexes, function(index) {
         index <- DelayedArray:::.clone(index)
         if (is.null(index$index[[1]]))
@@ -61,7 +77,7 @@ update_row <- function(lazyList, value) {
                                          allow.NAs = TRUE
                                          , as.NSBS = TRUE
                                          )
-    x@lazyIndex <- update_row(x@lazyIndex, i@subscript)
+    x@lazyIndex <- .update_row(x@lazyIndex, i@subscript)
     slot(x, "nrows", check = FALSE) <- length(i)
     if (!is.null(rownames(x))) {
         slot(x, "rownames", check = FALSE) <- make.unique(extractROWS(rownames(x), 
@@ -69,7 +85,7 @@ update_row <- function(lazyList, value) {
     }
     ## copy updated lazy index to each column
     for (j in seq_along(x))
-        DelayedArray:::.index(x[[j]]) <- .get_index(x, j)
+        DelayedArray:::.index(x[[j]]) <- .get_index(x, j)$index
     x
 }
 setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
@@ -119,10 +135,8 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 
 ## DelayedDataFrame has inherited from DataFrame, so it inherits coercion methods of DataFrame to matrix/data.frame/list (as.matrix, as.list, as.data.frame/as(x, "data.frame/list")). Will only need to define set("ANY", "DelayedDataFrame"). 
 
-## .as.DelayedDataFrame.DataFrame <- function(from){
+## .as.DelayedDataFrame.DataFrame <- function(x){
 setAs("DataFrame", "DelayedDataFrame", function(from){
-
-    delayed_ops <- vapply(from, function(x) is(x, "DelayedArray"), logical(1))
     delayed_ops <- vapply(from, is, logical(1), "DelayedArray")
     
     ## (DelayedDF only works for DelayedArray with different backend)
@@ -138,30 +152,17 @@ setAs("DataFrame", "DelayedDataFrame", function(from){
              words[2], " not DelayedArray ",
              words[3], ". \n")
     }
-
-    ## the dimension of each column must be the same (for lazyIndex)
-    ndims <- vapply(from, function(x) length(dim(x)), integer(1))
-    uniq_ndims <- unique(ndims)
-
-    indexes <- list()
-    for (i in seq_along(uniq_ndims)){
-        indexes[[i]] <- IndexList(index=vector("list", uniq_ndims[i]))
-    }
-
-    has_index <- unname(vapply(ndims, match, integer(1), uniq_ndims))
-    lazyIndex <- .lazyList(indexes = indexes, has_index = has_index)
-
-    ## FIXME: if any column already has @index with values, not NULL,
-    ##        should include into the indexes and has_index.
     
-    for (i in seq_along(from))
-        from[[i]]@index <- indexes[[has_index[i]]]
+    ## 
+    lazyIndex <- .lazyList(indexes = list(IndexList(index=vector("list", 1))),
+                           has_index = rep(1L, length(from)))
+    lazyIndex <- .update_lazyIndex(lazyIndex, from)
 
     .DelayedDataFrame(from, lazyIndex = lazyIndex)
-}
-)
+})
 
 ## setMethod("DelayedDataFrame", "DataFrame", .as.DelayedDataFrame.DataFrame)
+
 ###
 setAs("ANY", "DelayedDataFrame", function(from){
     df <- as(from, "DataFrame")

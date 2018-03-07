@@ -9,7 +9,7 @@
 \alias{gdsfile,GDSArraySeed-method}
 \alias{gdsfile,GDSArray-method}
 \alias{gdsfile,DelayedArray-method}
-\alias{gdsfile,SummarizedExperiment-method}
+\alias{gdsfile,VariantExperiment-method}
 \alias{gdsfile<-}
 \title{GDSArray}
 \usage{
@@ -27,7 +27,7 @@ gdsfile(x)
 
 \S4method{gdsfile}{DelayedArray}(x)
 
-\S4method{gdsfile}{SummarizedExperiment}(x)
+\S4method{gdsfile}{VariantExperiment}(x)
 
 gdsfile(x) <- value
 }

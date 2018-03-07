@@ -378,9 +378,7 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=char
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- DelayedDataFrame(mcols(rowRange), infocols)
     }
-    ## mcols(rowRanges) <- DelayedDataFrame(mcols(rowRanges))
-    ## SummarizedExperiment(assays = assays, colData=colData, rowRanges = rowRange)
-    se <- SummarizedExperiment(
+    se <- VariantExperiment(
         assays = assays,
         colData = colData,
         rowRanges = rowRange)

@@ -29,45 +29,47 @@
         gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
         FUN=SeqArray::seqAlleleFreq
     )
-
-    id <- paste(ref.allele, collapse="_")
-    rowData(gdsfile)[[paste0("seqAlleleFreq_", id)]] <- alleleFreq
-    gdsfile
+    alleleFreq
+    ## id <- paste(ref.allele, collapse="_")
+    ## rowData(gdsfile)[[paste0("seqAlleleFreq_", id)]] <- alleleFreq
+    ## gdsfile
 }
-setMethod("seqAlleleFreq", "SummarizedExperiment", .seqAlleleFreq)        
+setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 
 .seqAlleleCount <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){
     alleleCount <- .doCompatibleFunction(
         gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
         FUN=SeqArray::seqAlleleCount
     )
-
-    id <- paste(ref.allele, collapse="_")
-    rowData(gdsfile)[[paste0("seqAlleleCount_", id)]] <- alleleCount
-    gdsfile
+    alleleCount
+    ## id <- paste(ref.allele, collapse="_")
+    ## rowData(gdsfile)[[paste0("seqAlleleCount_", id)]] <- alleleCount
+    ## gdsfile
 }
-setMethod("seqAlleleCount", "SummarizedExperiment", .seqAlleleCount)        
+
+setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)        
 
 .seqMissing <- function(gdsfile, per.variant=TRUE, .progress=FALSE, parallel = seqGetParallel()){
     seqMissing <- .doCompatibleFunction(
         gdsfile, per.variant=per.variant, .progress =.progress, parallel=parallel,
         FUN=SeqArray::seqMissing
     )
-    if (per.variant)
-        rowData(gdsfile)[["variant_missing"]] <- seqMissing
-    else
-        SummarizedExperiment::colData(gdsfile)[["sample_missing"]] <- seqMissing
-    gdsfile
+    seqMissing
+    ## if (per.variant)
+    ##     rowData(gdsfile)[["variant_missing"]] <- seqMissing
+    ## else
+    ##     VariantExperiment::colData(gdsfile)[["sample_missing"]] <- seqMissing
+    ## gdsfile
 }
-setMethod("seqMissing", "SummarizedExperiment", .seqMissing)        
+setMethod("seqMissing", "VariantExperiment", .seqMissing)        
 
 .seqNumAllele <- function(gdsfile){
     numAllele <- .doCompatibleFunction(gdsfile, FUN=SeqArray::seqNumAllele)
-
-    rowData(gdsfile)[["numAllele"]] <- numAllele
-    gdsfile
+    numAllele
+    ## rowData(gdsfile)[["numAllele"]] <- numAllele
+    ## gdsfile
 }
-setMethod("seqNumAllele", "SummarizedExperiment", .seqNumAllele)        
+setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)        
 
 ## SeqVarTools stats functions:
 
@@ -100,7 +102,7 @@ setMethod("seqNumAllele", "SummarizedExperiment", .seqNumAllele)
     hwe <- .doCompatibleFunction(gdsobj, permute=permute, FUN = SeqVarTools::hwe)
     hwe   ## returns a data.frame, will output as is, do not paste into rowData(se)
 }
-setMethod("hwe", "SummarizedExperiment", .hwe)
+setMethod("hwe", "VariantExperiment", .hwe)
 
 .inbreedCoeff <- function(gdsobj, margin=c("by.variant", "by.sample"),
                           use.names=FALSE){
@@ -108,41 +110,41 @@ setMethod("hwe", "SummarizedExperiment", .hwe)
         gdsobj, margin=margin, use.names=use.names, FUN = SeqVarTools::inbreedCoeff)
     inbCoef   ## returns a named (if use.names=TRUE) vector
 }
-setMethod("inbreedCoeff", "SummarizedExperiment", .inbreedCoeff)
+setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
 
 .pca <- function(gdsobj, eigen.cnt=32){
     pca <- .doCompatibleFunction(gdsobj, eigen.cnt=eigen.cnt, FUN = SeqVarTools::pca)
     pca   ## returns a list, $eigenval (vector), $eigenvect (matrix)
 }
-setMethod("pca", "SummarizedExperiment", .pca)
+setMethod("pca", "VariantExperiment", .pca)
 
 .titv <- function(gdsobj, by.sample=FALSE, use.names=FALSE){
     titv <- .doCompatibleFunction(gdsobj, by.sample=by.sample,
                                   use.names=use.names, FUN = SeqVarTools::titv)
     titv   ## returns a scalar / vector (if by.sample=TRUE)
 }
-setMethod("titv", "SummarizedExperiment", .titv)
+setMethod("titv", "VariantExperiment", .titv)
 
 .refDosage <- function(gdsobj, use.names=TRUE){
     dos <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::refDosage)
     dos   ## returns a matrix, nsamp * nvar
 }
-setMethod("refDosage", "SummarizedExperiment", .refDosage)
+setMethod("refDosage", "VariantExperiment", .refDosage)
 
 .altDosage <- function(gdsobj, use.names=TRUE){
     dos <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::altDosage)
     dos   ## returns a matrix, nsamp * nvar
 }
-setMethod("altDosage", "SummarizedExperiment", .altDosage)
+setMethod("altDosage", "VariantExperiment", .altDosage)
 
 .ctSingleton <- function(gdsobj, use.names=FALSE){
     ct <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::countSingletons)
     ct   ## returns a vector of the number of singleton variants per sample.
 }
-setMethod("countSingletons", "SummarizedExperiment", .ctSingleton)
+setMethod("countSingletons", "VariantExperiment", .ctSingleton)
 
 .heterozygosity <- function(gdsobj, margin=c("by.variant", "by.sample"), use.names=FALSE){
     margin <- match.arg(margin)
@@ -150,7 +152,7 @@ setMethod("countSingletons", "SummarizedExperiment", .ctSingleton)
                                   FUN = SeqVarTools::heterozygosity)
     hetero   ## returns a vector of the number of singleton variants per sample.
 }
-setMethod("heterozygosity", "SummarizedExperiment", .heterozygosity)
+setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
 
 .homozygosity <- function(gdsobj, allele=c("any", "ref", "alt"), margin=c("by.variant", "by.sample"), use.names=FALSE){
     allele <- match.arg(allele)
@@ -160,14 +162,14 @@ setMethod("heterozygosity", "SummarizedExperiment", .heterozygosity)
                                   FUN = SeqVarTools::homozygosity)
     homo   ## returns a vector of the number of singleton variants per sample.
 }
-setMethod("homozygosity", "SummarizedExperiment", .homozygosity)
+setMethod("homozygosity", "VariantExperiment", .homozygosity)
 
 .meanBySample <- function(gdsobj, var.name, use.names=FALSE){
     mean <- .doCompatibleFunction(gdsobj, var.name=var.name, use.names=use.names,
                                   FUN = SeqVarTools::meanBySample)
     mean
 } 
-setMethod("meanBySample", "SummarizedExperiment", .meanBySample)
+setMethod("meanBySample", "VariantExperiment", .meanBySample)
 
 .missingGenotypeRate <- function(gdsobj, margin=c("by.variant", "by.sample"), use.names=FALSE){
     margin <- match.arg(margin)
@@ -175,18 +177,18 @@ setMethod("meanBySample", "SummarizedExperiment", .meanBySample)
                                      FUN = SeqVarTools::missingGenotypeRate)
     misRate
 }
-setMethod("missingGenotypeRate", "SummarizedExperiment", .missingGenotypeRate)
+setMethod("missingGenotypeRate", "VariantExperiment", .missingGenotypeRate)
 
 .isSNV <- function(gdsobj, biallelic=TRUE){
     issnv <- .doCompatibleFunction(gdsobj, biallelic=biallelic,
                                    FUN = SeqVarTools::isSNV)
     issnv
 }
-setMethod("isSNV", "SummarizedExperiment", .isSNV)
+setMethod("isSNV", "VariantExperiment", .isSNV)
 
 .isVariant <- function(gdsobj, use.names=FALSE){
     isvar <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                    FUN = SeqVarTools::isVariant)
     isvar
 }
-setMethod("isVariant", "SummarizedExperiment", .isVariant)
+setMethod("isVariant", "VariantExperiment", .isVariant)

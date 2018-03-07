@@ -8,7 +8,7 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
     back-end for DelayedArray, and store the GDSArray data into the 
     SummarizedExperiment.
 Depends:
-    R (>= 3.4.2),
+    R (>= 3.5),
     S4Vectors (>= 0.17.34),
     SummarizedExperiment (>= 1.9.14),
     GenomicRanges,

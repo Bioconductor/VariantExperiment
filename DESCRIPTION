@@ -12,7 +12,7 @@ Depends:
     S4Vectors (>= 0.17.34),
     SummarizedExperiment (>= 1.9.14),
     GenomicRanges,
-    DelayedArray (>= 0.5.20)
+    GDSArray
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/Bioconductor/VariantExperiment
@@ -31,9 +31,6 @@ LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
-    AllUtilities.R
-    GDSArray-classes.R
-    GDSArray-methods.R
     DelayedDataFrame-class.R
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R

@@ -1,5 +1,33 @@
+3/7/2018
+
+- Depends on GDSArray (installed locally, master 0.99.4)   -- done! 
+- use GDSArray:::GDSArraySeed(). -- done!
+- use GDSArray:::.get\_gdsdata\_...  -- done!
+- modify R/... codes for updated GDSArray:AllUtilities.R functions. The input is file name in characer, not "gds.class" object.  -- done!
+- VE methods: gdsfile(VE)? 
+- DelayedDataFrame to include all data type.
+  -- validity check.   -- done!
+  -- conversion, DF->DDF   -- done!
+  
+- DelayedDataFrame lazyIndex to include non-delayed_ops objects.
+  -- (plain atomic vector of NULL for non-delayed columns. 
+  -- update_row  -- done!
+  -- extractROWS(DDF)  -- check indexInUse first? update_lazyIndex. 
+  -- [ subsetting.   -- 
+- Coercion from DF=>DDF works. 
+- update "extractROWS.DelayedDataFrame".   -- done!
+- update "[DDF" when initiate(DDF, lazyIndex=new_lazyIndex). --- done!
+- 
+- validityCheck for DDF add length(x@has_index)==ncol(x)   -- done!
+- if, else, {... add white space after. functions, new line for {. -- done!
+
+- update documentation. -- doing...
+  -- why ?DelayedDataFrame does not return any documentation?? 
+  -- add example.
+
+
 2/27/2018
-- GDSArray into separate package? yes!  
+- GDSArray into separate package? -- done!
 - DelayedDataFrame into S4Vector? or separate package? 2nd iteration. keep the refClass(memory-wise save for cloning). To accomodate Delayed_ops or not. [[/"$" method.   
 - unit tests. subsetting for dDF works. [, [[, 
 - related manual/unit tests for each R script. 
@@ -20,7 +48,7 @@
 - when VE rowData/colData() updated with additional columns, write them into gds file with `saveGDSSummarizedExperiment`. 
  
 - stat functions, export all methods?   -- done! 
-- stat functions, write into rowData(se)??  
+- stat functions, write into rowData(se)??  -- NO!
 
 ## loadGDSSE(), if(identical(basename(gdsfile(a)), "assays.gds")) does not work.
 

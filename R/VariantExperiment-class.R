@@ -8,7 +8,9 @@
     ##         x="integer")
 )
 
-## constructor
+###--------------
+### constructor
+###--------------
 #' @export VariantExperiment
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
 {
@@ -43,9 +45,9 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 ##     .VariantExperiment(from)
 ## })
 
-###----------------------------------------------------------------
+###----------------
 ### Coercion
-###
+###----------------
 
 ## 
 
@@ -65,7 +67,20 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
     TRUE
 }
 
-#' @importFrom S4Vectors setValidity2
+#' @import S4Vectors 
 setValidity2("VariantExperiment", .validate_VariantExperiment)
+
+###--------------------
+### getter and setter
+###--------------------
+setMethod("gdsfile", "VariantExperiment", function(x)
+    vapply(assays(x), gdsfile, character(1)))
+
+setReplaceMethod("gdsfile", "VariantExperiment", function(x, value) {
+    new_filepath <- tools::file_path_as_absolute(value)
+    assays(x) <- lapply(assays(x), function(assay)
+        BiocGenerics:::replaceSlots(seed(assay), file=value, check=FALSE))
+    x
+})
 
 

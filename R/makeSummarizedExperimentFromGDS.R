@@ -1,6 +1,7 @@
 
 #' @importFrom GenomicRanges GRanges ranges seqnames 
 #' @importFrom IRanges IRanges
+#' @import gdsfmt
 #' @import SNPRelate
 #' @import SeqArray
 .granges_gdsdata <- function(gdsfile, fileFormat, ...){
@@ -75,7 +76,7 @@
                 dimnames=list(varid),  ## for snp/variant nodes only.
                 permute=FALSE,
                 first_val="ANY")
-    DelayedArray(seed)  ## return a DelayedArray/GDSArray object without names.
+    GDSArray(seed)  ## return a DelayedArray/GDSArray object without names.
 }
 
 ### delayedArray in each column in DF, have individual index, which does not save spaces almost......
@@ -103,15 +104,15 @@
     infonodes <- paste0("annotation/info/", infoColumns)
     if(rowDataOnDisk){
         res <- lapply(infonodes, function(x)
-            DelayedArray(
-                seed=new("GDSArraySeed",
+            GDSArray(
+                file=new("GDSArraySeed",
                          file=seqArrayFile,
                          name=x,
                          dim=objdesp.gdsn(index.gdsn(f, x))$dim,
                          dimnames=list(seqGetData(f, "variant.id")),
                          permute=FALSE,
                          first_val="ANY")))
-        res1 <- DelayedDataFrame(lapply(res, function(x)DataFrame(I(x))))
+        res1 <- DelayedDataFrame(lapply(res, I))
     }else{
         res1 <- SeqArray::info(f, info=infoColumns)
     }
@@ -186,15 +187,16 @@
     }else{
         node <- name
     }
-    seed <- new("GDSArraySeed",
-                file=file,
-                name=node,
-                dim=objdesp.gdsn(index.gdsn(f, node))$dim,
-                dimnames=list(read.gdsn(index.gdsn(f, "sample.id"))),
-                ## for sample-related nodes only.
-                permute=FALSE,
-                first_val="ANY")
-    DelayedArray(seed)  ## returns Delayed/GDSArray, not DF.
+    seed <- new(
+        "GDSArraySeed",
+        file=file,
+        name=node,
+        dim=objdesp.gdsn(index.gdsn(f, node))$dim,
+        dimnames=list(read.gdsn(index.gdsn(f, "sample.id"))),
+        ## for sample-related nodes only.
+        permute=FALSE,
+        first_val="ANY")
+    GDSArray(seed)  ## returns Delayed/GDSArray, not DF.
 }
 
 ###

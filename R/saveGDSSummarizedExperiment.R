@@ -83,7 +83,8 @@
                  compress=compress, closezip=TRUE
                  )  ## "," separated.
 }
- 
+
+#' @importFrom utils head tail
 .write_sedata_as_gdsnode <- function(data, name, ff, gds_path,
                                      chunk_size, nrow, ncol, compress)
 {
@@ -169,8 +170,8 @@
 }
 
 ###
-    ## Write gds file from SE with all contents
-    ###
+## Write gds file from SE with all contents
+###
 
 .write_se_as_gds <- function(se, fileFormat, gds_path, chunk_size,
                              compress, verbose)

@@ -65,6 +65,7 @@
 #' DelayedDataFrame-class
 #' @name DelayedDataFrame
 #' @exportClass DelayedDataFrame
+#' @importFrom methods as initialize is new "slot<-"
 #' @aliases DelayedDataFrame-class
 #' @description The \code{DelayedDataFrame} class extends the
 #'     \code{DataFrame} class and supports the storage of any type of
@@ -131,10 +132,12 @@ update_lazyIndex <- function(from)
     slot(x, "listData") <- lapply(
         structure(seq_len(ncol(x)), names=names(x)), function(j)
         {
-            if(!is(x[[j]], "list"))  ## non-delayed_ops object.
+            if(!is(x[[j]], "DelayedArray"))  ## non-delayed_ops object.
                 extractROWS(x[[j]], i)
-            else                     ## DelayedArray objects.
+            else {                    ## DelayedArray objects.
                 x[[j]]@index <- .get_index(x, j)
+                x[[j]]
+            }
         })
     slot(x, "nrows", check = FALSE) <- length(i)
     if (!is.null(rownames(x))) {
@@ -147,6 +150,25 @@ update_lazyIndex <- function(from)
 #' @aliases extractROWS,DelayedDataFrame-method
 #' @rdname DelayedDataFrame-class
 setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
+
+setMethod("[", c("lazyList", "ANY", "missing", "ANY"),
+          function(x, i, j, ..., drop = TRUE)
+          {
+              has_index <- x@has_index[i]
+              uhas_index = unique(has_index)
+              has_index <- match(has_index, uhas_index)
+              indexes <- x@indexes[uhas_index]
+              .lazyList(indexes = indexes, has_index = has_index)
+              ## .get_index(, i)
+          }
+          )
+
+setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
+    function(x, i, j, ..., drop = TRUE)
+    {
+        x@lazyIndex <- x@lazyIndex[j]
+        callNextMethod()
+})
 
 `[.DelayedDataFrame` <- function (x, i, j, ..., drop = TRUE) 
 {
@@ -199,6 +221,13 @@ setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
 #' @exportMethod [
 #' @aliases [,DelayedDataFrame-method
 #' @rdname DelayedDataFrame-class
+#' @param x input
+#' @param i row subscript
+#' @param j col subscript
+#' @param drop if drop with reduced dimension, default is TRUE.
+#' @param row.names rownames
+#' @param check.names if check names.
+#' @param ... other arguments to pass.
 setMethod("[", "DelayedDataFrame", `[.DelayedDataFrame`)
 
 ###-------------
@@ -223,6 +252,7 @@ DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 #' @exportMethod coerce
 #' @aliases coerce,DataFrame,DelayedDataFrame-method
 #' @rdname DelayedDataFrame-class
+#' @param from a \code{DataFrame} object
 setAs("DataFrame", "DelayedDataFrame", function(from){
     ## initial lazyIndex
     lazyIndex <- .lazyList(
@@ -230,12 +260,7 @@ setAs("DataFrame", "DelayedDataFrame", function(from){
         has_index = rep(1L, length(from)))
     ans <- .DelayedDataFrame(from, lazyIndex = lazyIndex)
     update_lazyIndex(ans)
-    ## ans@lazyIndex <- .check_lazyIndex_inuse(ans@lazyIndex)
-    ## ans
 })
-
-## setMethod("DelayedDataFrame", "DataFrame",
-##           function(from) as(from, "DelayedDataFrame"))
 
 ###
 setAs("ANY", "DelayedDataFrame", function(from){

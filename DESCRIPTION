@@ -25,6 +25,7 @@ Imports:
     SNPRelate,
     SeqArray,
     SeqVarTools,
+    DelayedArray,
     Biostrings, 
     IRanges
 LazyData: true

@@ -23,6 +23,23 @@ update_lazyIndex(from)
 
 DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
 }
+\arguments{
+\item{from}{a \code{DataFrame} object}
+
+\item{x}{input}
+
+\item{i}{row subscript}
+
+\item{j}{col subscript}
+
+\item{...}{other arguments to pass.}
+
+\item{drop}{if drop with reduced dimension, default is TRUE.}
+
+\item{row.names}{rownames}
+
+\item{check.names}{if check names.}
+}
 \description{
 The \code{DelayedDataFrame} class extends the
     \code{DataFrame} class and supports the storage of any type of

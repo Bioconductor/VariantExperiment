@@ -20,6 +20,36 @@
     FUN(f, ...)
 }
 
+## Reading VCF file directly into VE.
+### use default value arguments for seqVCF2GDS, to read in all info from VCF. Use arguments from "makeSummarizedExperimentFromGDS" for "seqVCF2VE" to choose what to read into VE.
+### retain argument: optimize, parallel, verbose??
+seqVCF2VE <- function(vcf.fn, dir="my_gds_ve",name=NULL,
+                      rowDataColumns=character(),
+                      colDataColumns=character(),
+                      infoColumns=character(), rowDataOnDisk=TRUE,
+                      colDataOnDisk=TRUE, parallel=FALSE,
+                      verbose=TRUE, 
+                      )
+{
+    out.gds.fn <- file.path(dir, "ve.gds")
+    if (!file.exists(out.gds.fn)) {
+        SeqArray::seqVCF2GDS(vcf.fn=vcf.fn, out.fn=out.gds.fn, header=NULL,
+                             storage.option="LZMA_RA", info.import=NULL,
+                             fmt.import=NULL, genotype.var.name="GT",
+                             ignore.chr.prefix="chr", reference=NULL,
+                             start=1L, count=-1L, optimize=TRUE,
+                             raise.error=TRUE, digest=TRUE, parallel=parallel,
+                             verbose=verbose)
+    }        
+    ve <- makeSummarizedExperimentFromGDS(
+        file=out.gds.fn, name=name, rowDataColumns=rowDataColumns,
+        colDataColumns=colDataColumns, infoColumns=infoColumns,
+        rowDataOnDisk=rowDataOnDisk, colDataOnDisk=colDataOnDisk)
+    ve
+    ## makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=character(), colDataColumns=character(), infoColumns=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE){
+
+}
+
 ## SeqArray stats: seqAlleleFreq seqAlleleCount seqMissing seqNumAllele 
 
 ## #' @importFrom SeqArray seqAlleleFreq seqAlleleCount seqMissing seqNumAllele

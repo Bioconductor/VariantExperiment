@@ -1,3 +1,7 @@
+3/19/2018
+- Add VCFReading function into VE.
+- rename "se" inside "makeSummarizedExperimentFromGDS" or "save/loadgdsfmtsummarizedexperiment" to be "ve". 
+
 2/27/2018
 - GDSArray into separate package? yes!  
 - DelayedDataFrame into S4Vector? or separate package? 2nd iteration. keep the refClass(memory-wise save for cloning). To accomodate Delayed_ops or not. [[/"$" method.   
@@ -5,7 +9,6 @@
 - related manual/unit tests for each R script. 
 - vignette updates. 
 - DelayedDF finished, meet with Herve, Martin. 
-- ??
 
 2/22/2018
 - DelayedDataFrame construction. -- done!

@@ -1,3 +1,15 @@
+3/20/2018
+
+3rd iteration: 
+- modify "concatenate("lazyList")" for "object=list()" argument. 
+- do not propagate lazyIndex into delayed columns. 
+- rbind, cbind. update @lazyIndex only, and callNextMethod(). 
+- rownames. -- done!
+- as("DelayedDataFrame", "DataFrame") to realize the lazyIndex into each column. 
+  simply call lapply(lazyIndex, columns of DDF). 
+- "[i,j,...]<-" assignment.
+- "[[<-" replace, need to update lazyIndex. 
+
 3/12/2018
 
 - unit test  
@@ -5,16 +17,16 @@
 - vignette
 - assignment for DelayedDataFrame, need to update @lazyIndex slot. 
   -- "$<-" assignment, ==> "[[<-" assignment.
-  -- "[[]]<-" assignment.
-  -- "[[]]<-NULL" 
-  -- "[i,j,...]<-" assignment. 
+  -- "[[]]<-" append. -- done!
+  -- "[[]]<-" replace -- need to update @lazyIndex...
+  -- "[[]]<-NULL"    -- done!
   
   
 3/7/2018
 
 - Depends on GDSArray (installed locally, master 0.99.4)   -- done! 
 - use GDSArray:::GDSArraySeed(). -- done!
-- use GDSArray:::.get\_gdsdata\_...  -- done!
+- use GDSArray:::.get_gdsdata_...  -- done!
 - modify R/... codes for updated GDSArray:AllUtilities.R functions. The input is file name in characer, not "gds.class" object.  -- done!
 - VE methods: gdsfile(VE)? 
 - DelayedDataFrame to include all data type.

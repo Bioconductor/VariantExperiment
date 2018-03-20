@@ -13,6 +13,7 @@
 \alias{DelayedDataFrame}
 \alias{coerce}
 \alias{coerce,DataFrame,DelayedDataFrame-method}
+\alias{lazyIndex<-,DelayedDataFrame-method}
 \title{DelayedDataFrame-class}
 \usage{
 update_lazyIndex(from)
@@ -22,6 +23,8 @@ update_lazyIndex(from)
 \S4method{[}{DelayedDataFrame,ANY,ANY,ANY}(x, i, j, ..., drop = TRUE)
 
 DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
+
+\S4method{lazyIndex}{DelayedDataFrame}(x) <- value
 }
 \arguments{
 \item{from}{a \code{DataFrame} object}
@@ -40,6 +43,9 @@ DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
 
 \item{check.names}{if check names.}
 }
+\value{
+the new value of \code{lazyIndex} slot for \code{DelayedDataFrame} object.
+}
 \description{
 The \code{DelayedDataFrame} class extends the
     \code{DataFrame} class and supports the storage of any type of
@@ -48,6 +54,8 @@ The \code{DelayedDataFrame} class extends the
 \code{update_lazyIndex}: make sure the indexes are
     consistent with columns and being used. update the
     \code{indexes} slot and \code{@has_index} slot in lazyIndex.
+
+the setter for the \code{lazyIndex} slot of \code{DelayedDataFrame} object.
 }
 \details{
 The \code{DelayedDataFrame} inherits from \code{DataFrame}

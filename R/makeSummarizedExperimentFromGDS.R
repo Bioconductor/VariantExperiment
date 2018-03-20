@@ -1,4 +1,4 @@
-
+#' @import GDSArray
 #' @importFrom GenomicRanges GRanges ranges seqnames 
 #' @importFrom IRanges IRanges
 #' @import gdsfmt
@@ -150,11 +150,11 @@
                     .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
                 toupper(rowDataColumns))
             resDF <- DelayedDataFrame(lapply(res, I))
-            if("ALLELE" %in% names(resDF)){
-                resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
-                resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
-                resDF[["ALLELE"]] <- NULL 
-            }
+            ## if("ALLELE" %in% names(resDF)){
+            ##     resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
+            ##     resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
+            ##     resDF[["ALLELE"]] <- NULL 
+            ## }
             if("REF" %in% names(resDF)){
                 resDF$REF <- sub(",.*", "", resDF$REF)
             }
@@ -241,14 +241,14 @@
             node <- paste0(pre, "/", colDataColumns)
             annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
             names(annot) <- colDataColumns
-            DataFrame(annot, row.names=sample.id)
+            DelayedDataFrame(annot, row.names=sample.id)
         }
     } else {
         f <- openfn.gds(file)
         on.exit(closefn.gds(f))
         stopifnot(inherits(f, "gds.class"))
         sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        DataFrame(row.names=sample.id)
+        DelayedDataFrame(row.names=sample.id)
     }
 }
 

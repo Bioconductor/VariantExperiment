@@ -1,8 +1,35 @@
+3/21/2018
+
+- DDF, do not carry old indexes inside. When constructing with new columns, always have NULL as index. 
+- new LazyList, extends "SimpleList". 
+  -- modify utility functions for LazyList and DDF@lazyIndex.   -- done.
+  -- redefine setMethod("[", "LazyList")  -- done.
+  -- concatenate("LazyList"), for loop updating. For the c("LazyList") method to work.  -- done!
+
+- constructor of "DelayedDataFrame", only include NULL for original lazyIndex. 
+     ordinary vector has the same index as 1-dim DelayedArray.    -- done!
+- modify "extractROWS("DelayedDataFrame")". only update @lazyIndex. leave DDF untouched.  --done!
+- modify show method of DDF. only print head(DDF, 5). Realization for 5 rows.  -- done!
+		print("DelayedDataFrame with 10 rows and 5 columns")
+		call as("DDF", "DataFrame") for realization. 
+- nrow("DelayedDataFrame")  -- done!
+- modify setMethod("[", "DelayedDataFrame"). -- done!
+
+- update @nrow @rownames slots for subsetting.    -- done!
+- modify "show" method accordingly for nrows() and rownames().   -- done!
+- [[]] extraction, modify to be consistent with dim(ddf). 
+  -- lower level function: "getListElement("DelayedDataFrame")" defined. 
+- lazyIndex@listData. do not distinguish (un)delayed columns, use only vector for index. ?? 
+- "check\_lazyIndex\_in_use" and reorder.   -- when??
+- c(LazyList), add checking validity. 
+- rbind, cbind. c(DDF, DDF)
+
+
 3/20/2018
 
 3rd iteration: 
 - modify "concatenate("lazyList")" for "object=list()" argument. 
-- do not propagate lazyIndex into delayed columns. 
+- do not propagate lazyIndex into delayed columns.   -- done. modified "update_lazyIndex".
 - rbind, cbind. update @lazyIndex only, and callNextMethod(). 
 - rownames. -- done!
 - as("DelayedDataFrame", "DataFrame") to realize the lazyIndex into each column. 

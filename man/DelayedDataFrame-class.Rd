@@ -6,28 +6,34 @@
 \alias{.DelayedDataFrame}
 \alias{DelayedDataFrame-class}
 \alias{update_lazyIndex}
+\alias{DelayedDataFrame}
+\alias{coerce}
+\alias{coerce,DataFrame,DelayedDataFrame-method}
 \alias{extractROWS,DelayedDataFrame,ANY-method}
 \alias{extractROWS,DelayedDataFrame-method}
 \alias{[,DelayedDataFrame,ANY,ANY,ANY-method}
 \alias{[,DelayedDataFrame-method}
-\alias{DelayedDataFrame}
-\alias{coerce}
-\alias{coerce,DataFrame,DelayedDataFrame-method}
 \alias{lazyIndex<-,DelayedDataFrame-method}
 \title{DelayedDataFrame-class}
 \usage{
 update_lazyIndex(from)
 
+DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
+
 \S4method{extractROWS}{DelayedDataFrame,ANY}(x, i)
 
 \S4method{[}{DelayedDataFrame,ANY,ANY,ANY}(x, i, j, ..., drop = TRUE)
-
-DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
 
 \S4method{lazyIndex}{DelayedDataFrame}(x) <- value
 }
 \arguments{
 \item{from}{a \code{DataFrame} object}
+
+\item{...}{other arguments to pass.}
+
+\item{row.names}{rownames}
+
+\item{check.names}{if check names.}
 
 \item{x}{input}
 
@@ -35,13 +41,7 @@ DelayedDataFrame(..., row.names = NULL, check.names = TRUE)
 
 \item{j}{col subscript}
 
-\item{...}{other arguments to pass.}
-
 \item{drop}{if drop with reduced dimension, default is TRUE.}
-
-\item{row.names}{rownames}
-
-\item{check.names}{if check names.}
 }
 \value{
 the new value of \code{lazyIndex} slot for \code{DelayedDataFrame} object.

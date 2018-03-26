@@ -16,13 +16,20 @@
 - modify setMethod("[", "DelayedDataFrame"). -- done!
 
 - update @nrow @rownames slots for subsetting.    -- done!
-- modify "show" method accordingly for nrows() and rownames().   -- done!
+- modify "show" method for "DelayedDataFrame" with updated @nrows and @rownames. 
+  -- setMethod("show", "DelayedDataFrame") removed. Could work with show("DataFrame"). -- done!
 - [[]] extraction, modify to be consistent with dim(ddf). 
-  -- lower level function: "getListElement("DelayedDataFrame")" defined. 
+  -- lower level function: "getListElement("DelayedDataFrame")" defined.   -- done!
+- redefine setMethod("lapply", "DelayedDataFrame") inside "show" method. 
+  -- lower level function: setMethod("as.list", "DelayedDataFrame") redefined   -- done!
+  -- NOTE: "as.list" is the lower level function for "lapply" and names("DDF"). 
+- redine setMethod("names", "DelayedDataFrame")
+  -- previously called from names(as.list(x)). Now cheaper with names(x@listData).  -- done!
+
 - lazyIndex@listData. do not distinguish (un)delayed columns, use only vector for index. ?? 
 - "check\_lazyIndex\_in_use" and reorder.   -- when??
 - c(LazyList), add checking validity. 
-- rbind, cbind. c(DDF, DDF)
+- rbind, cbind. c(DDF, DDF)   -- works! Do more checking. 
 
 
 3/20/2018

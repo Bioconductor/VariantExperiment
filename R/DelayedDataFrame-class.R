@@ -184,18 +184,42 @@ DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 ## methods
 ###-------------
 
-setMethod("getListElement", "DelayedDataFrame", function(x, i)
+.subsetDelayedDataFrameListData <- function(x, i, j)
 {
-    index <- .get_index(x, i)[[1]]  ## FIXME after modifying the indexes to be not list.
-    extractROWS(x@listData[[i]], index)
+    stopifnot(is(x, "DelayedDataFrame"))
+    extractROWS(x@listData[[i]], j)  ## FIXME: normalize j... 
+}
+
+setMethod("getListElement", "DelayedDataFrame", function(x, i, exact=TRUE)
+{
+    i2 <- normalizeDoubleBracketSubscript(
+        i, x, exact = exact,
+        allow.NA = TRUE,
+        allow.nomatch = TRUE)
+    if (is.na(i2)) 
+        return(NULL)
+    index <- .get_index(x, i2)[[1]]  ## FIXME after modifying the indexes to be not list.
+    if (is.null(index))
+        index <- TRUE   
+    .subsetDelayedDataFrameListData(x, i, index)
 })
 
-## setMethod("as.list", "DelayedDataFrame", function(x, use.names=TRUE)
-## {
-##     ans <- as.list(DataFrame(x))
-##     if (!use.names)
-##         names(ans) <- NULL
-## })
+## "as.list" function is called in lapply("DelayedDataFrame", ) and names("DelayedDataFrame")...
+setMethod("as.list", "DelayedDataFrame", function(x, use.names=TRUE)  
+{
+    names <- names(x@listData)
+    ans <- lapply(
+        setNames(seq_len(ncol(x)), names), function(j) x[[j]]
+    )
+    if (!use.names)
+        names(ans) <- NULL
+    ans
+})
+
+setMethod("names", "DelayedDataFrame", function(x)
+{
+    names(x@listData)
+})
 
 ###-------------
 ### Coercion
@@ -242,26 +266,10 @@ setAs("DataFrame", "DelayedDataFrame", function(from){
 
 setAs("DelayedDataFrame", "DataFrame", function(from){
     ## realize the lazyIndex to each column.
-    ## browser();browser()
-    indexes <- from@lazyIndex@listData
-    rowSubscripts <- lapply(indexes, function(index) index[[1]])
-    nrowSubscript <- nrow(from)
-    isNullRowSubscripts <- vapply(rowSubscripts, is.null, logical(1))
-    if(all( isNullRowSubscripts ))
-        return(S4Vectors:::new_DataFrame(listData=from@listData))  ## is it expensive??
-    listData <- lapply(
-        setNames(seq_len(ncol(from)), names(from)), function(j)
-        {
-            rowSubscript <- .get_index(from, j)[[1]]
-            if(is.null(rowSubscript))
-                rowSubscript <- TRUE   
-            extractROWS(from[[j]], rowSubscript)
-        })
-    ans <- S4Vectors:::new_DataFrame(listData=listData, nrows=nrowSubscript)
+    new_listData <- as.list(from)
+    ans <- S4Vectors:::new_DataFrame(listData=new_listData, nrows=nrow(from))
     if (!is.null(rownames(from))) {
-        rnmSubscript <- rowSubscripts[[ which(!isNullRowSubscripts)[1] ]]
-        rownames <- make.unique(extractROWS(rownames(from), rnmSubscript))
-        ans@rownames <- rownames
+       ans@rownames <- rownames(from)
     }
     ans
 })
@@ -270,67 +278,6 @@ setAs("DelayedDataFrame", "DataFrame", function(from){
 setAs("ANY", "DelayedDataFrame", function(from){
     df <- as(from, "DataFrame")
     as(df, "DelayedDataFrame")
-})
-
-###-----------------
-## show method
-###----------------
-
-setMethod("show", "DelayedDataFrame", function (object) 
-{
-    ## browser(); browser()
-    nhead <- get_showHeadLines()
-    ntail <- get_showTailLines()
-    ## rowSubscripts <- object@lazyIndex@listData[[1]][[1]]  ## FIXME?
-    ## nr <- ifelse(is.null(rowSubscripts), nrow(object), length(rowSubscripts))
-    nr <- nrow(object)
-    nc <- ncol(object)
-    cat(class(object), " with ", nr, ifelse(nr == 1, " row and ", 
-        " rows and "), nc, ifelse(nc == 1, " column\n", " columns\n"), 
-        sep = "")
-    if (nr > 0 && nc > 0) {
-        nms <- rownames(object)
-        if (nr <= (nhead + ntail + 1L)) {
-            object <- DataFrame(object)
-            out <- as.matrix(format(as.data.frame(lapply(object, 
-                showAsCell), optional = TRUE)))
-            if (!is.null(nms)) 
-                rownames(out) <- nms
-        }
-        else {
-            out <- rbind(
-                as.matrix(format(as.data.frame(lapply(
-                    setNames(seq_len(length(object)), names(object)), 
-                    function(j) {
-                        index <- .get_index(object, j)[[1]]
-                        ## FIXME: if null, should get the length of
-                        ## the other index, not nrow(object)
-                        if (is.null(index))
-                            index <- seq_len(nrow(object))
-                        headSubscript <- head(index, nhead)
-                        showAsCell(extractROWS(object[[j]], headSubscript))
-                    })),
-                    optional = TRUE)),
-                rbind(rep.int("...", nc)),
-                as.matrix(format(as.data.frame(lapply(
-                    setNames(seq_len(length(object)), names(object)), 
-                    function(j) {
-                        index <- .get_index(object, j)[[1]]
-                        if (is.null(index))
-                            index <- seq_len(nrow(object))
-                        tailSubscript <- tail(index, ntail)
-                        showAsCell(extractROWS(object[[j]], tailSubscript))
-                    })),
-                    optional = TRUE)))
-            rownames(out) <- S4Vectors:::.rownames(nms, nr, nhead, ntail)  ## FIXME, rownames
-        }
-        classinfo <- matrix(unlist(lapply(object, function(x) {
-            paste0("<", classNameForDisplay(x)[1], ">")
-        }), use.names = FALSE), nrow = 1, dimnames = list("", 
-            colnames(out)))
-        out <- rbind(classinfo, out)
-        print(out, quote = FALSE, right = TRUE)
-    }
 })
 
 ###-----------------

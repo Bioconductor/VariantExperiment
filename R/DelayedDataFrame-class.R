@@ -35,8 +35,11 @@ setMethod("show", "LazyList", function(object)
     indexLength <- vapply(indexes, function (index) {
         length(index[[1]])  ## FIXME: do not use list for indexes. only keep i subscripts.
     }, integer(1))
-    
-    if (length(unique(indexLength)) > 1 && all(unique(indexLength) > 0))
+
+    uniqLen <- unique(indexLength)
+    if (length(uniqLen) == 1)
+        return(TRUE)
+    if (length(uniqLen[uniqLen != 0]) > 1)
         return(wmsg("'x@lazyIndex' must be of same length or 'NULL'"))
     TRUE
 }
@@ -47,16 +50,28 @@ setValidity2("LazyList", .validate_LazyList)
 ## Utility functions for .LazyList
 ###---------------------------------------
 
-.lazyIndex_inuse <- function(LazyList)
+
+
+.lazyIndex_inuse <- function(LazyList)  
 {
+    ## browser(); browser()
+    ## 1. check if all @listData in use in @index. remove if not.
     orig <- seq_len(length(LazyList@listData)) 
     index_inuse <- orig %in% unique(LazyList@index)
     old <- orig[index_inuse]
-    LazyList@listData <- LazyList@listData[index_inuse]
-    new <- seq_len(length(LazyList@listData))
+    new_listData <- LazyList@listData[index_inuse]
 
-    LazyList@index <- new[match(LazyList@index, old)]
-    LazyList
+    new <- seq_len(length(LazyList@listData))
+    new_index <- new[match(LazyList@index, old)]
+
+    ## 2. check if any duplicate in @listData and remove if
+    ## yes. Modify @index correspondingly.
+    dupOldIndex <- anyDuplicated(new_listData)
+    dupNewIndex <- match(new_listData[dupOldIndex], new_listData)
+
+    new_listData <- new_listData[-dupOldIndex]
+    new_index[match(dupOldIndex, new_index)] <- dupNewIndex
+    .LazyList(new_listData, index=new_index)
 }
 
 .update_index <- function(LazyList, j, value)
@@ -92,7 +107,7 @@ setValidity2("LazyList", .validate_LazyList)
         }
         index
     })
-    LazyList
+    .lazyIndex_inuse(LazyList)
 }
 
 ###------------------

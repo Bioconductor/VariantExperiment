@@ -27,8 +27,13 @@
   -- previously called from names(as.list(x)). Now cheaper with names(x@listData).  -- done!
 
 - lazyIndex@listData. do not distinguish (un)delayed columns, use only vector for index. ?? 
-- "check\_lazyIndex\_in_use" and reorder.   -- when??
-- c(LazyList), add checking validity. 
+- "check\_lazyIndex\_in_use" and reorder.   
+  -- 1. remove any @listData that is not used in @index.   -- done!
+  -- 2. remove any duplicated @listData and modify @index accordingly.  --done!
+  -- added inside ".update\_index" (correspondingly in coercion from DF to DDF, and concatenateObject(LazyIndex)).  --done!
+  -- added inside ".update\_row". So updated with "[" method.  -- done!
+  
+- c(LazyList), add checking validity.   -- done! but does not check automatically...
 - rbind, cbind. c(DDF, DDF)   -- works! Do more checking. 
 
 

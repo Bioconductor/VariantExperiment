@@ -32,10 +32,7 @@ setMethod("show", "LazyList", function(object)
 {
     ## indexes length must be same
     indexes <- x@listData
-    indexLength <- vapply(indexes, function (index) {
-        length(index[[1]])  ## FIXME: do not use list for indexes. only keep i subscripts.
-    }, integer(1))
-
+    indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)
     if (length(uniqLen) == 1)
         return(TRUE)
@@ -50,32 +47,36 @@ setValidity2("LazyList", .validate_LazyList)
 ## Utility functions for .LazyList
 ###---------------------------------------
 
-
-
 .lazyIndex_inuse <- function(LazyList)  
 {
     ## browser(); browser()
-    ## 1. check if all @listData in use in @index. remove if not.
-    orig <- seq_len(length(LazyList@listData)) 
-    index_inuse <- orig %in% unique(LazyList@index)
-    old <- orig[index_inuse]
+    ## 1. check if any duplicate in @listData. Modify @index
+    ## correspondingly.
+    dupIndex <- duplicated(LazyList@listData)
+    if (any(dupIndex)) {
+        dupOldIndex <- which(dupIndex)
+        for (i in dupOldIndex) {
+            dupNewIndex <- match(LazyList@listData[i], LazyList@listData)  ## replace
+            ## multiple
+            ## index.
+            LazyList@index[LazyList@index %in% i] <- dupNewIndex
+        }
+    }
+    ## 2. check if all @listData in use in @index. remove if not.
+    old_listData_ind <- seq_len(length(LazyList@listData)) 
+    index_inuse <- old_listData_ind %in% unique(LazyList@index)
+
     new_listData <- LazyList@listData[index_inuse]
+    new_index <- match(LazyList@index, old_listData_ind[index_inuse])
 
-    new <- seq_len(length(LazyList@listData))
-    new_index <- new[match(LazyList@index, old)]
-
-    ## 2. check if any duplicate in @listData and remove if
-    ## yes. Modify @index correspondingly.
-    dupOldIndex <- anyDuplicated(new_listData)
-    dupNewIndex <- match(new_listData[dupOldIndex], new_listData)
-
-    new_listData <- new_listData[-dupOldIndex]
-    new_index[match(dupOldIndex, new_index)] <- dupNewIndex
-    .LazyList(new_listData, index=new_index)
+    ans <- .LazyList(new_listData, index=new_index)
+    ## reorder for columns
+    ans[TRUE]
 }
 
 .update_index <- function(LazyList, j, value)
 {
+    ## browser(); browser()
     for (i in seq_along(LazyList@listData)) {
         index <- LazyList@listData[[i]]
         if (identical(value, index)) {
@@ -92,18 +93,14 @@ setValidity2("LazyList", .validate_LazyList)
 
 .update_row <- function(LazyList, value)
 {
+    ## browser(); browser()
     LazyList@listData <- lapply(LazyList@listData, function(index) {
-        if (is(index, "list")) {
-            if (is.null(index[[1]])) {
-                index[[1]] <- value
-            } else {
-            if (length(value) > length(index[[1]]) )
-                stop("the subscripts are out of bound")
-            index[[1]] <- index[[1]][value]
-            }
+        if (is.null(index)) {
+            index <- value
         } else {
-            if (!is.null(index))
-                index <- index[value]
+            if (length(value) > length(index) )
+                stop("the subscripts are out of bound")
+            index <- index[value]
         }
         index
     })
@@ -150,38 +147,29 @@ setValidity2("LazyList", .validate_LazyList)
     x@lazyIndex@listData[[j]]
 }
 
-#' @description \code{update_lazyIndex}: make sure the indexes are
-#'     consistent with columns and being used. update the
-#'     \code{indexes} slot and \code{@has_index} slot in lazyIndex.
-#' @rdname DelayedDataFrame-class
-update_lazyIndex <- function(from)
-{
-    if (identical(dim(from), c(0L, 0L))) {
-        from@lazyIndex <- .LazyList()
-        return(from)
-    }     
-    lazyIndex <- from@lazyIndex
-    delayedClass <- vapply(from, is, logical(1), "DelayedArray")
+## #' @description \code{update_lazyIndex}: make sure the indexes are
+## #'     consistent with columns and being used. update the
+## #'     \code{indexes} slot and \code{@has_index} slot in lazyIndex.
+## #' @rdname DelayedDataFrame-class
+## update_lazyIndex <- function(from)
+## {
+##     if (identical(dim(from), c(0L, 0L))) {
+##         from@lazyIndex <- .LazyList()
+##         return(from)
+##     }     
+##     lazyIndex <- from@lazyIndex
+##     delayedClass <- vapply(from, is, logical(1), "DelayedArray")
 
-    for (i in seq_len(length(from))) {
-        if (delayedClass[i]) {
-            index <- from[[i]]@index
-        } else {
-            index <- NULL
-        }
-        lazyIndex <- .update_index(lazyIndex, i, index)
-    }
-    ## remove any index if not in use
-    from@lazyIndex <- .lazyIndex_inuse(lazyIndex)
-    ## reorder indexes
-    from@lazyIndex <- from@lazyIndex[TRUE]
-    ## ## assign new indexes into DelayedArray columns.
-    ## for (i in seq_len(length(from))) {
-    ##     if(delayedClass[i])
-    ##         from[[i]]@index <- .get_index(from, i)
-    ## }
-    from
-}
+##     for (i in seq_len(length(from))) {  ## FIXME, do not distinguish delayedClass or not.
+##         if (delayedClass[i]) {
+##             index <- from[[i]]@index  ## FIXME. index <- from[[i]]@index[[1]] ??
+##         } else {
+##             index <- NULL
+##         }
+##         lazyIndex <- .update_index(lazyIndex, i, index)
+##     }
+##     from
+## }
 
 ###-------------
 ## constructor
@@ -199,12 +187,6 @@ DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 ## methods
 ###-------------
 
-.subsetDelayedDataFrameListData <- function(x, i, j)
-{
-    stopifnot(is(x, "DelayedDataFrame"))
-    extractROWS(x@listData[[i]], j)  ## FIXME: normalize j... 
-}
-
 setMethod("getListElement", "DelayedDataFrame", function(x, i, exact=TRUE)
 {
     i2 <- normalizeDoubleBracketSubscript(
@@ -213,10 +195,10 @@ setMethod("getListElement", "DelayedDataFrame", function(x, i, exact=TRUE)
         allow.nomatch = TRUE)
     if (is.na(i2)) 
         return(NULL)
-    index <- .get_index(x, i2)[[1]]  ## FIXME after modifying the indexes to be not list.
+    index <- .get_index(x, i2)
     if (is.null(index))
-        index <- TRUE   
-    .subsetDelayedDataFrameListData(x, i, index)
+        index <- TRUE
+    extractROWS(x@listData[[i2]], index)
 })
 
 ## "as.list" function is called in lapply("DelayedDataFrame", ) and names("DelayedDataFrame")...
@@ -236,6 +218,11 @@ setMethod("names", "DelayedDataFrame", function(x)
     names(x@listData)
 })
 
+## setMethod("cbind", "DelayedDataFrame", function(x)   ## FIXME.. 
+## {
+##     DelayedDataFrame(CallNextMethod())
+## })
+
 ###-------------
 ### Coercion
 ###-------------
@@ -251,36 +238,16 @@ setMethod("names", "DelayedDataFrame", function(x)
 #' @rdname DelayedDataFrame-class
 #' @param from a \code{DataFrame} object
 setAs("DataFrame", "DelayedDataFrame", function(from){
-    ## initialize lazyIndex
-    ## if (identical(dim(from), c(0L, 0L))) {
     ## browser(); browser()
+    if (identical(dim(from), c(0L, 0L))) {
     lazyIndex <- .LazyList()
-    ## } else {     
-    delayedClass <- vapply(from, is, logical(1), "DelayedArray")
-
-    for (i in seq_len(length(from))) {
-        if (delayedClass[i]) {
-            index <- vector("list", length(dim(from[[i]])))
-            ## index <- from[[i]]@index
-        } else {
-            index <- vector("list", 1)  ## ordinary vector columns also has list index.
-        }
-        lazyIndex <- .update_index(lazyIndex, i, index)
+    } else {     
+        lazyIndex <- .LazyList(vector("list", 1), index=rep(1L, length(from)))
     }
-    ## ## remove any index if not in use
-    ## from@lazyIndex <- .lazyIndex_inuse(lazyIndex)
-    ## ## reorder indexes
-    ## from@lazyIndex <- from@lazyIndex[TRUE]
-    ## lazyIndex <- .LazyList(
-    ##     listData = vector("list", 1),
-    ##     index = rep(1L, length(from)))
-    ans <- .DelayedDataFrame(from, lazyIndex = lazyIndex)
-    ans
-    ## update_lazyIndex(ans)
+    .DelayedDataFrame(from, lazyIndex = lazyIndex)
 })
 
 setAs("DelayedDataFrame", "DataFrame", function(from){
-    ## realize the lazyIndex to each column.
     new_listData <- as.list(from)
     ans <- S4Vectors:::new_DataFrame(listData=new_listData, nrows=nrow(from))
     if (!is.null(rownames(from))) {
@@ -315,21 +282,9 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 ###----------------
 .extractROWS_DelayedDataFrame <- function(x, i)
 {
-    ## x <- update_lazyIndex(x)  
     i <- normalizeSingleBracketSubscript(
         i, x, exact = FALSE, allow.NAs = TRUE, as.NSBS = FALSE)
     x@lazyIndex <- .update_row(x@lazyIndex, i)
-    ## slot(x, "listData") <- lapply(
-    ##     setNames(seq_len(ncol(x)), names(x)), function(j)
-    ##     {
-    ##         if(!is(x[[j]], "DelayedArray"))  ## non-delayed_ops object.
-    ##             extractROWS(x[[j]], i)
-    ##         else {                    ## DelayedArray objects.
-    ##             a <- x[[j]]
-    ##             a@index <- .get_index(x, j)
-    ##             a
-    ##         }
-    ##     })
     slot(x, "nrows", check = FALSE) <- length(i)
     if (!is.null(rownames(x))) {
         slot(x, "rownames", check = FALSE) <-
@@ -388,33 +343,38 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
     })
 
 
+## setMethod("concatenateObjects", "LazyList",
+##           function(x, objects=list(), use.names = TRUE,
+##                    ignore.mcols = FALSE, check = TRUE) 
+## {
+##     if (!isTRUEorFALSE(use.names)) 
+##         stop("'use.names' must be TRUE or FALSE")
+##     for (j in seq_len(length(objects))) {
+##         lazyIndex <- objects[[j]]
+##         for (i in seq_len(length(lazyIndex@index))) {
+##             new_index <- lazyIndex@index[i]
+##             new_indexes <- lazyIndex@listData[[new_index]]
+##             x@index <- c(x@index, new_index)
+##             x <- .update_index(x, length(x@index), value=new_indexes)
+##         }
+##     }
+##     x
+## })
+
+## constructing a new DelayedDataFrame
 setMethod(
     "concatenateObjects", "DelayedDataFrame",
     function(x, objects = list(), use.names = TRUE, ignore.mcols = FALSE, check = TRUE)
 {
-    y <- as(objects, "DelayedDataFrame")
-    ## x@lazyIndex <- do.call("c", c(list(x), objects))
-    ## browser()
-    x@lazyIndex <- c(x@lazyIndex, y@lazyIndex)
-    callNextMethod()
-})
-
-setMethod("concatenateObjects", "LazyList",
-          function(x, objects=list(), use.names = TRUE,
-                   ignore.mcols = FALSE, check = TRUE) 
-{
-    if (!isTRUEorFALSE(use.names)) 
-        stop("'use.names' must be TRUE or FALSE")
-    for (j in seq_len(length(objects))) {
-        lazyIndex <- objects[[j]]
-        for (i in seq_len(length(lazyIndex@index))) {
-            new_index <- lazyIndex@index[i]
-            new_indexes <- lazyIndex@listData[[new_index]]
-            x@index <- c(x@index, new_index)
-            x <- .update_index(x, length(x@index), value=new_indexes)
-        }
-    }
-    x
+    ## browser(); browser()
+    x <- DataFrame(x)
+    objects <- lapply(objects, as, "DataFrame")
+    ## objects <- DataFrame(objects)
+    DelayedDataFrame(callNextMethod())
+    ## x <- DelayedDataFrame(DataFrame(x))
+    ## y <- as(objects, "DelayedDataFrame")
+    ## x@lazyIndex <- c(x@lazyIndex, y@lazyIndex)
+    ## callNextMethod()
 })
 
 ###--------------

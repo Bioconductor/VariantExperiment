@@ -196,9 +196,10 @@ setMethod("getListElement", "DelayedDataFrame", function(x, i, exact=TRUE)
     if (is.na(i2)) 
         return(NULL)
     index <- .get_index(x, i2)
-    if (is.null(index))
-        index <- TRUE
-    extractROWS(x@listData[[i2]], index)
+    elt <- x@listData[[i2]]
+    if (!is.null(index))
+        elt <- extractROWS(elt, index)
+    elt
 })
 
 ## "as.list" function is called in lapply("DelayedDataFrame", ) and names("DelayedDataFrame")...

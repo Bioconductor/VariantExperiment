@@ -33,6 +33,7 @@ RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
     DelayedDataFrame-class.R
+    rbind.R
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R

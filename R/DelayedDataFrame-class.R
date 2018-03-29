@@ -70,7 +70,7 @@ setValidity2("LazyList", .validate_LazyList)
     new_index <- match(LazyList@index, old_listData_ind[index_inuse])
 
     ans <- .LazyList(new_listData, index=new_index)
-    ## reorder for columns
+    ## 3. reorder indexes (index for 1st columns in @listData[[1]])
     ans[TRUE]
 }
 
@@ -218,10 +218,17 @@ setMethod("names", "DelayedDataFrame", function(x)
     names(x@listData)
 })
 
-## setMethod("cbind", "DelayedDataFrame", function(x)   ## FIXME.. 
+## FIXME: GDSArray coerced into character vector...
+## setMethod("rbind", "DelayedDataFrame", function(..., deparse.level=1)
 ## {
-##     DelayedDataFrame(CallNextMethod())
+##     DelayedDataFrame(callNextMethod())
 ## })
+
+setMethod("cbind", "DelayedDataFrame", function(..., deparse.level=1)
+{
+    DelayedDataFrame(callNextMethod())
+})
+
 
 ###-------------
 ### Coercion

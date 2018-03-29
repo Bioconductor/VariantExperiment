@@ -29,6 +29,7 @@
 - ".lazyIndex\_inuse" and reorder.   -- further touch...
   -- 1. remove any @listData that is not used in @index.   -- done!
   -- 2. remove any duplicated @listData and modify @index accordingly.  --done!
+  -- 3. reorder indexes (index for 1st columns in @listData[[1]])
   -- added inside ".update\_index" (correspondingly in coercion from DF to DDF, and concatenateObject(LazyIndex)).  --done!
   -- added inside ".update\_row". So updated with "[" method.  -- done!
 
@@ -37,8 +38,16 @@
 - c(ddf1, ddf2) 
   -- need to check c(LazyList), the length of each index. 
   -- c(DataFrame(ddf1), DataFrame(ddf2)) works. different lengths of @listData, is it correct? 
-- rbind, cbind. c(DDF, DDF)   -- works but returns DataFrame... 
-
+- cbind. -- done!
+- rbind, 
+  -- GDSArray returns character vector. 
+  -- selectMethod("rbind", "DataFrame"). 
+  -- r/cbind("GDSMatrix") inherits r/cbind("DelayedMatrix") for 2-dim DelayedArray.
+  -- arbind, acbind for "DelayedArray" defined. 
+	  DelayedArray:::new_SeedBinder(list(), 2L)... returns "SeedBinder" object, that could be directly used to construct a DelayedArray...
+	  Redefine for "GDSArray"? need to keep the same seed! 
+  -- need to define "c" method for "GDSArray" with 1-dim. --- when !rectangular. 
+- Question: c(), rbind/rbind(), return a brand new DelayedDataFrame with @lazyIndex to be NULL for all?
 
 3/20/2018
 

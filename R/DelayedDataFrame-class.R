@@ -86,8 +86,7 @@ setValidity2("LazyList", .validate_LazyList)
     }
     new_index_id <- length(LazyList@listData) + 1L
     LazyList@index[j] <- new_index_id
-    index <- value
-    LazyList@listData[[new_index_id]] <- index
+    LazyList@listData[[new_index_id]] <- value
     .lazyIndex_inuse(LazyList)
 }
 
@@ -180,7 +179,7 @@ setValidity2("LazyList", .validate_LazyList)
 DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 {
     ## no-op for DelayedDataFrame input
-    if (length(list(...)) == 1L & is(list(...)[[1]], "DelayedDataFrame"))
+    if (length(list(...)) == 1L && is(list(...)[[1]], "DelayedDataFrame"))
         return(list(...)[[1]])
     df <- DataFrame(..., row.names=row.names, check.names=check.names)
     as(df, "DelayedDataFrame")
@@ -321,6 +320,22 @@ setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
               .LazyList(indexes, index = has_index)
           }
           )
+
+setReplaceMethod(
+    "[", c("DelayedDataFrame", "ANY"),
+    function(x, i, j, ..., value)
+{
+    xstub <- setNames(seq_along(x), names(x))
+    if (missing(j)) {
+        i <- normalizeSingleBracketSubscript(i, xstub)
+        x@lazyIndex <- .update_index(x@lazyIndex, i, NULL)
+    } else {
+        j <- normalizeSingleBracketSubscript(j, xstub)
+        x@listData[j] <- lapply(j, function(j, x) x[[j]], x)
+        x@lazyIndex <- .update_index(x@lazyIndex, j, NULL)
+    }
+    callNextMethod()
+})
 
 #' @importFrom methods callNextMethod
 #' @exportMethod [

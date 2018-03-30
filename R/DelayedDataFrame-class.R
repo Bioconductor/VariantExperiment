@@ -179,6 +179,9 @@ setValidity2("LazyList", .validate_LazyList)
 #' @rdname DelayedDataFrame-class
 DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 {
+    ## no-op for DelayedDataFrame input
+    if (length(list(...)) == 1L & is(list(...)[[1]], "DelayedDataFrame"))
+        return(list(...)[[1]])
     df <- DataFrame(..., row.names=row.names, check.names=check.names)
     as(df, "DelayedDataFrame")
 }
@@ -245,8 +248,8 @@ setMethod("cbind", "DelayedDataFrame", function(..., deparse.level=1)
 #' @aliases coerce,DataFrame,DelayedDataFrame-method
 #' @rdname DelayedDataFrame-class
 #' @param from a \code{DataFrame} object
-setAs("DataFrame", "DelayedDataFrame", function(from){
-    ## browser(); browser()
+setAs("DataFrame", "DelayedDataFrame", function(from)
+{
     if (identical(dim(from), c(0L, 0L))) {
     lazyIndex <- .LazyList()
     } else {     
@@ -255,7 +258,8 @@ setAs("DataFrame", "DelayedDataFrame", function(from){
     .DelayedDataFrame(from, lazyIndex = lazyIndex)
 })
 
-setAs("DelayedDataFrame", "DataFrame", function(from){
+setAs("DelayedDataFrame", "DataFrame", function(from)
+{
     new_listData <- as.list(from)
     ans <- S4Vectors:::new_DataFrame(listData=new_listData, nrows=nrow(from))
     if (!is.null(rownames(from))) {
@@ -263,6 +267,8 @@ setAs("DelayedDataFrame", "DataFrame", function(from){
     }
     ans
 })
+
+## setAs("DelayedDataFrame", "DelayedDataFrame", function(from) from)  ## no-op
 
 ###
 setAs("ANY", "DelayedDataFrame", function(from){
@@ -351,38 +357,39 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
     })
 
 
-## setMethod("concatenateObjects", "LazyList",
-##           function(x, objects=list(), use.names = TRUE,
-##                    ignore.mcols = FALSE, check = TRUE) 
-## {
-##     if (!isTRUEorFALSE(use.names)) 
-##         stop("'use.names' must be TRUE or FALSE")
-##     for (j in seq_len(length(objects))) {
-##         lazyIndex <- objects[[j]]
-##         for (i in seq_len(length(lazyIndex@index))) {
-##             new_index <- lazyIndex@index[i]
-##             new_indexes <- lazyIndex@listData[[new_index]]
-##             x@index <- c(x@index, new_index)
-##             x <- .update_index(x, length(x@index), value=new_indexes)
-##         }
-##     }
-##     x
-## })
+setMethod("concatenateObjects", "LazyList",
+          function(x, objects=list(), use.names = TRUE,
+                   ignore.mcols = FALSE, check = TRUE) 
+{
+    ## browser(); browser()
+    for (i in seq_len(length(objects))){
+        y <- objects[[i]]
+        x@listData <- c(x@listData, y@listData)
+    }
+    x@listData <- c(x@listData, lapply(objects, function(obj) obj@listData))
+    for (j in seq_len(length(objects))) {
+        y <- objects[[j]]
+        for (i in seq_len(length(y@index))) {
+            new_index <- y@index[i]
+            new_indexes <- y@listData[[new_index]]
+            ind <- match(list(new_indexes), x@listData)
+            x@index <- c(x@index, ind)
+        }
+    }
+    .lazyIndex_inuse(x)
+    
+})
 
 ## constructing a new DelayedDataFrame
 setMethod(
     "concatenateObjects", "DelayedDataFrame",
     function(x, objects = list(), use.names = TRUE, ignore.mcols = FALSE, check = TRUE)
 {
-    ## browser(); browser()
-    x <- DataFrame(x)
-    objects <- lapply(objects, as, "DataFrame")
-    ## objects <- DataFrame(objects)
-    DelayedDataFrame(callNextMethod())
-    ## x <- DelayedDataFrame(DataFrame(x))
-    ## y <- as(objects, "DelayedDataFrame")
-    ## x@lazyIndex <- c(x@lazyIndex, y@lazyIndex)
-    ## callNextMethod()
+    for (i in seq_len(length(objects))) {
+        y <- as(objects[[i]], "DelayedDataFrame")
+        x@lazyIndex <- c(x@lazyIndex, y@lazyIndex)
+    }
+    callNextMethod()
 })
 
 ###--------------

@@ -1,3 +1,11 @@
+3/30/2018
+- DelayedDataFrame(DDF), no-op.   -- done!
+- c("LazyList") works.  -- done!
+- c("DelayedDataFrame") works.   -- done!
+  -- try append/remove/replace columns in DelayedDataFrame. 
+- "SimpleList" requires @listData to be non-NULL in validity check. ...   
+  
+
 3/21/2018
 
 - DDF, do not carry old indexes inside. When constructing with new columns, always have NULL as index. 

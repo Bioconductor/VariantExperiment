@@ -1,9 +1,13 @@
 3/30/2018
+
 - DelayedDataFrame(DDF), no-op.   -- done!
 - c("LazyList") works.  -- done!
 - c("DelayedDataFrame") works.   -- done!
   -- try append/remove/replace columns in DelayedDataFrame. 
-- "SimpleList" requires @listData to be non-NULL in validity check. ...   
+
+- "SimpleList" requires @listData to be non-NULL in validity check. ...  
+- rowData(ve) for "SNP_ARRAY" input now could return "ALLELE1/2". -- done!
+- colData(ve) still returns "DataFrame" instead of "DelayedDataFrame"...?? 
   
 
 3/21/2018

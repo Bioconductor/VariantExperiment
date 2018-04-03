@@ -9,6 +9,16 @@
     )
 )
 
+LazyList <-
+    function(lazyData = list(), index = integer())
+{
+    ## order index c(4, 2, 1) --> 1, 2, 3
+    uindex <- unique(index)
+    index <- match(index, uindex)
+    lazyData <- lazyData[uindex]
+    .LazyList(lazyData, index = index)
+}
+
 setMethod("show", "LazyList", function(object)
 {
     lo <- length(object)
@@ -35,57 +45,45 @@ setMethod("show", "LazyList", function(object)
 #' @importFrom S4Vectors setValidity2
 setValidity2("LazyList", .validate_LazyList)
 
+setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
+    function(x, i, j, ..., drop = TRUE)
+{
+    LazyList(x@listData, index = x@index[i])
+})
+
 ###---------------------------------------
 ## Utility functions for .LazyList
 ###---------------------------------------
 
-.lazyIndex_inuse <- function(LazyList)  
+.lazyIndex_inuse <- function(lazyList)
 {
     ## browser(); browser()
     ## 1. check if any duplicate in @listData. Modify @index
     ## correspondingly.
-    dupIndex <- duplicated(LazyList@listData)
-    if (any(dupIndex)) {
-        dupOldIndex <- which(dupIndex)
-        for (i in dupOldIndex) {
-            dupNewIndex <- match(LazyList@listData[i], LazyList@listData)  ## replace
-            ## multiple
-            ## index.
-            LazyList@index[LazyList@index %in% i] <- dupNewIndex
-        }
-    }
+    listData <- unique(lazyList@listData)
+    index <- match(lazyList@listData, listData)[lazyList@index]
+
     ## 2. check if all @listData in use in @index. remove if not.
-    old_listData_ind <- seq_len(length(LazyList@listData)) 
-    index_inuse <- old_listData_ind %in% unique(LazyList@index)
+    listData_index <- seq_along(listData)
+    inUse <- listData_index %in% index
+    listData <- listData[inUse]
+    index <- cumsum(inUse)[index]
 
-    new_listData <- LazyList@listData[index_inuse]
-    new_index <- match(LazyList@index, old_listData_ind[index_inuse])
-
-    ans <- .LazyList(new_listData, index=new_index)
     ## 3. reorder indexes (index for 1st columns in @listData[[1]])
-    ans[TRUE]
+    LazyList(listData, index=index)
 }
 
-.update_index <- function(LazyList, j, value)
+.update_index <- function(lazyList, j, value)
 {
-    ## browser(); browser()
-    for (i in seq_along(LazyList@listData)) {
-        index <- LazyList@listData[[i]]
-        if (identical(value, index)) {
-            LazyList@index[j] <- i
-            return(LazyList)
-        }
-    }
-    new_index_id <- length(LazyList@listData) + 1L
-    LazyList@index[j] <- new_index_id
-    LazyList@listData[[new_index_id]] <- value
-    .lazyIndex_inuse(LazyList)
+    lazyList@listData <- c(lazyList@listData, list(value))
+    lazyList@index[j] <- length(lazyList@listData)
+    .lazyIndex_inuse(lazyList)
 }
 
-.update_row <- function(LazyList, value)
+.update_row <- function(lazyList, value)
 {
     ## browser(); browser()
-    LazyList@listData <- lapply(LazyList@listData, function(index) {
+    lazyList@listData <- lapply(lazyList@listData, function(index) {
         if (is.null(index)) {
             index <- value
         } else {
@@ -95,7 +93,7 @@ setValidity2("LazyList", .validate_LazyList)
         }
         index
     })
-    .lazyIndex_inuse(LazyList)
+    .lazyIndex_inuse(lazyList)
 }
 
 ###------------------
@@ -301,17 +299,6 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 #' @aliases extractROWS,DelayedDataFrame-method
 #' @rdname DelayedDataFrame-class
 setMethod("extractROWS", "DelayedDataFrame", .extractROWS_DelayedDataFrame)
-
-setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
-          function(x, i, j, ..., drop = TRUE)
-          {
-              has_index <- x@index[i]
-              uhas_index <- unique(has_index)
-              has_index <- match(has_index, uhas_index)
-              indexes <- x@listData[uhas_index]
-              .LazyList(indexes, index = has_index)
-          }
-          )
 
 setReplaceMethod(
     "[", c("DelayedDataFrame", "ANY"),

@@ -201,6 +201,45 @@ test_that("acbind,DelayedDataFrame works", {
 
 context("LazyIndex")
 
+test_that(".lazyIndex_inuse works", {
+    ## 0. No updates
+    ll <- .LazyList(list(1:10, 10:1, 11:20), index=1:3)
+    expect_identical(ll, .lazyIndex_inuse(ll))
+
+    ## 1. duplicate listData
+    ll <- .LazyList(list(1:10, 10:1, 1:10), index=1:3)
+    exp <- .LazyList(list(1:10, 10:1), index = c(1L, 2L, 1L))
+    expect_identical(exp, .lazyIndex_inuse(ll))
+    
+    ll <- .LazyList(list(1:10, 10:1, 1:10), index=c(1:3, 3L))
+    exp <- .LazyList(list(1:10, 10:1), index = c(1L, 2L, 1L, 1L))
+    expect_identical(exp, .lazyIndex_inuse(ll))
+
+    ## 2. listData in not in use index
+    ll <- .LazyList(list(1:10, 10:1, 11:20), index=c(1L, 3L, 3L))
+    exp <- .LazyList(list(1:10, 11:20), index = c(1L, 2L, 2L))
+    expect_identical(exp, .lazyIndex_inuse(ll))
+    
+    ## 3. reorder
+    ll <- .LazyList(list(1:10, 10:1, 11:20), index=c(3L, 2L, 1L))
+    exp <- .LazyList(list(11:20, 10:1, 1:10), index=1:3)
+    expect_identical(exp, .lazyIndex_inuse(ll))
+})
+
+test_that(".update_index works", {
+    ll <- .LazyList(list(1:10, 10:1), index=1:2)
+
+    lazyIndex <- sample(1:10)
+    exp <- .LazyList(list(lazyIndex, 10:1), index=1:2)
+    expect_identical(exp, .update_index(ll, 1, lazyIndex))
+
+    exp <- .LazyList(list(10:1), index=c(1L, 1L))
+    expect_identical(exp, .update_index(ll, 1, 10:1))
+
+    exp <- .LazyList(list(NULL, 10:1), index=1:2)
+    expect_identical(exp, .update_index(ll, 1, NULL))
+})
+
 test_that("LazyIndex [<- 1-D accounting is correct", {
     da0 <- DelayedArray(array(1:26, 26))
     obj <- DelayedDataFrame(letters, da0 = I(da0))

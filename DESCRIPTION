@@ -10,7 +10,7 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
 Depends:
     R (>= 3.5),
     S4Vectors (>= 0.17.34),
-    SummarizedExperiment (>= 1.9.14),
+    SummarizedExperiment (>= 1.9.15),
     GenomicRanges,
     GDSArray
 License: GPL-3

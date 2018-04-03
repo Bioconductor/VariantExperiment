@@ -68,7 +68,7 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 }
 
 #' @import S4Vectors 
-setValidity2("VariantExperiment", .validate_VariantExperiment)
+## setValidity2("VariantExperiment", .validate_VariantExperiment)
 
 ###--------------------
 ### getter and setter

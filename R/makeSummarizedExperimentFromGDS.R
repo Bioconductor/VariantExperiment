@@ -150,11 +150,11 @@
                     .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
                 toupper(rowDataColumns))
             resDF <- DelayedDataFrame(lapply(res, I))
-            ## if("ALLELE" %in% names(resDF)){
-            ##     resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
-            ##     resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
-            ##     resDF[["ALLELE"]] <- NULL 
-            ## }
+            if("ALLELE" %in% names(resDF)){
+                resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
+                resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
+                resDF[["ALLELE"]] <- NULL 
+            }
             if("REF" %in% names(resDF)){
                 resDF$REF <- sub(",.*", "", resDF$REF)
             }

@@ -1,14 +1,6 @@
 ###----------  
 ## lazyList
 ###----------
-## .lazyList <- setClass(
-##     "lazyList",
-##     slots = c(
-##         indexes = "list",
-##         has_index = "integer"
-##     )
-## )
-
 .LazyList <- setClass(
     "LazyList",
     contains = "SimpleList",

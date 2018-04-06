@@ -16,16 +16,22 @@ LazyIndex <-
     .LazyIndex(listData, index = index)
 }
 
+.listData <- function(x)
+    x@listData
+
+.index <- function(x)
+    x@index
+
 .validate_LazyIndex <- function(x)
 {
     ## indexes length must be same
-    indexes <- x@listData
+    indexes <- .listData(x)
     indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)
     if (length(uniqLen) == 1)
         return(TRUE)
     if (length(uniqLen[uniqLen != 0]) > 1)
-        return(wmsg("'x@lazyIndex' must be of same length or 'NULL'"))
+        return(wmsg("'.index(x)' must be of same length or 'NULL'"))
     TRUE
 }
 
@@ -37,11 +43,11 @@ setMethod("concatenateObjects", "LazyIndex",
                    ignore.mcols = FALSE, check = TRUE)
 {
     ## browser(); browser()
-    listData <- c(x@listData, lapply(objects, slot, "listData"))
-    indexes <- c(list(x@index), lapply(objects, slot, "index"))
+    listData <- c(.listData(x), lapply(objects, slot, "listData"))
+    indexes <- c(list(.index(x)), lapply(objects, slot, "index"))
 
     ## index offsets
-    offsets <- cumsum(c(0L, head(lengths(indexes), -1)))
+    offsets <- head(cumsum(c(0L, lengths(indexes))), -1L)
     index <- unlist(indexes) + rep(offsets, lengths(indexes))
 
     .lazyIndex_compose(listData, index)
@@ -50,7 +56,7 @@ setMethod("concatenateObjects", "LazyIndex",
 setMethod("[", c("LazyIndex", "ANY", "missing", "ANY"),
     function(x, i, j, ..., drop = TRUE)
 {
-    LazyIndex(x@listData, index = x@index[i])
+    .lazyIndex_compose(.listData(x), .index(x)[i])
 })
 
 ###---------------------------------------
@@ -78,27 +84,24 @@ setMethod("[", c("LazyIndex", "ANY", "missing", "ANY"),
 
 .update_index <- function(lazyList, j, value)
 {
-    listData <- c(lazyList@listData, list(value))
-    index <- lazyList@index
+    listData <- c(.listData(lazyList), list(value))
+    index <- .index(lazyList)
     index[j] <- length(listData)
     .lazyIndex_compose(listData, index)
 }
 
-.update_row <- function(lazyList, value)
+.update_row <- function(lazyList, i)
 {
     ## browser(); browser()
-    listData <- lapply(lazyList@listData, function(index) {
-        if (is.null(index)) {
-            index <- value
-        } else {
-            if (length(value) > length(index) )
-                stop("the subscripts are out of bound")
-            index <- index[value]
-        }
-        index
-    })
-    index <- lazyList@index
-    .lazyIndex_compose(listData, index)
+    listData <- .listData(lazyList)
+    isNull <- vapply(listData, is.null, logical(1))
+    if (any(lengths(listData[!isNull]) < length(ix)))
+        stop("subscripts are out of bound")
+
+    listData[isNull] <- i
+    listData[!isNull] <- lapply(listData[!isNull], `[`, i = i)
+
+    .lazyIndex_compose(listData, .index(lazyList))
 }
 
 setMethod("show", "LazyIndex", function(object)
@@ -107,7 +110,7 @@ setMethod("show", "LazyIndex", function(object)
     cat(classNameForDisplay(object), " of length ", lo, "\n",
         sep = "")
     ## cat("Indexes: ", "\n", sep="")
-    print(object@listData)
+    print(.listData(object))
     cat("index of each column: ", "\n", sep="")
-    print(object@index)
+    print(.index(object))
 })

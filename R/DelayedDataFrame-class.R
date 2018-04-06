@@ -34,8 +34,8 @@
 ###---------------------------------------
 .get_index <- function(x, j)
 {
-    j <- x@lazyIndex@index[[j]]
-    x@lazyIndex@listData[[j]]
+    j <- .index(x@lazyIndex)[[j]]
+    .listData(x@lazyIndex)[[j]]
 }
 
 ## #' @description \code{update_lazyIndex}: make sure the indexes are
@@ -174,8 +174,8 @@ setAs("ANY", "DelayedDataFrame", function(from){
 {
     .validate_LazyIndex(x@lazyIndex)
     ## @index must have same length of ncol(x)
-    if(length(x@lazyIndex@index) != ncol(x))
-        return(wmsg("'x@index' must be of same length of 'ncols(x)'"))
+    if(length(.index(x@lazyIndex)) != ncol(x))
+        return(wmsg("'.index(x)' must be of same length of 'ncols(x)'"))
     TRUE
 }
 

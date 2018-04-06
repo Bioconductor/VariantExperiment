@@ -122,6 +122,15 @@ test_that("lazyIndex [[<- accounting is correct", {
     expect_identical(exp, obj@lazyIndex)
 })
 
+test_that(".update_row works", {
+    ll <- LazyIndex(list(1:10, 10:1, 11:20), index=1:3)
+    exp <- LazyIndex(list(1:5, 10:6, 11:15), index = 1:3)
+    expect_identical(exp, .update_row(ll, 1:5))
+
+    exp <- LazyIndex(list(integer(0)), index = rep(1L, 3))
+    expect_identical(exp, .update_row(ll, integer(0)))
+})
+
 ## context(".update_index")
 
 ## test_that(".update_index works", {

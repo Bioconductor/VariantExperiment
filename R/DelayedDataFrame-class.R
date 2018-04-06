@@ -252,30 +252,6 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
         callNextMethod()
     })
 
-
-setMethod("concatenateObjects", "LazyIndex",
-          function(x, objects=list(), use.names = TRUE,
-                   ignore.mcols = FALSE, check = TRUE) 
-{
-    ## browser(); browser()
-    for (i in seq_len(length(objects))){
-        y <- objects[[i]]
-        x@listData <- c(x@listData, y@listData)
-    }
-    x@listData <- c(x@listData, lapply(objects, function(obj) obj@listData))
-    for (j in seq_len(length(objects))) {
-        y <- objects[[j]]
-        for (i in seq_len(length(y@index))) {
-            new_index <- y@index[i]
-            new_indexes <- y@listData[[new_index]]
-            ind <- match(list(new_indexes), x@listData)
-            x@index <- c(x@index, ind)
-        }
-    }
-    .lazyIndex_inuse(x)
-    
-})
-
 ## constructing a new DelayedDataFrame
 setMethod(
     "concatenateObjects", "DelayedDataFrame",

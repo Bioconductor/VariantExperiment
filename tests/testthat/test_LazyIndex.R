@@ -1,5 +1,8 @@
 context("LazyIndex")
 
+.lazyIndex_inuse <- function(x)
+    .lazyIndex_compose(x@listData, x@index)
+
 test_that(".lazyIndex_inuse works", {
     ## 0. No updates
     ll <- .LazyIndex(list(1:10, 10:1, 11:20), index=1:3)

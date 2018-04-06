@@ -1,25 +1,25 @@
 ###----------  
 ## lazyList
 ###----------
-.LazyList <- setClass(
-    "LazyList",
+.LazyIndex <- setClass(
+    "LazyIndex",
     contains = "SimpleList",
     slots = c(
         index = "integer"
     )
 )
 
-LazyList <-
+LazyIndex <-
     function(lazyData = list(), index = integer())
 {
     ## order index c(4, 2, 1) --> 1, 2, 3
     uindex <- unique(index)
     index <- match(index, uindex)
     lazyData <- lazyData[uindex]
-    .LazyList(lazyData, index = index)
+    .LazyIndex(lazyData, index = index)
 }
 
-setMethod("show", "LazyList", function(object)
+setMethod("show", "LazyIndex", function(object)
 {
     lo <- length(object)
     cat(classNameForDisplay(object), " of length ", lo, "\n",
@@ -30,7 +30,7 @@ setMethod("show", "LazyList", function(object)
     print(object@index)   
 })
 
-.validate_LazyList <- function(x)
+.validate_LazyIndex <- function(x)
 {
     ## indexes length must be same
     indexes <- x@listData
@@ -43,16 +43,16 @@ setMethod("show", "LazyList", function(object)
     TRUE
 }
 #' @importFrom S4Vectors setValidity2
-setValidity2("LazyList", .validate_LazyList)
+setValidity2("LazyIndex", .validate_LazyIndex)
 
-setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
+setMethod("[", c("LazyIndex", "ANY", "missing", "ANY"),
     function(x, i, j, ..., drop = TRUE)
 {
-    LazyList(x@listData, index = x@index[i])
+    LazyIndex(x@listData, index = x@index[i])
 })
 
 ###---------------------------------------
-## Utility functions for .LazyList
+## Utility functions for .LazyIndex
 ###---------------------------------------
 
 .lazyIndex_inuse <- function(lazyList)
@@ -70,7 +70,7 @@ setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
     index <- cumsum(inUse)[index]
 
     ## 3. reorder indexes (index for 1st columns in @listData[[1]])
-    LazyList(listData, index=index)
+    LazyIndex(listData, index=index)
 }
 
 .update_index <- function(lazyList, j, value)
@@ -124,7 +124,7 @@ setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
 .DelayedDataFrame <- setClass(
     "DelayedDataFrame",
     contains = "DataFrame",
-    slots = c(lazyIndex = "LazyList")
+    slots = c(lazyIndex = "LazyIndex")
 )
 
 ###---------------------------------------
@@ -143,7 +143,7 @@ setMethod("[", c("LazyList", "ANY", "missing", "ANY"),
 ## update_lazyIndex <- function(from)
 ## {
 ##     if (identical(dim(from), c(0L, 0L))) {
-##         from@lazyIndex <- .LazyList()
+##         from@lazyIndex <- .LazyIndex()
 ##         return(from)
 ##     }     
 ##     lazyIndex <- from@lazyIndex
@@ -240,9 +240,9 @@ setMethod("cbind", "DelayedDataFrame", function(..., deparse.level=1)
 setAs("DataFrame", "DelayedDataFrame", function(from)
 {
     if (identical(dim(from), c(0L, 0L))) {
-    lazyIndex <- .LazyList()
+    lazyIndex <- .LazyIndex()
     } else {     
-        lazyIndex <- .LazyList(vector("list", 1), index=rep(1L, length(from)))
+        lazyIndex <- .LazyIndex(vector("list", 1), index=rep(1L, length(from)))
     }
     .DelayedDataFrame(from, lazyIndex = lazyIndex)
 })
@@ -270,7 +270,7 @@ setAs("ANY", "DelayedDataFrame", function(from){
 ###----------------
 .validate_DelayedDataFrame <- function(x)
 {
-    .validate_LazyList(x@lazyIndex)
+    .validate_LazyIndex(x@lazyIndex)
     ## @index must have same length of ncol(x)
     if(length(x@lazyIndex@index) != ncol(x))
         return(wmsg("'x@index' must be of same length of 'ncols(x)'"))
@@ -351,7 +351,7 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
     })
 
 
-setMethod("concatenateObjects", "LazyList",
+setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,
                    ignore.mcols = FALSE, check = TRUE) 
 {

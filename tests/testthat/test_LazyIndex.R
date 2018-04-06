@@ -127,17 +127,36 @@ test_that(".update_row works", {
     exp <- LazyIndex(list(1:5, 10:6, 11:15), index = 1:3)
     expect_identical(exp, .update_row(ll, 1:5))
 
-    exp <- LazyIndex(list(integer(0)), index = rep(1L, 3))
+    ll <- LazyIndex(list(1:10, NULL), index=1:2)
+    exp <- LazyIndex(list(1:5), index=rep(1L, 2))
+    expect_identical(exp, .update_row(ll, 1:5))
+    
+    exp <- LazyIndex(list(integer(0)), index = rep(1L, 2))
     expect_identical(exp, .update_row(ll, integer(0)))
 })
 
-## context(".update_index")
+test_that(".validate_LazyIndex works", {
+    ll <- LazyIndex(list(1:10, NULL), index=1:2)
+    expect_true(validObject(ll))
+    expect_true(validObject(LazyIndex()))
+    expect_error(LazyIndex(list(1:10, 1:15), index=1:2))
+})
 
-## test_that(".update_index works", {
-##     expect_identical(.LazyIndex(), .update_index(.LazyIndex(), 0, NULL))
+test_that("[ subsetting for LazyIndex works", {
+    ll <- LazyIndex(list(1:10, NULL), index=1:2)
+    exp <- LazyIndex(list(1:5), index=1L)
+    expect_identical(exp, ll[1:5, 1])
 
-##     lst <- .LazyIndex(list(NULL), index=1L)
-##     expect_identical(lst, .update_index(lst, 1, NULL))
+    exp <- LazyIndex(list(1:5), index=rep(1L, 2))
+    expect_identical(exp, ll[1:5,])
 
-##     exp <- .LazyIndex(list(NULL)
-## })
+    exp <- LazyIndex(list(1:5), index=1L)
+    expect_identical(exp, ll[1:5, 1])
+    
+    expect_identical(ll[1], ll[,1])
+    exp <- LazyIndex(list(1:10), index=1L)
+    expect_identical(exp, ll[1])
+
+    exp <- LazyIndex(list(NULL), index=1L)
+    expect_identical(exp, ll[2])
+})

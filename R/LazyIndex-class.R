@@ -42,7 +42,6 @@ setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,
                    ignore.mcols = FALSE, check = TRUE)
 {
-    ## browser(); browser()
     listData <- c(.listData(x), lapply(objects, slot, "listData"))
     indexes <- c(list(.index(x)), lapply(objects, slot, "index"))
 
@@ -53,10 +52,41 @@ setMethod("concatenateObjects", "LazyIndex",
     .lazyIndex_compose(listData, index)
 })
 
-setMethod("[", c("LazyIndex", "ANY", "missing", "ANY"),
+setMethod("[", c("LazyIndex", "ANY"),
     function(x, i, j, ..., drop = TRUE)
 {
-    .lazyIndex_compose(.listData(x), .index(x)[i])
+    listData <- .listData(x)
+    index <- .index(x)
+
+    ## browser(); browser()
+    if (!isTRUEorFALSE(drop)) 
+        stop("'drop' must be TRUE or FALSE")
+    if (length(list(...)) > 0L) 
+        warning("parameters in '...' not supported")
+    list_style_subsetting <- (nargs() - (!missing(drop))) < 3L
+    if (list_style_subsetting || !missing(j)) {
+        if (list_style_subsetting) {
+            if (!missing(drop)) 
+                warning("'drop' argument ignored by list-style subsetting")
+            if (missing(i)) 
+                return(x)
+            j <- i
+        }
+        if (!is(j, "IntegerRanges")) {
+            xstub <- setNames(seq_along(index), seq_along(index))
+            j <- normalizeSingleBracketSubscript(j, xstub)
+        }
+        index <- extractROWS(index, j)
+        x <- .lazyIndex_compose(listData, index)
+        if (list_style_subsetting)
+            return(x)
+    }
+    if (!missing(i)) {
+        x <- .update_row(x, i)
+        ## new_listData <- extractROWS(listData, i)
+        ## LazyIndex(new_listData, index)
+    }
+    x
 })
 
 ###---------------------------------------
@@ -95,10 +125,10 @@ setMethod("[", c("LazyIndex", "ANY", "missing", "ANY"),
     ## browser(); browser()
     listData <- .listData(lazyList)
     isNull <- vapply(listData, is.null, logical(1))
-    if (any(lengths(listData[!isNull]) < length(ix)))
+    if (any(lengths(listData[!isNull]) < length(i)))
         stop("subscripts are out of bound")
 
-    listData[isNull] <- i
+    listData[isNull] <- list(i)
     listData[!isNull] <- lapply(listData[!isNull], `[`, i = i)
 
     .lazyIndex_compose(listData, .index(lazyList))

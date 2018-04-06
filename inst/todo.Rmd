@@ -1,7 +1,41 @@
+4/6/2018, sprint wrap-up demo. 
+
+- GDSArray accepted. after some minor tweaks: vignette, function name, adding example data: example(GDSArray)...
+
+- DelayedDataFrame, rewrite for the 3rd iteration. Delayed operation. subsetting ([, ]], $, 1/2 dimensional [ subsetting, with integer/logical/colname), assignment works, cbind/rbind works, only @lazyIndex updates. Show Methods shows the correct results after data manipulation, but @listData stays untouched, until DataFrame() coercion for the realization of the @lazyIndex into the data, where @listData gets update. 
+
+- LazyIndex utility functions. Check duplicates, unused indexex, reorder after col subsetting...
+
+- validity check...
+
+- VE, adding VCF2VE function, still under testing...
+-- works to return DelayedDataFrame from rowData(). colData() still returns DataFrame...
+-- gvcf... big data which fits our purpose of VariantExperiment. difference with traditional vcf: include all positions that are within coverage, and with depth. Even there is no variant on that position, it is still kept inside the gvcf file. For regions with no variants, the region was saved with start and end position with ranges. 1 line for 1 variant. 1 line for non-variant region with start and end position with ranges. 
+It include the End info, need to pass into rowRanges(VE). Rewrite seqVCF2GDS, and then VCF2VE...Currently, only read chr, and pos: 
+```
+gr <- GenomicRanges::GRangesxb(
+seqnames=chr,
+ranges=IRanges(start=pos, end=pos+reflen-1L),
+...)
+```
+
+- Failing package ranges. 
+-- ivygapSE, vince Carey. convert failure, similar to Vince's other package. `BiocOncoTK`, where error disappeared and Vince haven't done anything. Might be something related to the Windows building machine. 
+```
+Invalid Parameter - /figure-html
+Warning in shell(paste(c(cmd, args), collapse = " ")) :
+  'convert "ivygapSE_files/figure-html/lkonto-1.png" -trim "ivygapSE_files/figure-html/lkonto-1.png"' execution failed with error code 4
+```
+
+-- GenomicFeatures (Herve). Circular dependencies with TxDb...
+-- graph (Herve): failing on Windows i386, not on windows x64, linux and mac. 
+
+
+
 4/3/2018
 
-- "[" replace method. for multiple columns?   -- could only give values for 1 column. 
-
+- "[" replace method. for multiple columns?   -- could only give values for 1 column... correct!
+- add function to read in the vcf into VE directly! 
 
 3/30/2018
 

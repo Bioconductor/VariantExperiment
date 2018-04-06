@@ -1,3 +1,8 @@
+## VCF2VE function
+
+
+
+
 .saveGDSMaybe <- function(gdsfile) {
     file <- gdsfile(gdsfile)[1]
     gdsdim <- c(seqSummary(file, verbose=FALSE)$num.variant,

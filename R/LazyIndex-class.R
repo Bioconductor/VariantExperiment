@@ -42,7 +42,11 @@ setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,
                    ignore.mcols = FALSE, check = TRUE)
 {
-    listData <- c(.listData(x), lapply(objects, slot, "listData"))
+    if (!is.list(objects)) 
+        stop("'objects' must be a list")
+    
+    listData <- c(list(.listData(x)), lapply(objects, slot, "listData"))
+    listData <- unlist(listData, recursive=FALSE)
     indexes <- c(list(.index(x)), lapply(objects, slot, "index"))
 
     ## index offsets
@@ -58,7 +62,6 @@ setMethod("[", c("LazyIndex", "ANY"),
     listData <- .listData(x)
     index <- .index(x)
 
-    ## browser(); browser()
     if (!isTRUEorFALSE(drop)) 
         stop("'drop' must be TRUE or FALSE")
     if (length(list(...)) > 0L) 
@@ -83,8 +86,6 @@ setMethod("[", c("LazyIndex", "ANY"),
     }
     if (!missing(i)) {
         x <- .update_row(x, i)
-        ## new_listData <- extractROWS(listData, i)
-        ## LazyIndex(new_listData, index)
     }
     x
 })
@@ -122,11 +123,10 @@ setMethod("[", c("LazyIndex", "ANY"),
 
 .update_row <- function(lazyList, i)
 {
-    ## browser(); browser()
     listData <- .listData(lazyList)
     isNull <- vapply(listData, is.null, logical(1))
     if (any(lengths(listData[!isNull]) < length(i)))
-        stop("subscripts are out of bound")
+        stop("subscript contains out-of-bounds indices")
 
     listData[isNull] <- list(i)
     listData[!isNull] <- lapply(listData[!isNull], `[`, i = i)
@@ -139,7 +139,6 @@ setMethod("show", "LazyIndex", function(object)
     lo <- length(object)
     cat(classNameForDisplay(object), " of length ", lo, "\n",
         sep = "")
-    ## cat("Indexes: ", "\n", sep="")
     print(.listData(object))
     cat("index of each column: ", "\n", sep="")
     print(.index(object))

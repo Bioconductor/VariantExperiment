@@ -38,30 +38,6 @@
     .listData(x@lazyIndex)[[j]]
 }
 
-## #' @description \code{update_lazyIndex}: make sure the indexes are
-## #'     consistent with columns and being used. update the
-## #'     \code{indexes} slot and \code{@has_index} slot in lazyIndex.
-## #' @rdname DelayedDataFrame-class
-## update_lazyIndex <- function(from)
-## {
-##     if (identical(dim(from), c(0L, 0L))) {
-##         from@lazyIndex <- .LazyIndex()
-##         return(from)
-##     }     
-##     lazyIndex <- from@lazyIndex
-##     delayedClass <- vapply(from, is, logical(1), "DelayedArray")
-
-##     for (i in seq_len(length(from))) {  ## FIXME, do not distinguish delayedClass or not.
-##         if (delayedClass[i]) {
-##             index <- from[[i]]@index  ## FIXME. index <- from[[i]]@index[[1]] ??
-##         } else {
-##             index <- NULL
-##         }
-##         lazyIndex <- .update_index(lazyIndex, i, index)
-##     }
-##     from
-## }
-
 ###-------------
 ## constructor
 ###-------------
@@ -76,6 +52,14 @@ DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
     df <- DataFrame(..., row.names=row.names, check.names=check.names)
     as(df, "DelayedDataFrame")
 }
+
+###-------------
+## accessor
+###-------------
+
+setGeneric("lazyIndex", function(x) standardGeneric("lazyIndex"), signature="x")
+setMethod("lazyIndex", "DelayedDataFrame", function(x) x@lazyIndex)
+
 
 ###-------------
 ## methods

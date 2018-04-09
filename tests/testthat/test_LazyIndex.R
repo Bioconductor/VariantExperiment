@@ -160,3 +160,19 @@ test_that("[ subsetting for LazyIndex works", {
     exp <- LazyIndex(list(NULL), index=1L)
     expect_identical(exp, ll[2])
 })
+
+test_that("concatenateObjects for LazyIndex works", {
+    ll <- LazyIndex(list(1:10, NULL), index=1:2)
+
+    expect_identical(ll, c(ll))
+
+    exp <- LazyIndex(list(1:10, NULL), index=rep(1:2, 2))
+    expect_identical(exp, c(ll, ll))
+
+    exp <- LazyIndex(list(1:10, NULL), index=rep(1:2, 3))
+    expect_identical(exp, c(ll, ll, ll))
+
+    ll1 <- LazyIndex(list(1:5), index=rep(1L, 2))
+    expect_error(c(ll, ll1))
+})
+

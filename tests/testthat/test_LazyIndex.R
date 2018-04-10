@@ -172,6 +172,10 @@ test_that("concatenateObjects for LazyIndex works", {
     exp <- LazyIndex(list(1:10, NULL), index=rep(1:2, 3))
     expect_identical(exp, c(ll, ll, ll))
 
+    ll1 <- LazyIndex(list(NULL, 1:10), index=1:2)
+    exp <- LazyIndex(list(1:10, NULL), index=c(1:2, 2:1))
+    expect_identical(exp, c(ll, ll1))
+
     ll1 <- LazyIndex(list(1:5), index=rep(1L, 2))
     expect_error(c(ll, ll1))
 })

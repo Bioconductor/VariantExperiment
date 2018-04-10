@@ -83,12 +83,9 @@ setMethod("getListElement", "DelayedDataFrame", function(x, i, exact=TRUE)
 ## "as.list" function is called in lapply("DelayedDataFrame", ) and names("DelayedDataFrame")...
 setMethod("as.list", "DelayedDataFrame", function(x, use.names=TRUE)  
 {
-    names <- names(x@listData)
-    ans <- lapply(
-        setNames(seq_len(ncol(x)), names), function(j) x[[j]]
-    )
-    if (!use.names)
-        names(ans) <- NULL
+    ans <- lapply(seq_along(x), function(j) x[[j]])
+    if (use.names)
+        names(ans) <- names(x)
     ans
 })
 

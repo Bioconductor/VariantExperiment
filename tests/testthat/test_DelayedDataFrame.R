@@ -47,6 +47,23 @@ test_that("DelayedDataFrame [[ works", {
     expect_error(obj[[-1]], "\\[\\[ subscript must be >= 1")
 })
 
+test_that("DelayedDataFrame as.list() works", {
+    da1 <- DelayedArray(matrix(1:26, 26, 1))
+    ddf <- DelayedDataFrame(x = letters, da1 = I(da1))
+
+    idx <- 1:5
+    exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
+    expect_identical(exp, as.list(ddf[idx,]))
+
+    idx <- c(1:5, 1:5)
+    exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
+    expect_identical(exp, as.list(ddf[idx,]))
+
+    idx <- integer()
+    exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
+    expect_identical(exp, as.list(ddf[idx,]))
+})
+
 test_that("DelayedDataFrame 1-dimensional [ works", {
     da1 <- DelayedArray(matrix(1:26, 26, 1))
     da2 <- DelayedArray(matrix(1:52, 26, 2))

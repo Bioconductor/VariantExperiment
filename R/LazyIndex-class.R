@@ -24,15 +24,16 @@ LazyIndex <-
 
 .validate_LazyIndex <- function(x)
 {
+    msg <- character()
     ## indexes length must be same
     indexes <- .listData(x)
     indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)
-    if (length(uniqLen) == 1)
-        return(TRUE)
     if (length(uniqLen[uniqLen != 0]) > 1)
-        return(wmsg("'.index(x)' must be of same length or 'NULL'"))
-    TRUE
+        msg <- c(msg, "'.index(x)' must be of same length or 'NULL'")
+    if (!setequal(.index(x), seq_along(.listData(x))))
+        msg <- c(msg, "'.index(x)' and 'seq_along(.listData(x))' are not equal")
+    if (length(msg)) msg else TRUE
 }
 
 #' @importFrom S4Vectors setValidity2

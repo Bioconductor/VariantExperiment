@@ -34,8 +34,8 @@
 ###---------------------------------------
 .get_index <- function(x, j)
 {
-    j <- .index(x@lazyIndex)[[j]]
-    .listData(x@lazyIndex)[[j]]
+    j <- .index(lazyIndex(x))[[j]]
+    .listData(lazyIndex(x))[[j]]
 }
 
 ###-------------
@@ -58,8 +58,8 @@ DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 ###-------------
 
 setGeneric("lazyIndex", function(x) standardGeneric("lazyIndex"), signature="x")
-setMethod("lazyIndex", "DelayedDataFrame", function(x) x@lazyIndex)
 
+setMethod("lazyIndex", "DelayedDataFrame", function(x) x@lazyIndex)
 
 ###-------------
 ## methods
@@ -156,9 +156,9 @@ setAs("ANY", "DelayedDataFrame", function(from){
 ###----------------
 .validate_DelayedDataFrame <- function(x)
 {
-    .validate_LazyIndex(x@lazyIndex)
+    .validate_LazyIndex(lazyIndex(x))
     ## @index must have same length of ncol(x)
-    if(length(.index(x@lazyIndex)) != ncol(x))
+    if(length(.index(lazyIndex(x))) != ncol(x))
         return(wmsg("'.index(x)' must be of same length of 'ncols(x)'"))
     TRUE
 }
@@ -173,8 +173,8 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 {
     i <- normalizeSingleBracketSubscript(
         i, x, exact = FALSE, allow.NAs = TRUE, as.NSBS = FALSE)
-    ## x@lazyIndex <- .update_row(x@lazyIndex, i)
-    x@lazyIndex <- x@lazyIndex[i,]
+    ## lazyIndex(x) <- .update_row(lazyIndex(x), i)
+    lazyIndex(x) <- lazyIndex(x)[i,]
     slot(x, "nrows", check = FALSE) <- length(i)
     if (!is.null(rownames(x))) {
         slot(x, "rownames", check = FALSE) <-
@@ -194,11 +194,11 @@ setReplaceMethod(
     xstub <- setNames(seq_along(x), names(x))
     if (missing(j)) {
         i <- normalizeSingleBracketSubscript(i, xstub)
-        x@lazyIndex <- .update_index(x@lazyIndex, i, NULL)
+        lazyIndex(x) <- .update_index(lazyIndex(x), i, NULL)
     } else {
         j <- normalizeSingleBracketSubscript(j, xstub)
         x@listData[j] <- lapply(j, function(j, x) x[[j]], x)
-        x@lazyIndex <- .update_index(x@lazyIndex, j, NULL)
+        lazyIndex(x) <- .update_index(lazyIndex(x), j, NULL)
     }
     callNextMethod()
 })
@@ -232,7 +232,7 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
                 xstub <- setNames(seq_along(x), names(x))
                 j <- normalizeSingleBracketSubscript(j, xstub)
             }
-            x@lazyIndex <- x@lazyIndex[j]
+            lazyIndex(x) <- lazyIndex(x)[j]
         }
         callNextMethod()
     })
@@ -244,7 +244,7 @@ setMethod(
 {
     for (i in seq_len(length(objects))) {
         y <- as(objects[[i]], "DelayedDataFrame")
-        x@lazyIndex <- c(x@lazyIndex, y@lazyIndex)
+        lazyIndex(x) <- c(lazyIndex(x), lazyIndex(y))
     }
     callNextMethod()
 })

@@ -152,11 +152,15 @@ setAs("ANY", "DelayedDataFrame", function(from){
 ###----------------
 .validate_DelayedDataFrame <- function(x)
 {
-    .validate_LazyIndex(lazyIndex(x))
+    msg <- character()
+    test <- .validate_LazyIndex(lazyIndex(x))
+    if (!isTRUE(test))
+        msg <- c(msg, test)
     ## @index must have same length of ncol(x)
     if(length(.index(lazyIndex(x))) != ncol(x))
-        return(wmsg("'.index(x)' must be of same length of 'ncols(x)'"))
-    TRUE
+        msg <- c(msg, "'.index(x)' must be of same length of 'ncols(x)'")
+
+    if (length(msg)) msg else TRUE
 }
 
 #' @importFrom S4Vectors setValidity2

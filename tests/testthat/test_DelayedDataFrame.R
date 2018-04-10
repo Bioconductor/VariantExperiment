@@ -64,6 +64,22 @@ test_that("DelayedDataFrame as.list() works", {
     expect_identical(exp, as.list(ddf[idx,]))
 })
 
+test_that("DelayedDataFrame as(., 'DataFrame') works", {
+    da1 <- DelayedArray(matrix(1:26, 26, 1))
+    ddf <- DelayedDataFrame(x = letters, da1 = I(da1))
+
+    exp <- DataFrame(x = letters, da1 = I(da1))
+    expect_identical(exp, as(ddf, "DataFrame"))
+
+    idx <- 5:1
+    exp <- DataFrame(x = letters[idx], da1 = I(da1[idx,,drop=FALSE]))
+    expect_identical(exp, as(ddf[idx,], "DataFrame"))
+
+    ddf <- DelayedDataFrame(x = letters, da1 = I(da1), row.names = letters)
+    exp <- DataFrame(x = letters, da1 = I(da1), row.names = letters)
+    expect_identical(exp, as(ddf, "DataFrame"))
+})
+
 test_that("DelayedDataFrame 1-dimensional [ works", {
     da1 <- DelayedArray(matrix(1:26, 26, 1))
     da2 <- DelayedArray(matrix(1:52, 26, 2))

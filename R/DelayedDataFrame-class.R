@@ -124,7 +124,7 @@ setMethod("cbind", "DelayedDataFrame", function(..., deparse.level=1)
 setAs("DataFrame", "DelayedDataFrame", function(from)
 {
     if (identical(dim(from), c(0L, 0L))) {
-    lazyIndex <- .LazyIndex()
+        lazyIndex <- .LazyIndex()
     } else {     
         lazyIndex <- .LazyIndex(vector("list", 1), index=rep(1L, length(from)))
     }
@@ -133,12 +133,10 @@ setAs("DataFrame", "DelayedDataFrame", function(from)
 
 setAs("DelayedDataFrame", "DataFrame", function(from)
 {
-    new_listData <- as.list(from)
-    ans <- S4Vectors:::new_DataFrame(listData=new_listData, nrows=nrow(from))
-    if (!is.null(rownames(from))) {
-       ans@rownames <- rownames(from)
-    }
-    ans
+    listData <- as.list(from)
+    idx <- vapply(listData, is, logical(1), "DelayedArray")
+    listData[idx] <- lapply(listData[idx], I)
+    DataFrame(listData, row.names = rownames(from))
 })
 
 ## setAs("DelayedDataFrame", "DelayedDataFrame", function(from) from)  ## no-op

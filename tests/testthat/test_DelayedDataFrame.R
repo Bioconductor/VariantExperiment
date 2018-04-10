@@ -122,7 +122,9 @@ test_that("DelayedDataFrame 2-dimensional [ works", {
     ddf <- function(i)
         DelayedDataFrame(
             letters = letters[i],
-            da1 = I(da1[i,]), da2 = I(da2[i,]), da3 = I(da3[i,,])
+            da1 = I(da1[i,,drop = FALSE]),
+            da2 = I(da2[i,, drop=FALSE]),
+            da3 = I(da3[i,,,drop=FALSE])
         )
     idx <- 1
     expect_equivalent(ddf(idx), obj[idx,])

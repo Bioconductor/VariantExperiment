@@ -5,9 +5,7 @@
 .LazyIndex <- setClass(
     "LazyIndex",
     contains = "SimpleList",
-    slots = c(
-        index = "integer"
-    )
+    slots = c(index = "integer")
 )
 
 LazyIndex <-

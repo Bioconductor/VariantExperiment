@@ -102,7 +102,8 @@ setMethod("names", "DelayedDataFrame", function(x)
 
 setMethod("cbind", "DelayedDataFrame", function(..., deparse.level=1)
 {
-    DelayedDataFrame(callNextMethod())
+    df <- callNextMethod()
+    DelayedDataFrame(df)
 })
 
 

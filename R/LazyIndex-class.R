@@ -37,6 +37,15 @@ LazyIndex <-
 #' @importFrom S4Vectors setValidity2
 setValidity2("LazyIndex", .validate_LazyIndex)
 
+setMethod("length", "LazyIndex", function(x)
+{
+    indexes <- .listData(x)
+    indexLength <- lengths(indexes)
+    uniqLen <- unique(indexLength)
+    if(uniqLen == 0) return(NULL)
+    else return(uniqLen[uniqLen != 0])
+})
+
 setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,
                    ignore.mcols = FALSE, check = TRUE)
@@ -71,7 +80,7 @@ setMethod("[", c("LazyIndex", "ANY"),
             if (!missing(drop)) 
                 warning("'drop' argument ignored by list-style subsetting")
             if (missing(i)) 
-                return(x)
+                return(x)  ## return x if x[]
             j <- i
         }
         if (!is(j, "IntegerRanges")) {

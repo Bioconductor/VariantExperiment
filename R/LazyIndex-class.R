@@ -38,6 +38,7 @@ LazyIndex <-
 #' @importFrom S4Vectors setValidity2
 setValidity2("LazyIndex", .validate_LazyIndex)
 
+#' @importFrom methods slot
 setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,
                    ignore.mcols = FALSE, check = TRUE)

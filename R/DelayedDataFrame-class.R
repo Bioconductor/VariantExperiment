@@ -42,7 +42,8 @@
 ## constructor
 ###-------------
 
-#' @export
+#' @export DelayedDataFrame
+#' @aliases DelayedDataFrame
 #' @rdname DelayedDataFrame-class
 DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 {
@@ -143,8 +144,6 @@ setAs("DelayedDataFrame", "DataFrame", function(from)
     ans
 })
 
-## setAs("DelayedDataFrame", "DelayedDataFrame", function(from) from)  ## no-op
-
 ###
 setAs("ANY", "DelayedDataFrame", function(from){
     df <- as(from, "DataFrame")
@@ -169,6 +168,7 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 ###-----------------
 ## subsetting
 ###----------------
+#' @importFrom methods slot
 .extractROWS_DelayedDataFrame <- function(x, i)
 {
     i <- normalizeSingleBracketSubscript(

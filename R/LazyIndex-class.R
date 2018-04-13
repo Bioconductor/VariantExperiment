@@ -55,12 +55,12 @@ setMethod("concatenateObjects", "LazyIndex",
         stop("'objects' must be a list")
     
     listData <- c(list(.listData(x)), lapply(objects, slot, "listData"))
-    listData <- unlist(listData, recursive=FALSE)
     indexes <- c(list(.index(x)), lapply(objects, slot, "index"))
 
     ## index offsets
-    offsets <- head(cumsum(c(0L, lengths(indexes))), -1L)
+    offsets <- head(cumsum(c(0L, lengths(listData))), -1L)
     index <- unlist(indexes) + rep(offsets, lengths(indexes))
+    listData <- unlist(listData, recursive=FALSE)
 
     .lazyIndex_compose(listData, index)
 })

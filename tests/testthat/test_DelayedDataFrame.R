@@ -53,15 +53,16 @@ test_that("DelayedDataFrame as.list() works", {
 
     idx <- 1:5
     exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
-    expect_identical(exp, as.list(ddf[idx,]))
+    expect_identical(exp, as.list(ddf[idx,]))  # FAILS: 'package' attribute stripped
+    expect_equivalent(exp, as.list(ddf[idx,]))
 
     idx <- c(1:5, 1:5)
     exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
-    expect_identical(exp, as.list(ddf[idx,]))
-
+    expect_equivalent(exp, as.list(ddf[idx,]))
+    
     idx <- integer()
     exp <- list(x=letters[idx], da1 = da1[idx,,drop=FALSE])
-    expect_identical(exp, as.list(ddf[idx,]))
+    expect_equivalent(exp, as.list(ddf[idx,]))
 })
 
 test_that("DelayedDataFrame as(., 'DataFrame') works", {

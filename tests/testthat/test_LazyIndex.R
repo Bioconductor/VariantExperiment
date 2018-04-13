@@ -141,7 +141,7 @@ test_that(".validate_LazyIndex works", {
     expect_true(validObject(ll))
     expect_true(validObject(LazyIndex()))
     expect_error(LazyIndex(list(1:10, 1:15), index=1:2))
-    expect_error(LazyIndex(listData=list(1:2, 2:1), index=1L))
+    expect_error(LazyIndex(list(1:2, 2:1), index=1L))
 })
 
 test_that("[ subsetting for LazyIndex works", {

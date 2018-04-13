@@ -200,6 +200,7 @@ setReplaceMethod(
         x@listData[j] <- lapply(j, function(j, x) x[[j]], x)
         lazyIndex(x) <- .update_index(lazyIndex(x), j, NULL)
     }
+    callNextMethod()
 })
 
 #' @importFrom methods callNextMethod
@@ -217,6 +218,7 @@ setReplaceMethod(
 setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
     function(x, i, j, ..., drop = TRUE)
 {
+    list_style_subsetting <- (nargs() - (!missing(drop))) < 3L
     if (list_style_subsetting || !missing(j)) {
         if (list_style_subsetting) {
             if (!missing(drop)) 

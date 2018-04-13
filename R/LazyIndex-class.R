@@ -27,6 +27,8 @@ LazyIndex <-
     indexes <- .listData(x)
     indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)
+    if (length(uniqLen) == 1)
+        return(TRUE)
     if (length(uniqLen[uniqLen != 0]) > 1)
         msg <- c(msg, "'.index(x)' must be of same length or 'NULL'")
     if (!setequal(.index(x), seq_along(.listData(x))))

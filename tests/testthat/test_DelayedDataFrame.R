@@ -253,14 +253,6 @@ test_that("acbind,DelayedDataFrame works", {
     expect_equivalent(obj, acbind(obj[1:10,], obj[11:26,]))
 })
 
-test_that("validity,DelayedDataFrame works", {
-    da0 <- DelayedArray(array(1:26, 26))
-    obj <- DelayedDataFrame(letters, da0=I(da0))
-
-    exp <- LazyIndex(.listData(lazyIndex(obj)), 1L)
-    expect_error(initialize(obj, lazyIndex=exp), "subscript out of bounds")
-})
-
 test_that("concatenateObjects,DelayedDataFrame works", {
     da1 <- DelayedArray(matrix(1:26, 26, 1))
     da2 <- DelayedArray(matrix(1:52, 26, 2))
@@ -282,6 +274,27 @@ test_that("concatenateObjects,DelayedDataFrame works", {
     exp <- c(lazyIndex(ddf2), lazyIndex(ddf1))
     expect_identical(exp, lazyIndex(obj2))
     expect_identical(exp, lazyIndex(obj[2:1]))
+})
+
+test_that("extractROWS,DelayedDataFrame works", {
+    da0 <- DelayedArray(array(1:26, 26))
+    obj <- DelayedDataFrame(letters, da0=I(da0), row.names=letters)
+    obj <- extractROWS(obj, c(TRUE, FALSE))
+
+    expect_identical(obj@listData[[1]], letters)
+    expect_equivalent(obj@listData[[2]], da0)  ## 'package' attribute stripped
+
+    expect_identical(unlist(.listData(lazyIndex(obj))), (1:26)[c(TRUE,FALSE)])
+    expect_identical(dim(obj), c(13L, 2L))
+    expect_identical(rownames(obj), letters[c(TRUE,FALSE)])
+
+})
+test_that("validity,DelayedDataFrame works", {
+    da0 <- DelayedArray(array(1:26, 26))
+    obj <- DelayedDataFrame(letters, da0=I(da0))
+
+    exp <- LazyIndex(.listData(lazyIndex(obj)), 1L)
+    expect_error(initialize(obj, lazyIndex=exp), "subscript out of bounds")
 })
 
 test_that("lazyIndex<-,DelayedDataFrame works", {

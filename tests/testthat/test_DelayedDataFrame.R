@@ -31,14 +31,14 @@ test_that("DelayedDataFrame constructor works", {
     obj <- DelayedDataFrame(ddf1, ddf2)
 
     exp <- LazyIndex(list(1:10, 10:1), 1:2)
-    expect_identical(exp, obj@lazyIndex)
+    expect_identical(exp, lazyIndex(obj))
     
     ## DelayedDataFrame constructor over mix of DelayedDataFrame and others
     df2 <- DataFrame(ddf2)
     obj <- DelayedDataFrame(ddf1, df2, da2=I(da2[1:10,]))
 
     exp <- LazyIndex(list(NULL), rep(1L, 3))
-    expect_identical(exp, obj@lazyIndex)
+    expect_identical(exp, lazyIndex(obj))
 
     exp <- list(NULL, c("da1", "da2", "da2.1"))
     expect_identical(exp, dimnames(obj))
@@ -204,8 +204,77 @@ test_that("[<-,DelayedDataFrame 2-D subseting works", {
 
     obj[1:5, 1] <- rev(letters[1:5])
     expect_identical(rev(letters[1:5]), obj[[1]][1:5])
+    nullList <- .LazyIndex(vector("list", 1), index=rep(1L, length(obj)))
+    expect_identical(nullList, lazyIndex(obj))
+
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj <- obj[10:1,]
+    obj[1:5, 1] <- rev(letters[1:5])
+    exp <- .LazyIndex(list(NULL, 10:1), index=1:2)
+    expect_identical(exp, lazyIndex(obj))
+    expect_identical(letters[c(5:1, 5:1)], obj@listData[[1]])
+
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj <- obj[10:1,]
+    obj["da0"] <- da0[sample(10)]
+    exp <- .LazyIndex(list(10:1, NULL), index=1:2)
+    expect_identical(exp, lazyIndex(obj))
 
     ## TODO: subset-replace a DelayedArray column
+
+})
+
+test_that("[[<-,DelayedDataFrame is correct", {
+    da0 <- DelayedArray(array(1:26, 26))
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+
+    nullList <- .LazyIndex(vector("list", 1), index=rep(1L, length(obj)))
+    expect_identical(nullList, lazyIndex(obj))
+
+    obj <- obj[1:10,]
+    exp <- .LazyIndex(list(1:10), index=rep(1L, length(obj)))
+    expect_identical(exp, lazyIndex(obj))
+
+    obj0 <- obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj <- obj[1:10,]
+    expect_identical(nullList, obj0@lazyIndex)
+
+    ## .append_list_element
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj0 <- obj <- obj[1:10,]
+    obj[["x"]] <- da0[1:10]
+    exp <- .LazyIndex(list(1:10, NULL), index = c(1L, 1L, 2L))
+    expect_identical(exp, lazyIndex(obj))
+
+    exp <- .LazyIndex(list(1:10), index = c(1L, 1L))
+    expect_identical(exp, obj0@lazyIndex)
+
+    ## .remove_list_element
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj[["da0"]] <- NULL
+    exp <- .LazyIndex(list(NULL), index = 1L)
+    expect_identical(exp, lazyIndex(obj))
+
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj <- obj[1:10,]
+    obj[["da0"]] <- NULL
+    exp <- .LazyIndex(list(1:10), index = 1L)
+    expect_identical(exp, lazyIndex(obj))
+
+    ## .replace_list_element
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj[["da0"]] <- sample(obj[["da0"]])
+    expect_identical(nullList, lazyIndex(obj))
+
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj[["da0"]] <- da0[sample(nrow(obj))]
+    expect_identical(nullList, lazyIndex(obj))
+
+    obj <- DelayedDataFrame(letters, da0 = I(da0))
+    obj <- obj[10:1,]
+    obj[["da0"]] <- da0[sample(10)]
+    exp <- .LazyIndex(list(10:1, NULL), index=1:2)
+    expect_identical(exp, lazyIndex(obj))
 })
 
 test_that("cbind,DelayedDataFrame works", {

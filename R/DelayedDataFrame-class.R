@@ -159,7 +159,7 @@ setAs("ANY", "DelayedDataFrame", function(from){
     test <- .validate_LazyIndex(lazyIndex(x))
     if (!isTRUE(test))
         msg <- c(msg, test)
-    ## @index must have same length of ncol(x)
+
     if(length(.index(lazyIndex(x))) != ncol(x))
         msg <- c(msg, "'.index(x)' must be of same length of 'ncols(x)'")
 

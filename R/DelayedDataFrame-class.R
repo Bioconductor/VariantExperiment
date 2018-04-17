@@ -47,11 +47,15 @@
 #' @rdname DelayedDataFrame-class
 DelayedDataFrame <- function(..., row.names=NULL, check.names=TRUE)
 {
-    ## no-op for DelayedDataFrame input
-    if (length(list(...)) == 1L && is(list(...)[[1]], "DelayedDataFrame"))
-        return(list(...)[[1]])
-    df <- DataFrame(..., row.names=row.names, check.names=check.names)
-    as(df, "DelayedDataFrame")
+    listData <- list(...)
+    isDDF <- vapply(unname(listData), is, logical(1), "DelayedDataFrame")
+    if (length(isDDF) && all(isDDF)) {
+        ddf <- concatenateObjects(listData[[1]], listData[-1])
+    } else {
+        df <- DataFrame(..., row.names=row.names, check.names=check.names)
+        ddf <- as(df, "DelayedDataFrame")
+    }
+    ddf
 }
 
 ###-------------
@@ -173,14 +177,13 @@ setValidity2("DelayedDataFrame", .validate_DelayedDataFrame)
 {
     i <- normalizeSingleBracketSubscript(
         i, x, exact = FALSE, allow.NAs = TRUE, as.NSBS = FALSE)
-    ## lazyIndex(x) <- .update_row(lazyIndex(x), i)
-    lazyIndex(x) <- lazyIndex(x)[i,]
-    slot(x, "nrows", check = FALSE) <- length(i)
-    if (!is.null(rownames(x))) {
-        slot(x, "rownames", check = FALSE) <-
-            make.unique(extractROWS(rownames(x), i))
-    }
-    x
+    rownames <- rownames(x)[i]
+    if (!is.null(rownames))
+        rownames <- make.unique(rownames)
+
+    initialize(
+        x, lazyIndex = lazyIndex(x)[i,], nrows = length(i), rownames = rownames
+    )
 }
 #' @exportMethod extractROWS
 #' @aliases extractROWS,DelayedDataFrame-method
@@ -216,8 +219,12 @@ setReplaceMethod(
 #' @param ... other arguments to pass.
 
 setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
-    function(x, i, j, ..., drop = TRUE)
+          function (x, i, j, ..., drop = TRUE) 
 {
+    if (!isTRUEorFALSE(drop)) 
+        stop("'drop' must be TRUE or FALSE")
+    if (length(list(...)) > 0L) 
+        warning("parameters in '...' not supported")
     list_style_subsetting <- (nargs() - (!missing(drop))) < 3L
     if (list_style_subsetting || !missing(j)) {
         if (list_style_subsetting) {
@@ -227,14 +234,31 @@ setMethod("[", c("DelayedDataFrame", "ANY", "ANY", "ANY"),
                 return(x)
             j <- i
         }
-        
-        if(!missing(j) && !is(j, "IntegerRanges")) {
+        if (!is(j, "IntegerRanges")) {
             xstub <- setNames(seq_along(x), names(x))
             j <- normalizeSingleBracketSubscript(j, xstub)
         }
-        lazyIndex(x) <- lazyIndex(x)[j]
-        }
-    callNextMethod()
+        x <- initialize(
+            x, lazyIndex = lazyIndex(x)[j], listData = extractROWS(x@listData, j),
+            elementMetadata = extractROWS(mcols(x), j)
+        )
+        if (anyDuplicated(names(x))) 
+            names(x) <- make.unique(names(x))
+        if (list_style_subsetting) 
+            return(x)
+    }
+    if (!missing(i)) {
+        x <- extractROWS(x, i)
+    }
+    if (missing(drop)) 
+        drop <- ncol(x) == 1L
+    if (drop) {
+        if (ncol(x) == 1L) 
+            return(x[[1L]])
+        if (nrow(x) == 1L) 
+            return(as(x, "list"))
+    }
+    x
 })
 
 ## constructing a new DelayedDataFrame

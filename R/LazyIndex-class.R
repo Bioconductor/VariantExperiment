@@ -42,8 +42,8 @@ setMethod("length", "LazyIndex", function(x)
     indexes <- .listData(x)
     indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)
-    if(uniqLen == 0) return(NULL)
-    else return(uniqLen[uniqLen != 0])
+    if(identical(uniqLen, 0L)) return(NULL)
+    uniqLen[uniqLen != 0]
 })
 
 #' @importFrom methods slot

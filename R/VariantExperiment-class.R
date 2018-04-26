@@ -81,17 +81,17 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 ###--------------------
 #' @export gdsfile
 #' @rdname VariantExperiment-class
-setMethod("gdsfile", "VariantExperiment", function(x)
-    vapply(assays(x), gdsfile, character(1)))
+setMethod("gdsfile", "VariantExperiment", function(object)
+    vapply(assays(object), gdsfile, character(1)))
 
 #' @export "gdsfile<-"
 #' @param value the new gds file path for VariantExperiment object.
 #' @rdname Variantexperiment-class
-setReplaceMethod("gdsfile", "VariantExperiment", function(x, value) {
+setReplaceMethod("gdsfile", "VariantExperiment", function(object, value) {
     new_filepath <- tools::file_path_as_absolute(value)
-    assays(x) <- lapply(assays(x), function(assay)
+    assays(object) <- lapply(assays(object), function(assay)
         BiocGenerics:::replaceSlots(seed(assay), file=value, check=FALSE))
-    x
+    object
 })
 
 

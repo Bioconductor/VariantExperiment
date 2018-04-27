@@ -31,9 +31,6 @@ LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
-    AllUtilities.R
-    GDSArray-classes.R
-    GDSArray-methods.R
     DelayedDataFrame-class.R
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R

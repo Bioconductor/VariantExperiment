@@ -20,14 +20,13 @@
 #' @rdname VariantExperiment-class
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
 {
-    elementMetadata <- S4Vectors:::make_zero_col_DataFrame(length(rowRanges))
-    if (!is(assays, "Assays"))
-        assays <- Assays(assays)
-    new("VariantExperiment", rowRanges=rowRanges,
-        colData=colData,
+    result <- SummarizedExperiment(
+        rowRanges=rowRanges,
+        colData = colData,
         assays=assays,
-        elementMetadata=elementMetadata,
-        metadata=as.list(metadata))
+        metadata=as.list(metadata)
+    )
+    .VariantExperiment(result)
 }
 
 ## VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list(), ...)

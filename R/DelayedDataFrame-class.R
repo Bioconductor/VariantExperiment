@@ -136,13 +136,13 @@ setAs("DataFrame", "DelayedDataFrame", function(from)
     .DelayedDataFrame(from, lazyIndex = lazyIndex)
 })
 
-setAs("DelayedDataFrame", "DataFrame", function(from)
-{
-    listData <- as.list(from)
-    idx <- vapply(listData, is, logical(1), "DelayedArray")
-    listData[idx] <- lapply(listData[idx], I)
-    DataFrame(listData, row.names = rownames(from))
-})
+## setAs("DelayedDataFrame", "DataFrame", function(from)
+## {
+##     listData <- as.list(from)
+##     idx <- vapply(listData, is, logical(1), "DelayedArray")
+##     listData[idx] <- lapply(listData[idx], I)
+##     DataFrame(listData, row.names = rownames(from))
+## })
 
 ###
 setAs("ANY", "DelayedDataFrame", function(from){

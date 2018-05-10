@@ -46,16 +46,6 @@ setValidity2("LazyIndex", .validate_LazyIndex)
     uniqLen[uniqLen != 0]
 }
 
-## #' @export
-## setMethod("length", "LazyIndex", function(x)
-## {
-##     indexes <- .listData(x)
-##     indexLength <- lengths(indexes)
-##     uniqLen <- unique(indexLength)
-##     if(identical(uniqLen, 0L)) return(NULL)
-##     uniqLen[uniqLen != 0]
-## })
-
 #' @importFrom methods slot
 setMethod("concatenateObjects", "LazyIndex",
           function(x, objects=list(), use.names = TRUE,

@@ -144,6 +144,20 @@ setAs("DataFrame", "DelayedDataFrame", function(from)
 ##     DataFrame(listData, row.names = rownames(from))
 ## })
 
+setMethod("coerce", c("DelayedDataFrame", "DataFrame"),
+          function(from, to="DataFrame", strict=TRUE)
+          {
+              if (!strict && is(from, "DataFrame")) {
+                  return(from)
+              } else {
+                  listData <- as.list(from)
+                  idx <- vapply(listData, is, logical(1), "DelayedArray")
+                  listData[idx] <- lapply(listData[idx], I)
+                  DataFrame(listData, row.names = rownames(from))
+              }
+          }
+)
+
 ###
 setAs("ANY", "DelayedDataFrame", function(from){
     df <- as(from, "DataFrame")

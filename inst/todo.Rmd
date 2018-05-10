@@ -2,7 +2,7 @@
 
 - finalize the `DelayedDataFrame` constructor. When inputs are all DDF, call `concatenateObjects,DelayedDataFrame`. Otherwise, call `DataFrame` constructor, and coerce into `DelayedDataFrame`. -- done!
 - update unit tests.   -- done!
-- `GDSArray` failing building. 
+- `GDSArray` failing building. -- fixed on 0.9.14.
 
 4/3/2018
 

@@ -1,14 +1,3 @@
-DDF use case:
-
-SNPlocks, Gpos? on-disk long table? SQL, drill table...
-relational/algebra? DataFrame S4 replacement or ordinary data.frame.
-stand-alone package? convenient. 
-extractCOLS...  
-check colnames for DDF construction. 
-package attributes stripped with [[, and as.list()
-acbind/arbind
-
-
 4/17/2018
 
 - finalize the `DelayedDataFrame` constructor. When inputs are all DDF, call `concatenateObjects,DelayedDataFrame`. Otherwise, call `DataFrame` constructor, and coerce into `DelayedDataFrame`. -- done!

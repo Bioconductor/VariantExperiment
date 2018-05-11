@@ -82,6 +82,7 @@
 ### delayedArray in each column in DF, have individual index, which does not save spaces almost......
 
 #' @importMethodsFrom SeqArray info
+#' @import DelayedDataFrame
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
     f <- seqOpen(seqArrayFile)
     on.exit(seqClose(f))

@@ -4,7 +4,7 @@
 
 .LazyIndex <- setClass(
     "LazyIndex",
-    contains = "SimpleList",
+    contains = "SimpleList",  ## extend list? List? 
     slots = c(index = "integer")
 )
 
@@ -29,6 +29,7 @@ LazyIndex <-
     uniqLen <- unique(indexLength)
     if (length(uniqLen[uniqLen != 0]) > 1)
         msg <- c(msg, "'.index(x)' must be of same length or 'NULL'")
+    ## index slot must be consistent with all listData elements.
     if (!setequal(.index(x), seq_along(.listData(x))))
         msg <- c(msg, "'.index(x)' and 'seq_along(.listData(x))' are not equal")
     if (length(msg)) msg else TRUE
@@ -37,7 +38,7 @@ LazyIndex <-
 #' @importFrom S4Vectors setValidity2
 setValidity2("LazyIndex", .validate_LazyIndex)
 
-.fulllength <- function(x) {
+.fulllength <- function(x) {  ## dim(), rectangular., concatenateObject (works as cbind)
     indexes <- .listData(x)
     indexLength <- lengths(indexes)
     uniqLen <- unique(indexLength)

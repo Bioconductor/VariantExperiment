@@ -284,6 +284,7 @@ setMethod(
         y <- as(objects[[i]], "DelayedDataFrame")
         lazyIndex(x) <- c(lazyIndex(x), lazyIndex(y))
     }
+    ## validObject(x) ## ncol(x) != .index(lazyIndex(x))
     callNextMethod()
 })
 

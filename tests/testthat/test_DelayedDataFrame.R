@@ -51,7 +51,7 @@ test_that("DelayedDataFrame [[ works", {
     obj <- DelayedDataFrame(letters, da1=I(da1), da2=I(da2), da3 = I(da3))
 
     expect_identical(letters, obj[["letters"]])
-    expect_equal(da1, obj[["da1"]])     # FAILS: 'package' attribute stripped
+    expect_equal(da1, obj[["da1"]])     # FAILS: 'package' attribute stripped (pkg: methods)
     expect_equivalent(da2, obj[["da2"]])
     expect_equivalent(da3, obj[["da3"]])
 

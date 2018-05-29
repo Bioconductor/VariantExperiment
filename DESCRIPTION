@@ -9,7 +9,7 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
     SummarizedExperiment.
 Depends:
     R (>= 3.5),
-    S4Vectors (>= 0.17.34),
+    S4Vectors (>= 0.19.5),
     SummarizedExperiment (>= 1.9.15),
     GenomicRanges,
     GDSArray (>= 0.9.14),

@@ -82,6 +82,7 @@
 ### delayedArray in each column in DF, have individual index, which does not save spaces almost......
 
 #' @importMethodsFrom SeqArray info
+#' @import DelayedDataFrame
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
     f <- seqOpen(seqArrayFile)
     on.exit(seqClose(f))
@@ -270,7 +271,7 @@ showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns
         if(ff == "SNP_ARRAY"){
             assaynodes <- "genotype"
         }else if(ff == "SEQ_ARRAY"){
-            assaynodes <- GDSArray:::.get_gdsdata_arrayNodes(file)
+            assaynodes <- GDSArray:::.get_gdsdata_non1D_array(file)
         }
         res$name <- assaynodes
     }

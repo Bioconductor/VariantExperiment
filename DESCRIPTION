@@ -9,10 +9,11 @@ Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS
     SummarizedExperiment.
 Depends:
     R (>= 3.5),
-    S4Vectors (>= 0.17.34),
+    S4Vectors (>= 0.19.5),
     SummarizedExperiment (>= 1.9.15),
     GenomicRanges,
-    GDSArray
+    GDSArray (>= 0.9.14),
+    DelayedDataFrame
 License: GPL-3
 Encoding: UTF-8
 URL: https://github.com/Bioconductor/VariantExperiment
@@ -32,7 +33,6 @@ LazyData: true
 RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
-    DelayedDataFrame-class.R
     rbind.R
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R

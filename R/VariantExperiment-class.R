@@ -1,27 +1,32 @@
+#' VariantExperiment
+#' 
+#' @name VariantExperiment-class
+#' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
 #' @exportClass VariantExperiment
+#' @rdname VariantExperiment-class
+#' 
 .VariantExperiment <- setClass(
     "VariantExperiment",
     contains="RangedSummarizedExperiment",
-    ## slots = c(gdsfile = "character")
-    ## slots=c(gdsfile="character",
-    ##         x="integer")
 )
 
 ###--------------
 ### constructor
 ###--------------
 #' @export VariantExperiment
+#' @importFrom GenomicRanges GRangesList
+#' @importFrom SummarizedExperiment Assays
+#' @rdname VariantExperiment-class
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
 {
-    elementMetadata <- S4Vectors:::make_zero_col_DataFrame(length(rowRanges))
-    if (!is(assays, "Assays"))
-        assays <- Assays(assays)
-    new("VariantExperiment", rowRanges=rowRanges,
-        colData=colData,
+    result <- SummarizedExperiment(
+        rowRanges=rowRanges,
+        colData = colData,
         assays=assays,
-        elementMetadata=elementMetadata,
-        metadata=as.list(metadata))
+        metadata=as.list(metadata)
+    )
+    .VariantExperiment(result)
 }
 
 ## VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list(), ...)
@@ -73,14 +78,19 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 ###--------------------
 ### getter and setter
 ###--------------------
-setMethod("gdsfile", "VariantExperiment", function(x)
-    vapply(assays(x), gdsfile, character(1)))
+#' @export gdsfile
+#' @rdname VariantExperiment-class
+setMethod("gdsfile", "VariantExperiment", function(object)
+    vapply(assays(object), gdsfile, character(1)))
 
-setReplaceMethod("gdsfile", "VariantExperiment", function(x, value) {
+#' @export "gdsfile<-"
+#' @param value the new gds file path for VariantExperiment object.
+#' @rdname Variantexperiment-class
+setReplaceMethod("gdsfile", "VariantExperiment", function(object, value) {
     new_filepath <- tools::file_path_as_absolute(value)
-    assays(x) <- lapply(assays(x), function(assay)
+    assays(object) <- lapply(assays(object), function(assay)
         BiocGenerics:::replaceSlots(seed(assay), file=value, check=FALSE))
-    x
+    object
 })
 
 

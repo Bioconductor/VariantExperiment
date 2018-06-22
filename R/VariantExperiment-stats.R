@@ -1,7 +1,85 @@
 ## VCF2VE function
+## VCF2VE <- function(vcf.fn, out.fn, header=NULL,
+##                    storage.option="LZMA_RA", info.import=NULL, fmt.import=NULL,
+##                    genotype.var.name="GT", ignore.chr.prefix="chr",
+##                    reference=NULL, start=1L, count=-1L, optimize=TRUE, raise.error=TRUE,
+##                    digest=TRUE, parallel=FALSE, verbose=TRUE)
 
+#' @name VCF2VE
+#' @rdname VariantExperiment-class.Rd
+#' @description \code{VCF2VE} is the function to convert a vcf file
+#'     into \code{VariantExperiment} object. By default, the genotype
+#'     data will be written as \code{GDSArray} format, which is saved
+#'     in the \code{assays} slot. The annotation info for variants
+#'     will be written as \code{DelayedDataFrame} object (by default)
+#'     or \code{DataFrame} object, and saved in the \code{rowData}
+#'     slot. The annotation info for samples will be written as
+#'     \code{DelayedDataFrame} object (by default) or \code{DataFrame}
+#'     object, and saved in the \code{colData} slot. 
+#' @param replace Whether to replace the directory if it already
+#'     exists. The default is FALSE.
+#' @param out.dir The directory to save the gds format of the vcf
+#'     data, and the newly generated VariantExperiment object with
+#'     array data in \code{GDSArray} format and annotation data in
+#'     \code{DelayedDataFrame} format.
+#' @param replace Whether to replace the directory if it already
+#'     exists. The default is FALSE.
+#' @param head if NULL, ‘header’ is set to be ‘seqVCF_Header(vcf.fn)’,
+#'     which is a list (with a class name "SeqVCFHeaderClass", S3
+#'     object).
+#' @param compress the compression method for writing the gds
+#'     file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
+#'     more details of this argument.
+#' @param annotationOnDisk whether to save the annotation info for
+#'     samples and variants as Delayed object. The default is TRUE.
+#' @param ignore.chr.prefix a vector of character, indicating the
+#'     prefix of chromosome which should be ignored, like "chr"; it is
+#'     not case-sensitive.
+#' @param reference genome reference, like "hg19", "GRCh37"; if the
+#'     genome reference is not available in VCF files, users could
+#'     specify the reference here.
+#' @param start the starting variant if importing part of VCF files.
+#' @param count the maximum count of variant if importing part of VCF
+#'     files, -1 indicates importing to the end.
+#' @param verbose whether to print the process messages. The default
+#'     is FALSE.
+#' @export
+VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
+                   info.import=NULL, fmt.import=NULL,
+                   annotationOnDisk = TRUE,
+                   ignore.chr.prefix="chr",
+                   reference=NULL, start=1L, count=-1L,
+                   parallel=FALSE, verbose=TRUE){
+    
+    ## check
+    stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
+    if (!isSingleString(out.dir))
+        stop(wmsg("'dir' must be a single string specifying the path ",
+                  "to the directory where to save the ", "VariantExperiment",
+                  " object (the directory will be created)"))
+    if (!isTRUEorFALSE(replace))
+        stop("'replace' must be TRUE or FALSE")
+    
+    ## stopifnot(is.character(out.dir), length(out.dir)==1L)
 
+    ## run VCF to GDS
+    .create_dir(out.dir, replace)
+    out.gds.fn <- file.path(out.dir, "se.gds")
+    seqVCF2GDS(vcf.fn, out.gds.fn, header = header,
+               info.import = info.import, fmt.import = fmt.import,
+               ignore.chr.prefix = ignore.chr.prefix,
+               reference = reference, optimize=TRUE, raise.error=TRUE,
+               verbose=verbose)
 
+    ## run GDS to VE
+    makeSummarizedExperimentFromGDS(
+        file=out.gds.fn, name=NULL,
+        ## rowDataColumns = rowDataColumns,
+        ## colDataColumns = colDataColumns,
+        infoColumns = info.import,  ## ??
+        rowDataOnDisk = annotationOnDisk,
+        colDataOnDisk = annotationOnDisk)
+}
 
 .saveGDSMaybe <- function(gdsfile) {
     file <- gdsfile(gdsfile)[1]

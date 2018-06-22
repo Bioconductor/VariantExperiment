@@ -1,3 +1,12 @@
+5/29/2018
+- finalize "VCF2VE()" function. 
+  - check seqVCF2GDS arguments: header, start, count, optimize, raise.error, digest, paralle.
+  - add argument for sample info. 
+  - modify ".info_seqgds" for arbitray info columns (now from gds to VE, no problem, how about from vcf into gds?).
+  - "showAvailable" for rowData? (fixed entries now..., try a different vcf file)
+- test stats functions with real VCF data. 
+- add testthat functions for VCF2VE and other stats functions. 
+
 4/17/2018
 
 - finalize the `DelayedDataFrame` constructor. When inputs are all DDF, call `concatenateObjects,DelayedDataFrame`. Otherwise, call `DataFrame` constructor, and coerce into `DelayedDataFrame`. -- done!

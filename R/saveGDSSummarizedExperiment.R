@@ -289,20 +289,37 @@
     se
 }
 
-#' saveGDSSummarizedExperiment
-#' Save all the assays in GDS format, including in-memory assays. Delayed assays with delayed operations on them are realized while they are written to disk.
-#' @param se A SummarizedExperiment object, with the array data being ordinary array structure.
-#' @param dir The directory to save the gds format of the array data, and the newly generated SummarizedExperiment object with array data in GDSArray format.
-#' @param replace Whether to replace the directory if it already exists. The default is FALSE.
+#' saveGDSSummarizedExperiment Save all the assays in GDS format,
+#' including in-memory assays. Delayed assays with delayed operations
+#' on them are realized while they are written to disk.
+#' @param se A SummarizedExperiment object, with the array data being
+#'     ordinary array structure.
+#' @param dir The directory to save the gds format of the array data,
+#'     and the newly generated SummarizedExperiment object with array
+#'     data in GDSArray format.
+#' @param replace Whether to replace the directory if it already
+#'     exists. The default is FALSE.
 #' @param fileFormat File format for the output gds file. See details.
-#' @param compress the compression method for writing the gds file. The default is "LZMA_RA".
-#' @param chunk_size The chunk size (number of rows) when reading GDSArray-based assays from input \code{se} into memory and then write into a new gds file. 
-#' @param rowDataOnDisk whether to save the \code{rowData} as DelayedArray object. The default is TRUE.
-#' @param colDataOnDisk whether to save the \code{colData} as DelayedArray object. The default is TRUE.
-#' @param verbose whether to print the process messages. The default is FALSE.
-#' @importFrom SummarizedExperiment colData "colData<-" rowRanges "rowRanges<-" rowData "rowData<-" assays assay "assays<-" mcols "mcols<-"
+#' @param compress the compression method for writing the gds
+#'     file. The default is "LZMA_RA".
+#' @param chunk_size The chunk size (number of rows) when reading
+#'     GDSArray-based assays from input \code{se} into memory and then
+#'     write into a new gds file.
+#' @param rowDataOnDisk whether to save the \code{rowData} as
+#'     DelayedArray object. The default is TRUE.
+#' @param colDataOnDisk whether to save the \code{colData} as
+#'     DelayedArray object. The default is TRUE.
+#' @param verbose whether to print the process messages. The default
+#'     is FALSE.
+#' @importFrom SummarizedExperiment colData "colData<-" rowRanges
+#'     "rowRanges<-" rowData "rowData<-" assays assay "assays<-" mcols
+#'     "mcols<-"
 #' @export
-#' @details If the input \code{SummarizedExperiment} object has GDSArray-based assay data, there is no need to specify the argument \code{fileFomat}. Otherwise, it takes values of \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP array data. 
+#' @details If the input \code{SummarizedExperiment} object has
+#'     GDSArray-based assay data, there is no need to specify the
+#'     argument \code{fileFomat}. Otherwise, it takes values of
+#'     \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP
+#'     array data.
 
 saveGDSSummarizedExperiment <-
     function(se, dir="my_gds_se", replace=FALSE, fileFormat=NULL,

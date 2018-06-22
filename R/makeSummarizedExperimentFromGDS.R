@@ -206,23 +206,23 @@
 
 .colData_gdsdata <- function(file, fileFormat, colDataColumns, colDataOnDisk)
 {
-    if (!is.null(colDataColumns)) {
-        if (length(colDataColumns) > 0) {
-            idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
-            if (any(!idx.within)) {
-                warning("\n", 'The sample annotation of "',
-                        paste(colDataColumns[!idx.within], collapse = ", "),
-                        '" does not exist!', "\n",
-                        'Please use showAvailable(file, "colDataColumns") ',
-                        'to get the available columns for "colData."',
-                        "\n")
-                colDataColumns <- colDataColumns[idx.within]
-                if (length(colDataColumns) == 0)
-                    colDataColumns <- showAvailable(file)$colDataColumns
-            }
-        } else {
-            colDataColumns <- showAvailable(file)$colDataColumns
+    if (length(colDataColumns) > 0) {
+        idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
+        if (any(!idx.within)) {
+            warning("\n", 'The sample annotation of "',
+                    paste(colDataColumns[!idx.within], collapse = ", "),
+                    '" does not exist!', "\n",
+                    'Please use showAvailable(file, "colDataColumns") ',
+                    'to get the available columns for "colData."',
+                    "\n")
+            colDataColumns <- colDataColumns[idx.within]
+            if (length(colDataColumns) == 0)
+                colDataColumns <- showAvailable(file)$colDataColumns
         }
+    } else {   ## colDataColumns=character()
+        colDataColumns <- showAvailable(file)$colDataColumns
+    }
+    if (length(colDataColumns) > 0) {
         if (colDataOnDisk) {
             sample.id <- .sampnode_gdsdata_ondisk(
                 file, fileFormat, "sample.id")
@@ -249,10 +249,13 @@
         on.exit(closefn.gds(f))
         stopifnot(inherits(f, "gds.class"))
         sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        DelayedDataFrame(row.names=sample.id)
+        if (colDataOnDisk) {
+            DelayedDataFrame(row.names=sample.id)
+        } else {
+            DataFrame(row.names=sample.id)
+        }
     }
 }
-
 #' ShowAvailable
 #' 
 #' The function to show the available entries for the arguments within \code{makeSummarizedExperimentFromGDS}

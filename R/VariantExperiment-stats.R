@@ -8,14 +8,11 @@
 #' @name VCF2VE
 #' @rdname VariantExperiment-class.Rd
 #' @description \code{VCF2VE} is the function to convert a vcf file
-#'     into \code{VariantExperiment} object. By default, the genotype
-#'     data will be written as \code{GDSArray} format, which is saved
-#'     in the \code{assays} slot. The annotation info for variants
-#'     will be written as \code{DelayedDataFrame} object (by default)
-#'     or \code{DataFrame} object, and saved in the \code{rowData}
-#'     slot. The annotation info for samples will be written as
-#'     \code{DelayedDataFrame} object (by default) or \code{DataFrame}
-#'     object, and saved in the \code{colData} slot. 
+#'     into \code{VariantExperiment} object. The genotype data will be
+#'     written as \code{GDSArray} format, which is saved in the
+#'     \code{assays} slot. The annotation info for variants or samples
+#'     will be written as \code{DelayedDataFrame} object, and saved in
+#'     the \code{rowData} or \code{colData} slot.
 #' @param replace Whether to replace the directory if it already
 #'     exists. The default is FALSE.
 #' @param out.dir The directory to save the gds format of the vcf
@@ -27,11 +24,15 @@
 #' @param head if NULL, ‘header’ is set to be ‘seqVCF_Header(vcf.fn)’,
 #'     which is a list (with a class name "SeqVCFHeaderClass", S3
 #'     object).
-#' @param compress the compression method for writing the gds
-#'     file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
-#'     more details of this argument.
-#' @param annotationOnDisk whether to save the annotation info for
-#'     samples and variants as Delayed object. The default is TRUE.
+#' @param info.import characters, the variable name(s) in the INFO
+#'     field for import; default is ‘NULL’ for all variables.
+#' @param fmt.import characters, the variable name(s) in the FORMAT
+#'     field for import; default is ‘NULL’ for all variables.  ## #'
+## #' @param compress the compression method for writing the gds
+## #'     file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
+## #'     more details of this argument.
+## #' @param annotationOnDisk whether to save the annotation info for
+## #'     samples and variants as Delayed object. The default is TRUE.
 #' @param ignore.chr.prefix a vector of character, indicating the
 #'     prefix of chromosome which should be ignored, like "chr"; it is
 #'     not case-sensitive.
@@ -46,11 +47,11 @@
 #' @export
 VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
                    info.import=NULL, fmt.import=NULL,
-                   annotationOnDisk = TRUE,
+                   ## annotationOnDisk = TRUE,
                    ignore.chr.prefix="chr",
                    reference=NULL, start=1L, count=-1L,
                    parallel=FALSE, verbose=TRUE){
-    
+    ## browser()
     ## check
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
     if (!isSingleString(out.dir))
@@ -68,8 +69,8 @@ VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
     seqVCF2GDS(vcf.fn, out.gds.fn, header = header,
                info.import = info.import, fmt.import = fmt.import,
                ignore.chr.prefix = ignore.chr.prefix,
-               reference = reference, optimize=TRUE, raise.error=TRUE,
-               verbose=verbose)
+               reference = reference, start = 1L, count = -1L,
+               optimize=TRUE, raise.error=TRUE, verbose=verbose)
 
     ## run GDS to VE
     makeSummarizedExperimentFromGDS(
@@ -77,8 +78,8 @@ VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
         ## rowDataColumns = rowDataColumns,
         ## colDataColumns = colDataColumns,
         infoColumns = info.import,  ## ??
-        rowDataOnDisk = annotationOnDisk,
-        colDataOnDisk = annotationOnDisk)
+        rowDataOnDisk = TRUE,
+        colDataOnDisk = TRUE)
 }
 
 .saveGDSMaybe <- function(gdsfile) {

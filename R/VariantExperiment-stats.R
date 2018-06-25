@@ -6,7 +6,7 @@
 ##                    digest=TRUE, parallel=FALSE, verbose=TRUE)
 
 #' @name VCF2VE
-#' @rdname VariantExperiment-class.Rd
+#' @rdname VariantExperiment-class
 #' @description \code{VCF2VE} is the function to convert a vcf file
 #'     into \code{VariantExperiment} object. The genotype data will be
 #'     written as \code{GDSArray} format, which is saved in the
@@ -69,8 +69,10 @@ VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
     seqVCF2GDS(vcf.fn, out.gds.fn, header = header,
                info.import = info.import, fmt.import = fmt.import,
                ignore.chr.prefix = ignore.chr.prefix,
-               reference = reference, start = 1L, count = -1L,
-               optimize=TRUE, raise.error=TRUE, verbose=verbose)
+               reference = reference, start = start, count = count,
+               optimize=TRUE, raise.error=TRUE, digest = TRUE,
+               parallel = parallel,
+               verbose=verbose)
 
     ## run GDS to VE
     makeSummarizedExperimentFromGDS(

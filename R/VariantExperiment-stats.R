@@ -4,7 +4,12 @@
 ##                    genotype.var.name="GT", ignore.chr.prefix="chr",
 ##                    reference=NULL, start=1L, count=-1L, optimize=TRUE, raise.error=TRUE,
 ##                    digest=TRUE, parallel=FALSE, verbose=TRUE)
-
+## #' @param compress the compression method for writing the gds
+## #' file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
+## #' more details of this argument.
+## #' @param annotationOnDisk whether to save the annotation info for
+## #' samples and variants as Delayed object. The default is TRUE.
+#' VCF2VE        
 #' @name VCF2VE
 #' @rdname VariantExperiment-class
 #' @description \code{VCF2VE} is the function to convert a vcf file
@@ -21,18 +26,17 @@
 #'     \code{DelayedDataFrame} format.
 #' @param replace Whether to replace the directory if it already
 #'     exists. The default is FALSE.
-#' @param head if NULL, ‘header’ is set to be ‘seqVCF_Header(vcf.fn)’,
-#'     which is a list (with a class name "SeqVCFHeaderClass", S3
-#'     object).
+#' @param header if NULL, ‘header’ is set to be
+#'     ‘seqVCF_Header(vcf.fn)’, which is a list (with a class name
+#'     "SeqVCFHeaderClass", S3 object).
 #' @param info.import characters, the variable name(s) in the INFO
 #'     field for import; default is ‘NULL’ for all variables.
 #' @param fmt.import characters, the variable name(s) in the FORMAT
-#'     field for import; default is ‘NULL’ for all variables.  ## #'
-## #' @param compress the compression method for writing the gds
-## #'     file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
-## #'     more details of this argument.
-## #' @param annotationOnDisk whether to save the annotation info for
-## #'     samples and variants as Delayed object. The default is TRUE.
+#'     field for import; default is ‘NULL’ for all variables.  
+#' @param sample.info characters (with) file path for the sample info
+#'     data. The data must have colnames, and the number of rows must
+#'     be the same as with the number of samples in vcf file. The
+#'     default is ‘NULL’ for no sample info.
 #' @param ignore.chr.prefix a vector of character, indicating the
 #'     prefix of chromosome which should be ignored, like "chr"; it is
 #'     not case-sensitive.
@@ -45,12 +49,12 @@
 #' @param verbose whether to print the process messages. The default
 #'     is FALSE.
 #' @export
-VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
-                   info.import=NULL, fmt.import=NULL,
-                   ## annotationOnDisk = TRUE,
-                   ignore.chr.prefix="chr",
-                   reference=NULL, start=1L, count=-1L,
-                   parallel=FALSE, verbose=TRUE){
+VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
+                   header = NULL, info.import = NULL,
+                   fmt.import = NULL, sample.info = NULL, 
+                   ignore.chr.prefix = "chr", reference = NULL,
+                   start = 1L, count = -1L, parallel = FALSE,
+                   verbose = TRUE){
     ## browser()
     ## check
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
@@ -60,6 +64,8 @@ VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
                   " object (the directory will be created)"))
     if (!isTRUEorFALSE(replace))
         stop("'replace' must be TRUE or FALSE")
+    if (!isTRUEorFALSE(parallel))
+        stop("'parallel' must be TRUE or FALSE")
     
     ## stopifnot(is.character(out.dir), length(out.dir)==1L)
 
@@ -67,13 +73,30 @@ VCF2VE <- function(vcf.fn, out.dir="my_gds_se", replace=FALSE, header=NULL,
     .create_dir(out.dir, replace)
     out.gds.fn <- file.path(out.dir, "se.gds")
     seqVCF2GDS(vcf.fn, out.gds.fn, header = header,
+               storage.option = "LZMA_RA", 
                info.import = info.import, fmt.import = fmt.import,
+               genotype.var.name = "GT",
                ignore.chr.prefix = ignore.chr.prefix,
                reference = reference, start = start, count = count,
                optimize=TRUE, raise.error=TRUE, digest = TRUE,
                parallel = parallel,
                verbose=verbose)
 
+    ## add sample info into gds file.
+    sample.info <- read.table(file = sample.info, header = TRUE,
+                              blank.lines.skip = FALSE,
+                              stringsAsFactors = FALSE)
+
+    gfile <- openfn.gds(out.gds.fn, readonly=FALSE)
+    sampAnnot <- index.gdsn(gfile, "sample.annotation")
+    for (i in seq_along(sample.info)) {
+        SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
+                           sampAnnot, names(sample.info)[i], sample.info[,i],
+                           storage = "string", closezip = TRUE, visible = FALSE)
+    }
+    closefn.gds(gfile)
+    ## on.exit({ if (!is.null(gfile)) closefn.gds(gfile)} )
+    
     ## run GDS to VE
     makeSummarizedExperimentFromGDS(
         file=out.gds.fn, name=NULL,

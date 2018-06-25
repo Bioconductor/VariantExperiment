@@ -3,7 +3,7 @@
   - check seqVCF2GDS arguments: header, start, count, optimize, raise.error, digest, paralle.
   - test VCF2VE() arguments. -- done! 
 	"verbose=TRUE" by default? 
-  - add argument for sample info. 
+  - add argument for sample info.    -- to do... 
   - modify ".info_seqgds" for arbitray info columns (now from gds to VE, no problem, how about from vcf into gds?).  -- no problem!
   - "showAvailable" for rowData? (fixed entries now..., try a different vcf file)
 - test stats functions with real VCF data. 

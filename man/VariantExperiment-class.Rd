@@ -16,9 +16,9 @@ VariantExperiment(assays, rowRanges = GRangesList(),
 \S4method{gdsfile}{VariantExperiment}(object)
 
 VCF2VE(vcf.fn, out.dir = "my_gds_se", replace = FALSE, header = NULL,
-  info.import = NULL, fmt.import = NULL, ignore.chr.prefix = "chr",
-  reference = NULL, start = 1L, count = -1L, parallel = FALSE,
-  verbose = TRUE)
+  info.import = NULL, fmt.import = NULL, sample.info = NULL,
+  ignore.chr.prefix = "chr", reference = NULL, start = 1L, count = -1L,
+  parallel = FALSE, verbose = TRUE)
 }
 \arguments{
 \item{out.dir}{The directory to save the gds format of the vcf
@@ -29,11 +29,20 @@ array data in \code{GDSArray} format and annotation data in
 \item{replace}{Whether to replace the directory if it already
 exists. The default is FALSE.}
 
+\item{header}{if NULL, ‘header’ is set to be
+‘seqVCF_Header(vcf.fn)’, which is a list (with a class name
+"SeqVCFHeaderClass", S3 object).}
+
 \item{info.import}{characters, the variable name(s) in the INFO
 field for import; default is ‘NULL’ for all variables.}
 
 \item{fmt.import}{characters, the variable name(s) in the FORMAT
-field for import; default is ‘NULL’ for all variables.  ## #'}
+field for import; default is ‘NULL’ for all variables.}
+
+\item{sample.info}{characters (with) file path for the sample info
+data. The data must have colnames, and the number of rows must
+be the same as with the number of samples in vcf file. The
+default is ‘NULL’ for no sample info.}
 
 \item{ignore.chr.prefix}{a vector of character, indicating the
 prefix of chromosome which should be ignored, like "chr"; it is
@@ -53,10 +62,6 @@ is FALSE.}
 
 \item{replace}{Whether to replace the directory if it already
 exists. The default is FALSE.}
-
-\item{head}{if NULL, ‘header’ is set to be ‘seqVCF_Header(vcf.fn)’,
-which is a list (with a class name "SeqVCFHeaderClass", S3
-object).}
 }
 \description{
 VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.

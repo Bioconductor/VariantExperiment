@@ -18,7 +18,7 @@ VariantExperiment(assays, rowRanges = GRangesList(),
 VCF2VE(vcf.fn, out.dir = "my_gds_se", replace = FALSE, header = NULL,
   info.import = NULL, fmt.import = NULL, sample.info = NULL,
   ignore.chr.prefix = "chr", reference = NULL, start = 1L, count = -1L,
-  parallel = FALSE, verbose = TRUE)
+  parallel = FALSE, verbose = FALSE)
 }
 \arguments{
 \item{out.dir}{The directory to save the gds format of the vcf
@@ -41,8 +41,8 @@ field for import; default is ‘NULL’ for all variables.}
 
 \item{sample.info}{characters (with) file path for the sample info
 data. The data must have colnames, and the number of rows must
-be the same as with the number of samples in vcf file. The
-default is ‘NULL’ for no sample info.}
+be the same as with the number of samples in vcf file. No blank
+line allowed. The default is ‘NULL’ for no sample info.}
 
 \item{ignore.chr.prefix}{a vector of character, indicating the
 prefix of chromosome which should be ignored, like "chr"; it is

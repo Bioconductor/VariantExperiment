@@ -1,15 +1,13 @@
-## VCF2VE function
-## VCF2VE <- function(vcf.fn, out.fn, header=NULL,
-##                    storage.option="LZMA_RA", info.import=NULL, fmt.import=NULL,
-##                    genotype.var.name="GT", ignore.chr.prefix="chr",
-##                    reference=NULL, start=1L, count=-1L, optimize=TRUE, raise.error=TRUE,
-##                    digest=TRUE, parallel=FALSE, verbose=TRUE)
-## #' @param compress the compression method for writing the gds
-## #' file. The default is "LZMA_RA". See ‘?SeqArray::seqVCF2GDS’ for
-## #' more details of this argument.
-## #' @param annotationOnDisk whether to save the annotation info for
-## #' samples and variants as Delayed object. The default is TRUE.
-#' VCF2VE        
+## VCF2VE function VCF2VE <- function(vcf.fn, out.fn, header=NULL,
+## storage.option="LZMA_RA", info.import=NULL, fmt.import=NULL,
+## genotype.var.name="GT", ignore.chr.prefix="chr", reference=NULL,
+## start=1L, count=-1L, optimize=TRUE, raise.error=TRUE, digest=TRUE,
+## parallel=FALSE, verbose=TRUE) #' @param compress the compression
+## method for writing the gds #' file. The default is "LZMA_RA". See
+## ‘?SeqArray::seqVCF2GDS’ for #' more details of this argument.  #'
+## @param annotationOnDisk whether to save the annotation info for #'
+## samples and variants as Delayed object. The default is TRUE.  #'
+## VCF2VE
 #' @name VCF2VE
 #' @rdname VariantExperiment-class
 #' @description \code{VCF2VE} is the function to convert a vcf file
@@ -32,11 +30,11 @@
 #' @param info.import characters, the variable name(s) in the INFO
 #'     field for import; default is ‘NULL’ for all variables.
 #' @param fmt.import characters, the variable name(s) in the FORMAT
-#'     field for import; default is ‘NULL’ for all variables.  
+#'     field for import; default is ‘NULL’ for all variables.
 #' @param sample.info characters (with) file path for the sample info
 #'     data. The data must have colnames, and the number of rows must
-#'     be the same as with the number of samples in vcf file. The
-#'     default is ‘NULL’ for no sample info.
+#'     be the same as with the number of samples in vcf file. No blank
+#'     line allowed. The default is ‘NULL’ for no sample info.
 #' @param ignore.chr.prefix a vector of character, indicating the
 #'     prefix of chromosome which should be ignored, like "chr"; it is
 #'     not case-sensitive.
@@ -54,7 +52,7 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
                    fmt.import = NULL, sample.info = NULL, 
                    ignore.chr.prefix = "chr", reference = NULL,
                    start = 1L, count = -1L, parallel = FALSE,
-                   verbose = TRUE){
+                   verbose = FALSE){
     ## browser()
     ## check
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
@@ -84,15 +82,17 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
 
     ## add sample info into gds file.
     sample.info <- read.table(file = sample.info, header = TRUE,
-                              blank.lines.skip = FALSE,
+                              blank.lines.skip = TRUE,
                               stringsAsFactors = FALSE)
 
     gfile <- openfn.gds(out.gds.fn, readonly=FALSE)
     sampAnnot <- index.gdsn(gfile, "sample.annotation")
     for (i in seq_along(sample.info)) {
         SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
-                           sampAnnot, names(sample.info)[i], sample.info[,i],
-                           storage = "string", closezip = TRUE, visible = FALSE)
+                           node = sampAnnot, varname = names(sample.info)[i],
+                           val = sample.info[,i],
+                           ## storage = storage.mode(val),
+                           closezip = TRUE)
     }
     closefn.gds(gfile)
     ## on.exit({ if (!is.null(gfile)) closefn.gds(gfile)} )

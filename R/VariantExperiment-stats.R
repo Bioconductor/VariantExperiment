@@ -129,6 +129,7 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
     gdsfile
 }
 
+#' @import SeqVarTools
 .doCompatibleFunction <- function(gdsfile, ..., FUN) {
     gdsfile <- .saveGDSMaybe(gdsfile)
     file <- gdsfile(gdsfile)[1]

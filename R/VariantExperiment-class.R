@@ -1,6 +1,7 @@
-#' VariantExperiment
-#' 
+#' VariantExperiment class and slot getters and setters. 
+#'
 #' @name VariantExperiment-class
+#' @rdname VariantExperiment-class
 #' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
 #' @exportClass VariantExperiment

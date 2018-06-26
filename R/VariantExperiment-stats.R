@@ -9,7 +9,7 @@
 ## samples and variants as Delayed object. The default is TRUE.  #'
 ## VCF2VE
 #' @name VCF2VE
-#' @rdname VariantExperiment-class
+#' @rdname VariantExperiment-stats
 #' @description \code{VCF2VE} is the function to convert a vcf file
 #'     into \code{VariantExperiment} object. The genotype data will be
 #'     written as \code{GDSArray} format, which is saved in the
@@ -138,10 +138,8 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
     FUN(f, ...)
 }
 
-## SeqArray stats: seqAlleleFreq seqAlleleCount seqMissing seqNumAllele 
-
-## #' @importFrom SeqArray seqAlleleFreq seqAlleleCount seqMissing seqNumAllele
 #' @import SeqArray 
+#' @exportMethod seqAlleleFreq
 .seqAlleleFreq <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){
     alleleFreq <- .doCompatibleFunction(
         gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
@@ -154,6 +152,7 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
 }
 setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 
+#' @exportMethod seqAlleleCount
 .seqAlleleCount <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){
     alleleCount <- .doCompatibleFunction(
         gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
@@ -164,9 +163,9 @@ setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)
     ## rowData(gdsfile)[[paste0("seqAlleleCount_", id)]] <- alleleCount
     ## gdsfile
 }
-
 setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)        
 
+#' @exportMethod seqMissing
 .seqMissing <- function(gdsfile, per.variant=TRUE, .progress=FALSE, parallel = seqGetParallel()){
     seqMissing <- .doCompatibleFunction(
         gdsfile, per.variant=per.variant, .progress =.progress, parallel=parallel,
@@ -181,6 +180,7 @@ setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)
 }
 setMethod("seqMissing", "VariantExperiment", .seqMissing)        
 
+#' @exportMethod seqNumAllele
 .seqNumAllele <- function(gdsfile){
     numAllele <- .doCompatibleFunction(gdsfile, FUN=SeqArray::seqNumAllele)
     numAllele
@@ -216,12 +216,15 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
 
 ## #' @importFrom SeqVarTools hwe inbreedCoeff pca refDosage altDosage countSingletons homozygosity heterozygosity meanBySample missingGenotypeRate
 ## titv, isSNV, isVariant
+
+#' @exportMethod hwe
 .hwe <- function(gdsobj, permute=FALSE){
     hwe <- .doCompatibleFunction(gdsobj, permute=permute, FUN = SeqVarTools::hwe)
     hwe   ## returns a data.frame, will output as is, do not paste into rowData(se)
 }
 setMethod("hwe", "VariantExperiment", .hwe)
 
+#' @exportMethod inbreedCoeff
 .inbreedCoeff <- function(gdsobj, margin=c("by.variant", "by.sample"),
                           use.names=FALSE){
     inbCoef <- .doCompatibleFunction(
@@ -230,12 +233,14 @@ setMethod("hwe", "VariantExperiment", .hwe)
 }
 setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
 
+#' @exportMethod pca
 .pca <- function(gdsobj, eigen.cnt=32){
     pca <- .doCompatibleFunction(gdsobj, eigen.cnt=eigen.cnt, FUN = SeqVarTools::pca)
     pca   ## returns a list, $eigenval (vector), $eigenvect (matrix)
 }
 setMethod("pca", "VariantExperiment", .pca)
 
+#' @exportMethod titv
 .titv <- function(gdsobj, by.sample=FALSE, use.names=FALSE){
     titv <- .doCompatibleFunction(gdsobj, by.sample=by.sample,
                                   use.names=use.names, FUN = SeqVarTools::titv)
@@ -243,6 +248,7 @@ setMethod("pca", "VariantExperiment", .pca)
 }
 setMethod("titv", "VariantExperiment", .titv)
 
+#' @exportMethod refDosage
 .refDosage <- function(gdsobj, use.names=TRUE){
     dos <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::refDosage)
@@ -250,6 +256,7 @@ setMethod("titv", "VariantExperiment", .titv)
 }
 setMethod("refDosage", "VariantExperiment", .refDosage)
 
+#' @exportMethod altDosage
 .altDosage <- function(gdsobj, use.names=TRUE){
     dos <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::altDosage)
@@ -257,6 +264,7 @@ setMethod("refDosage", "VariantExperiment", .refDosage)
 }
 setMethod("altDosage", "VariantExperiment", .altDosage)
 
+#' @exportMethod countSingletons
 .ctSingleton <- function(gdsobj, use.names=FALSE){
     ct <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::countSingletons)
@@ -264,6 +272,7 @@ setMethod("altDosage", "VariantExperiment", .altDosage)
 }
 setMethod("countSingletons", "VariantExperiment", .ctSingleton)
 
+#' @exportMethod heterozygosity
 .heterozygosity <- function(gdsobj, margin=c("by.variant", "by.sample"), use.names=FALSE){
     margin <- match.arg(margin)
     hetero <- .doCompatibleFunction(gdsobj, margin=margin, use.names=use.names,
@@ -272,6 +281,7 @@ setMethod("countSingletons", "VariantExperiment", .ctSingleton)
 }
 setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
 
+#' @exportMethod homozygosity
 .homozygosity <- function(gdsobj, allele=c("any", "ref", "alt"), margin=c("by.variant", "by.sample"), use.names=FALSE){
     allele <- match.arg(allele)
     margin <- match.arg(margin)
@@ -282,6 +292,7 @@ setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
 }
 setMethod("homozygosity", "VariantExperiment", .homozygosity)
 
+#' @exportMethod meanBySample
 .meanBySample <- function(gdsobj, var.name, use.names=FALSE){
     mean <- .doCompatibleFunction(gdsobj, var.name=var.name, use.names=use.names,
                                   FUN = SeqVarTools::meanBySample)
@@ -289,6 +300,7 @@ setMethod("homozygosity", "VariantExperiment", .homozygosity)
 } 
 setMethod("meanBySample", "VariantExperiment", .meanBySample)
 
+#' @exportMethod missingGenotypeRate
 .missingGenotypeRate <- function(gdsobj, margin=c("by.variant", "by.sample"), use.names=FALSE){
     margin <- match.arg(margin)
     misRate <- .doCompatibleFunction(gdsobj, margin=margin, use.names=use.names,
@@ -297,6 +309,7 @@ setMethod("meanBySample", "VariantExperiment", .meanBySample)
 }
 setMethod("missingGenotypeRate", "VariantExperiment", .missingGenotypeRate)
 
+#' @exportMethod isSNV
 .isSNV <- function(gdsobj, biallelic=TRUE){
     issnv <- .doCompatibleFunction(gdsobj, biallelic=biallelic,
                                    FUN = SeqVarTools::isSNV)
@@ -304,6 +317,7 @@ setMethod("missingGenotypeRate", "VariantExperiment", .missingGenotypeRate)
 }
 setMethod("isSNV", "VariantExperiment", .isSNV)
 
+#' @exportMethod isVariant
 .isVariant <- function(gdsobj, use.names=FALSE){
     isvar <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                    FUN = SeqVarTools::isVariant)

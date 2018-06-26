@@ -16,10 +16,13 @@
 	8 fixed, mandatory cols: #CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO
 	if genotype data present, follow by FORMAT, then arbtrary number of sample IDs. 
 
-- test stats functions with real VCF data.   -- "VE.temp/"
+- test stats functions with real VCF data.   -- done!
   -- save any results into VE? seqAlleleFrequency, seqAlleleCount, seqMissing(variant/sample)...? 
   -- sample.annotation related stat analysis: mendelian errors? 
-- add testthat functions for VCF2VE and other stats functions. 
+  -- association test associated analysis? 
+- add testthat functions for VCF2VE and other stats functions.
+  -- initiated!
+  -- prepare a example sample info file and save in "inst/extdata/sample.info", for test. -- doing...
 
 4/17/2018
 

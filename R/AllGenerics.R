@@ -1,4 +1,4 @@
-#' @export seqAlleleFreq seqAlleleCount seqMissing seqNumAllele hwe inbreedCoeff pca titv refDosage altDosage countSingletons homozygosity heterozygosity meanBySample missingGenotypeRate isSNV isVariant
+## #' @export seqAlleleFreq seqAlleleCount seqMissing seqNumAllele hwe inbreedCoeff pca titv refDosage altDosage countSingletons homozygosity heterozygosity meanBySample missingGenotypeRate isSNV isVariant
 
 ## ## SeqArray: seqAlleleFreq seqAlleleCount seqMissing seqNumAllele
 setGeneric("seqAlleleFreq",

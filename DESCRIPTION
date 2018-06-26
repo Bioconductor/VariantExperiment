@@ -1,7 +1,7 @@
 Package: VariantExperiment
 Title: GDS back-end data for DelayedArray to represent gdsfmt using
     standard SummarizedExperiment metaphor
-Version: 0.99.0
+Version: 0.2.0
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
 Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS 

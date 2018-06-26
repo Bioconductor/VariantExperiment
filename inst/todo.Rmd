@@ -5,9 +5,12 @@
 	"verbose=TRUE" by default? 
   - add argument for sample info.    -- done!
   - modify ".info_seqgds" for arbitray info columns (now from gds to VE, no problem, how about from vcf into gds?).  -- no problem!
-  - "showAvailable" for rowData? (fixed entries now..., try a different vcf file)
 - test stats functions with real VCF data. 
 - add testthat functions for VCF2VE and other stats functions. 
+- "showAvailable" for rowData? (fixed entries now..., try a different vcf file)  -- done!
+  - check fixed header columns (tab-delimited) for vcf files. 
+	8 fixed, mandatory cols: #CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO
+	if genotype data present, follow by FORMAT, then arbtrary number of sample IDs. 
 
 4/17/2018
 

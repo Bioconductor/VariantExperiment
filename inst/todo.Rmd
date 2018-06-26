@@ -4,6 +4,10 @@
   - test VCF2VE() arguments. -- done! 
 	"verbose=TRUE" by default? 
   - add argument for sample info.    -- done!
+	-- no blank line.
+	-- with rownames() for sample.id.
+	-- warning if any sample ID is not matched?? 
+	
   - modify ".info_seqgds" for arbitray info columns (now from gds to VE, no problem, how about from vcf into gds?).  -- no problem!
 - test stats functions with real VCF data. 
 - add testthat functions for VCF2VE and other stats functions. 

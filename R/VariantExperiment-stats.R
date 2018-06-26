@@ -32,9 +32,9 @@
 #' @param fmt.import characters, the variable name(s) in the FORMAT
 #'     field for import; default is ‘NULL’ for all variables.
 #' @param sample.info characters (with) file path for the sample info
-#'     data. The data must have colnames, and the number of rows must
-#'     be the same as with the number of samples in vcf file. No blank
-#'     line allowed. The default is ‘NULL’ for no sample info.
+#'     data. The data must have colnames (for phenotypes), rownames
+#'     (sample ID's). No blank line allowed. The default is ‘NULL’ for
+#'     no sample info.
 #' @param ignore.chr.prefix a vector of character, indicating the
 #'     prefix of chromosome which should be ignored, like "chr"; it is
 #'     not case-sensitive.
@@ -81,22 +81,30 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
                verbose=verbose)
 
     ## add sample info into gds file.
-    sample.info <- read.table(file = sample.info, header = TRUE,
-                              blank.lines.skip = TRUE,
-                              stringsAsFactors = FALSE)
-
-    gfile <- openfn.gds(out.gds.fn, readonly=FALSE)
-    sampAnnot <- index.gdsn(gfile, "sample.annotation")
-    for (i in seq_along(sample.info)) {
-        SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
-                           node = sampAnnot, varname = names(sample.info)[i],
-                           val = sample.info[,i],
-                           ## storage = storage.mode(val),
-                           closezip = TRUE)
+    if (!is.null(sample.info)) {
+        sample.info <- read.table(file = sample.info, header = TRUE,
+                                  blank.lines.skip = TRUE,
+                                  stringsAsFactors = FALSE)
+        gfile <- openfn.gds(out.gds.fn, readonly=FALSE)
+        sample.id <- read.gdsn(index.gdsn(gfile, "sample.id"))
+        idx <- match(sample.id, rownames(sample.info))
+        if (any(is.na(idx)))
+            warning(paste0(sum(is.na(idx)), " out of ",
+                           length(sample.id), " samples ",
+                           "does not have sample info available. ",
+                           "(", paste(head(sample.id[is.na(idx)]), collapse=", "),
+                           ifelse(sum(is.na(idx)) > 6, "...", ""), ")"))
+        sample.info <- sample.info[idx, ]
+        sampAnnot <- index.gdsn(gfile, "sample.annotation")
+        for (i in seq_along(sample.info)) {
+            SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
+                               node = sampAnnot, varname = names(sample.info)[i],
+                               val = sample.info[,i],
+                               closezip = TRUE)
+        }
+        closefn.gds(gfile)
     }
-    closefn.gds(gfile)
-    ## on.exit({ if (!is.null(gfile)) closefn.gds(gfile)} )
-    
+
     ## run GDS to VE
     makeSummarizedExperimentFromGDS(
         file=out.gds.fn, name=NULL,

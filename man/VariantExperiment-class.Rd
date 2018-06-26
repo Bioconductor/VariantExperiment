@@ -40,9 +40,9 @@ field for import; default is ‘NULL’ for all variables.}
 field for import; default is ‘NULL’ for all variables.}
 
 \item{sample.info}{characters (with) file path for the sample info
-data. The data must have colnames, and the number of rows must
-be the same as with the number of samples in vcf file. No blank
-line allowed. The default is ‘NULL’ for no sample info.}
+data. The data must have colnames (for phenotypes), rownames
+(sample ID's). No blank line allowed. The default is ‘NULL’ for
+no sample info.}
 
 \item{ignore.chr.prefix}{a vector of character, indicating the
 prefix of chromosome which should be ignored, like "chr"; it is

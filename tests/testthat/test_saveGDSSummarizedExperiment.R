@@ -15,6 +15,10 @@ test_that("initiate snp gds file works", {
     .initiate_snpgds <- VariantExperiment:::.initiate_snpgds
     file <- SNPRelate::snpgdsExampleFileName()
     se <- makeSummarizedExperimentFromGDS(file)
+    ## FIXME: warning
+    ##   1: In methods:::.selectDotsMethod(classes, .MTable, .AllMTable) :
+    ## multiple direct matches: "DelayedDataFrame", "DataFrame"; using the first of these
+
     gds_path <- tempfile(fileext=".gds")
     .initiate_snpgds(se, gds_path, compress="LZMA_RA")
     f <- gdsfmt::openfn.gds(gds_path)

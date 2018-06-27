@@ -18,11 +18,15 @@
 
 - test stats functions with real VCF data.   -- done!
   -- save any results into VE? seqAlleleFrequency, seqAlleleCount, seqMissing(variant/sample)...? 
-  -- sample.annotation related stat analysis: mendelian errors? 
+  -- sample.annotation related stat analysis: mendelian errors? (use family info, test!!)
   -- association test associated analysis? 
+  
 - add testthat functions for VCF2VE and other stats functions.
-  -- initiated!
-  -- prepare a example sample info file and save in "inst/extdata/sample.info", for test. -- doing...
+  -- "test\_VariantExperiment-stat.R". -- done!
+  -- prepare a example sample info file and save in "inst/extdata/sample.info", for test. -- done!
+  -- matrix values returned from stats functions, return as GDSArray? or ordinary array? 
+	  "refDosage", "altDosage", ...same dimension as genotype array. 
+  -- check "test_saveGDSSummarizedExperimentFrom" for 3 errors. 
 
 4/17/2018
 

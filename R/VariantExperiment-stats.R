@@ -94,7 +94,7 @@ VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
                            "does not have sample info available. ",
                            "(", paste(head(sample.id[is.na(idx)]), collapse=", "),
                            ifelse(sum(is.na(idx)) > 6, "...", ""), ")"))
-        sample.info <- sample.info[idx, ]
+        sample.info <- sample.info[idx, , drop=FALSE]
         sampAnnot <- index.gdsn(gfile, "sample.annotation")
         for (i in seq_along(sample.info)) {
             SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),

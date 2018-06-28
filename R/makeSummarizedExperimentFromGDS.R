@@ -3,7 +3,8 @@
 #' @importFrom IRanges IRanges
 #' @import gdsfmt
 #' @import SNPRelate
-#' @import SeqArray
+#' @rawNamespace import(SeqArray, except = c(colData, rowRanges))
+
 .granges_gdsdata <- function(gdsfile, fileFormat, ...){
     if(fileFormat == "SNP_ARRAY"){
         f <- snpgdsOpen(gdsfile)
@@ -56,6 +57,7 @@
     resDF  ## returns a DataFrame with names. 
 }
 
+#' @importFrom methods new
 .varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
     f <- openfn.gds(gdsfile)
     on.exit(closefn.gds(f))
@@ -123,7 +125,6 @@
 
 #' @importFrom Biostrings DNAStringSet
 #' @import SNPRelate
-#' @import SeqArray
 #' @importMethodsFrom DelayedArray sub
 .rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns, rowDataOnDisk){
     rr <- .granges_gdsdata(file, fileFormat)
@@ -259,6 +260,8 @@
 #' ShowAvailable
 #' 
 #' The function to show the available entries for the arguments within \code{makeSummarizedExperimentFromGDS}
+#' @name showAvailable
+#' @rdname makeSummarizedExperimentFromGDS
 #' @param file the path to the gds.class file.
 #' @param args the arguments in \code{makeSummarizedExperimentFromGDS}.
 #' @export

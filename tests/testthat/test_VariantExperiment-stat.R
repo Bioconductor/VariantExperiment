@@ -1,50 +1,3 @@
-test_that("VCF2VE works", {
-    vcf <- SeqArray::seqExampleFileName("vcf")
-    ve <- VCF2VE(vcf, out.dir = tempfile())
-
-    ## general
-    expect_equal(dim(ve), c(1348L, 90L))
-    expect_equal(dim(rowData(ve)), c(1348L, 14L))
-    expect_equal(dim(colData(ve)), c(90L, 0L))
-    expect_s4_class(rowData(ve), "DelayedDataFrame")
-    expect_s4_class(colData(ve), "DelayedDataFrame")
-    expect_equal(rownames(rowData(ve)), rownames(ve))
-    expect_equal(rownames(colData(ve)), colnames(ve))
-    
-    ## contents
-    expect_equal(names(assays(ve)),
-                 c("genotype/data", "phase/data", "annotation/format/DP/data"))
-    expect_equal(colnames(rowData(ve)),
-                 c("ID", "ALT", "REF", "QUAL", "FILTER", "info_AA", "info_AC",
-                   "info_AN", "info_DP", "info_HM2", "info_HM3", "info_OR",
-                   "info_GP", "info_BN" ))
-    expect_equal(colnames(colData(ve)), character(0))
-
-    ## arguments
-    ve1 <- VCF2VE(vcf, out.dir = tempfile(), info.import=c("OR", "GP")) 
-    expect_equal(colnames(rowData(ve1)),
-                 c("ID", "ALT", "REF", "QUAL", "FILTER", "info_OR", "info_GP")) 
-
-    ve2 <- VCF2VE(vcf, out.dir = tempfile(), fmt.import="xx")
-    expect_equivalent(ve, ve2)
-    ve3 <- VCF2VE(vcf, out.dir = tempfile(), fmt.import=NULL)
-    expect_equivalent(ve, ve3)
-    ve4 <- VCF2VE(vcf, out.dir = tempfile(), fmt.import="DP")
-    expect_equivalent(ve, ve4)
-    ve6 <- VCF2VE(vcf, out.dir = tempfile(), reference="hg19")
-    expect_equivalent(ve, ve6)
-    
-    ve7 <- VCF2VE(vcf, out.dir = tempfile(), start=101, count=1000) 
-    expect_equal(dim(ve7), c(1000L, 90L))
-    expect_equal(rownames(ve7), as.character(seq(101, length.out=1000)))
-
-
-    sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve8 <- VCF2VE(vcf, out.dir = tempfile(), sample.info = sample.info)
-    expect_equal(dim(colData(ve8)), c(90L, 1L))
-    expect_equal(colnames(colData(ve8)), "family")
-})
-
 test_that("Allele related functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
     sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
@@ -57,7 +10,7 @@ test_that("Allele related functions work", {
     expect_equal(lengths(freqAll)[1338], 3)
     expect_equal(lengths(freqAll)[1323], 3)
 
-    freq.ref <- seqAlleleFreq(ve)
+    freq.ref <- seqAlleleFreq(ve, ref.allele = 0L)
     ref.allele <- as.array(rowData(ve)$REF)
     freq.ref1 <- seqAlleleFreq(ve, ref.allele = ref.allele)
     expect_equal(freq.ref, freq.ref1)
@@ -91,7 +44,7 @@ test_that("Allele related functions work", {
 
 ### hwe, inbreedCoeff, pca, titv, refDosage, altDosage, countSingletons, heterozygosity, homozygosity, meanBySample, missingGenotypeRate (by sample/variant), isSNV, isVariant
 
-test_that("hwe works", {
+test_that("other statistical functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
     sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
     ve <- VCF2VE(vcf, out.dir = tempfile(), sample.info = sample.info)
@@ -121,13 +74,17 @@ test_that("hwe works", {
 
     ## refDosage
     dosage.ref <- refDosage(ve)
-    expect_equal(dim(dosage.ref), c(90L, 1348L))
-    expect_equal(rownames(dosage.ref), colnames(ve))
-    expect_equal(colnames(dosage.ref), rownames(ve))
+    expect_identical(dim(dosage.ref), dim(ve))
+    expect_equal(rownames(dosage.ref), rownames(ve))
+    expect_equal(colnames(dosage.ref), colnames(ve))
 
     ## altDosage
-    dosage.alt <- altDosage(ve)  ## FIXME: sparse=TRUE does not work...
-
+    dosage.alt <- altDosage(ve)
+    expect_identical(dim(dosage.alt), dim(ve))
+    dosage.alt <- altDosage(ve, sparse=TRUE)
+    expect_identical(dim(dosage.alt), dim(ve))    
+    expect_s4_class(dosage.alt, "dgCMatrix")
+    
     ## coutnSingletons
     cts <- countSingletons(ve) 
     expect_equal(length(cts), ncol(ve))
@@ -149,17 +106,10 @@ test_that("hwe works", {
     expect_true(max(homr.all) == 1)
     
     ## meanBySample
-    mn <- meanBySample(ve, var.name="annotation/format/DP", use.names=TRUE)
-    ## FIXME: "var.name" need to be consistent with VE infrastructure. 
+    mn <- meanBySample(ve, var.name="annotation/format/DP/data", use.names=TRUE)
     expect_equal(names(mn), colnames(ve))
-
-    ## missingGenotypeRate
-    mr <- missingGenotypeRate(ve, margin="by.sample")
-    expect_identical(mr, seqMissing(ve, per.variant=FALSE))
+    expect_error(meanBySample(ve, var.name="genotype", use.names=TRUE))
     
-    mr <- missingGenotypeRate(ve, margin="by.variant")
-    expect_identical(mr, seqMissing(ve, per.variant=TRUE))
-
     ## isSNV
     issnv <- isSNV(ve, biallelic=TRUE)    ## Setting ‘biallelic=TRUE’
                                           ## is considerably faster
@@ -170,5 +120,8 @@ test_that("hwe works", {
     ## isVariant
     isvar <- isVariant(ve)
     expect_true(is.logical(isvar))
-    expect_equal(dim(isvar), c(90L, 1348L))
+    expect_identical(dim(isvar), dim(ve))
 })
+
+
+## FIXME: return all matrix like output as the same dimension of ve. 

@@ -118,7 +118,6 @@ rowData(se2)
 rowRanges(se2)
 ```
 
-
 ## `save/loadGDSSummarizedExperiment`
 Use the function `saveGDSSummarizedExperiment` to save any SE object (with ordinary in-memory / GDSArray-based assay data) into the GDSArray-based SE object. Arguments of `rowDataOnDisk` and `colDataOnDisk` are supplied for users to save the `rowData(se) / colData(se)` with GDSArray-based `DataFrame`. By default, all the data slots of `SummarizedExperiment` objects (`assays()`, `rowData()`, `colData()`) are saved with GDSArray-based data.
 
@@ -211,8 +210,8 @@ rowData(subsetByOverlaps(se2, GRanges("22:1-48958933")))
 
 # Future work
 - Make the meta data for rows and cols on-disk reading.  -- done!
-- More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis.   -- next sprint!
-- Develop a pipeline for using `VariantExperiment` as the basic data structure for DNA-sequencing data analysis.  
+- More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis.   -- done!
+- Develop a pipeline for using `VariantExperiment` as the basic data structure for DNA-sequencing data analysis.  -- next version. 
 
 # Session Info
 ```{r sessionInfo}

@@ -2,7 +2,7 @@
 - finalize "VCF2VE()" function. 
   - check seqVCF2GDS arguments: header, start, count, optimize, raise.error, digest, paralle.
   - test VCF2VE() arguments. -- done! 
-	"verbose=TRUE" by default? 
+	"verbose=FALSE" by default. 
   - add argument for sample info.    -- done!
 	-- no blank line.
 	-- with rownames() for sample.id.
@@ -16,18 +16,63 @@
 	8 fixed, mandatory cols: #CHROM, POS, ID, REF, ALT, QUAL, FILTER, INFO
 	if genotype data present, follow by FORMAT, then arbtrary number of sample IDs. 
 
-- test stats functions with real VCF data.   -- done!
-  -- save any results into VE? seqAlleleFrequency, seqAlleleCount, seqMissing(variant/sample)...? 
-  -- sample.annotation related stat analysis: mendelian errors? (use family info, test!!)
-  -- association test associated analysis? 
+- test stats functions with real VCF data.   -- doing...
+  -- save any results into VE? seqAlleleFrequency, seqAlleleCount, seqMissing(variant/sample)...NO!
+  -- sample.annotation related stat analysis: mendelian errors? (use family info, test!!) - next phase!
+  -- association test associated analysis?  -- next phase!
   
 - add testthat functions for VCF2VE and other stats functions.
   -- "test\_VariantExperiment-stat.R". -- done!
   -- prepare a example sample info file and save in "inst/extdata/sample.info", for test. -- done!
-  -- matrix values returned from stats functions, return as GDSArray? or ordinary array? 
+  -- matrix values returned from stats functions, return as GDSArray? or ordinary array? -- ordinary array for now!
 	  "refDosage", "altDosage", ...same dimension as genotype array. 
-  -- check "test_saveGDSSummarizedExperimentFrom" for 3 errors. 
+  
+- to pass check() and BiocCheck::check(). 
+  -- documentation. "VE-stats.R", parameters.
+  -- aliass, for functions with \usage entries. 
+  
+- adding new stats functions: 
+  -- seqBCF2GDS, seqVCF2GDS (vcf.fn argument?)
 
+
+- FIXME: 
+  -- altDosage(ve)  ## FIXME: sparse=TRUE does not work...    -- done! 
+  -- missingGenotypeRate (FIXME: same as seqMissing remove it!!)  -- done!
+  -- "meanBySample", append "/data" for the "var.name", i.e., names(assay(ve)). 
+	  -- Add restrictions in the @param var.name !!! 
+  -- return all matrix like output as the same dimension of ve. (refDosage, altDosage, isVariant...) -- done!
+  -- where is the reference info saved in VE? gds attributes?
+  -- import(SE): will this import classes and methods? 
+  -- importFrom(SeqArray), to fix the conflicting functions, like colData(), rowRanges()...
+  -- gdsfile(ve), return a vector? or just 1 path for all assay data? 
+
+- bugs: 
+  -- devtools::document(), first time document() reserves SeqVarTools::titv() methods/functions, second time document() lost all methods for "SeqVarGDSClass"...
+  ## unable to find an inherited method for function ‘meanBySample’ for signature ‘"SeqVarGDSClass"’
+
+-- question for martin: 
+1. VariantExperiment() constructor, should we copy all argument documentations from SummarizedExperiment? 
+2. next phase:
+- add more sample related stats functions. (need real data)
+- add block processing, and apply functions. 
+- connection with VariantAnnotation (collapsedVCF? in memory)?
+- for annotation: AnnotationHub? (ensemblVEP, VariantFiltering..., dbsnp pkgs). 
+- filtering, using rowRanges, overlap...
+
+```{r}
+BiocManager::available("mafdb")
+library(AnnotationHub)
+hub <- AnnotationHub()
+query(hub, "mafdb")
+query(hub, c("castelo", "phast"))
+a <- query(hub, c("repeat", "homo"))
+a["AH5122"]  ## RETURNS the description.
+a[["AH5122"]] ## retrieves the data (download for the 1st time)
+
+b <- query(hub, c("esp", "homo sapiens"))
+mcols(b)
+query(hub, "1000 genomes")
+```
 4/17/2018
 
 - finalize the `DelayedDataFrame` constructor. When inputs are all DDF, call `concatenateObjects,DelayedDataFrame`. Otherwise, call `DataFrame` constructor, and coerce into `DelayedDataFrame`. -- done!

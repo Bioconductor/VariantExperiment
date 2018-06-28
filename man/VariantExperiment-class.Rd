@@ -6,13 +6,48 @@
 \alias{.VariantExperiment}
 \alias{VariantExperiment}
 \alias{gdsfile,VariantExperiment-method}
-\title{VariantExperiment class and slot getters and setters.}
+\alias{gdsfile<-,VariantExperiment-method}
+\title{VariantExperiment-class}
 \usage{
 VariantExperiment(assays, rowRanges = GRangesList(),
   colData = DelayedDataFrame(), metadata = list())
 
 \S4method{gdsfile}{VariantExperiment}(object)
+
+\S4method{gdsfile}{VariantExperiment}(object) <- value
+}
+\arguments{
+\item{assays}{A ‘list’ or ‘SimpleList’ of matrix-like elements, or
+a matrix-like object. All elements of the list must have the
+same dimensions, and dimension names (if present) must be
+consistent across elements and with the row names of
+‘rowRanges’ and ‘colData’.}
+
+\item{rowRanges}{A GRanges or GRangesList object describing the
+ranges of interest. Names, if present, become the row names of
+the SummarizedExperiment object. The length of the GRanges or
+GRangesList must equal the number of rows of the matrices in
+‘assays’.}
+
+\item{colData}{An optional DataFrame describing the samples. Row
+names, if present, become the column names of the
+VariantExperiment.}
+
+\item{metadata}{An optional ‘list’ of arbitrary content describing
+the overall experiment.}
+
+\item{object}{a \code{VariantExperiment} object.}
+
+\item{value}{the new gds file path for VariantExperiment object.}
+}
+\value{
+a \code{VariantExperiment} object.
 }
 \description{
 VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
+}
+\details{
+VariantExperiment class and slot getters and setters.
+
+check "?RangedSummarizedExperiment" for more details.
 }

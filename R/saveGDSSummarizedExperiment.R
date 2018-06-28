@@ -84,7 +84,7 @@
                  )  ## "," separated.
 }
 
-#' @importFrom utils head tail
+## #' @importFrom utils head tail
 .write_sedata_as_gdsnode <- function(data, name, ff, gds_path,
                                      chunk_size, nrow, ncol, compress)
 {

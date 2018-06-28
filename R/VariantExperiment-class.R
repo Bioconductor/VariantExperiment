@@ -1,24 +1,38 @@
 #' VariantExperiment class and slot getters and setters. 
-#'
-#' @name VariantExperiment-class
+#' @title VariantExperiment-class
 #' @rdname VariantExperiment-class
 #' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
 #' @exportClass VariantExperiment
-#' @rdname VariantExperiment-class
-#' 
+
 .VariantExperiment <- setClass(
     "VariantExperiment",
     contains="RangedSummarizedExperiment",
 )
 
-###--------------
-### constructor
-###--------------
-#' @export VariantExperiment
+###-------------- constructor --------------
+#' @rdname VariantExperiment-class
+#' @param assays A ‘list’ or ‘SimpleList’ of matrix-like elements, or
+#'     a matrix-like object. All elements of the list must have the
+#'     same dimensions, and dimension names (if present) must be
+#'     consistent across elements and with the row names of
+#'     ‘rowRanges’ and ‘colData’.
+#' @param rowRanges A GRanges or GRangesList object describing the
+#'     ranges of interest. Names, if present, become the row names of
+#'     the SummarizedExperiment object. The length of the GRanges or
+#'     GRangesList must equal the number of rows of the matrices in
+#'     ‘assays’.
+#' @param colData An optional DataFrame describing the samples. Row
+#'     names, if present, become the column names of the
+#'     VariantExperiment.
+#' @param metadata An optional ‘list’ of arbitrary content describing
+#'     the overall experiment.
+#' @return a \code{VariantExperiment} object.
+#' @details check "?RangedSummarizedExperiment" for more details.
 #' @importFrom GenomicRanges GRangesList
 #' @importFrom SummarizedExperiment Assays
-#' @rdname VariantExperiment-class
+#' @export VariantExperiment
+
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
 {
     result <- SummarizedExperiment(
@@ -55,8 +69,7 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 ### Coercion
 ###----------------
 
-## 
-
+#' @importFrom methods is
 .validate_VariantExperiment <- function(x)
 {
     ## DelayedDataFrame
@@ -81,12 +94,13 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 ###--------------------
 #' @export gdsfile
 #' @rdname VariantExperiment-class
+#' @param object a \code{VariantExperiment} object.
 setMethod("gdsfile", "VariantExperiment", function(object)
     vapply(assays(object), gdsfile, character(1)))
 
 #' @export "gdsfile<-"
 #' @param value the new gds file path for VariantExperiment object.
-#' @rdname Variantexperiment-class
+#' @rdname VariantExperiment-class
 setReplaceMethod("gdsfile", "VariantExperiment", function(object, value) {
     new_filepath <- tools::file_path_as_absolute(value)
     assays(object) <- lapply(assays(object), function(assay)

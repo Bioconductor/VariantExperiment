@@ -3,12 +3,12 @@
 #' @rdname VariantExperiment-class
 #' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
 #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
-#' @exportClass VariantExperiment
+#' @export
 
-.VariantExperiment <- setClass(
+setClass(
     "VariantExperiment",
     contains="RangedSummarizedExperiment",
-)
+    )
 
 ###-------------- constructor --------------
 #' @rdname VariantExperiment-class
@@ -41,7 +41,7 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
         assays=assays,
         metadata=as.list(metadata)
     )
-    .VariantExperiment(result)
+    new("VariantExperiment", result)
 }
 
 ## VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list(), ...)

@@ -40,8 +40,8 @@
 }
 
 #' Statistical functions for \code{VariantExperiment} objects.
-#' @name seqAlleleFreq
-#' @rdname VariantExperiment-stats
+#' @name VariantExperiment-methods
+#' @rdname VariantExperiment-methods
 #' @aliases seqAlleleFreq,VariantExperiment-method
 #' @param gdsfile xx
 #' @param ref.allele xx
@@ -60,8 +60,8 @@ setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)
     ## rowData(gdsfile)[[paste0("seqAlleleCount_", id)]] <- alleleCount
     ## gdsfile
 }
-#' @name seqAlleleCount
-#' @rdname VariantExperiment-stats
+## #' @name seqAlleleCount
+#' @rdname VariantExperiment-methods
 #' @aliases seqAlleleCount,VariantExperiment-method
 #' @export
 setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)        
@@ -78,8 +78,8 @@ setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)
     ##     VariantExperiment::colData(gdsfile)[["sample_missing"]] <- seqMissing
     ## gdsfile
 }
-#' @name seqMissing
-#' @rdname VariantExperiment-stats
+## #' @name seqMissing
+#' @rdname VariantExperiment-methods
 #' @aliases seqMissing,VariantExperiment-method
 #' @param per.variant xx
 #' @export
@@ -91,8 +91,9 @@ setMethod("seqMissing", "VariantExperiment", .seqMissing)
     ## rowData(gdsfile)[["numAllele"]] <- numAllele
     ## gdsfile
 }
-#' @name seqNumAllele
-#' @rdname VariantExperiment-stats
+
+## #' @name seqNumAllele
+#' @rdname VariantExperiment-methods
 #' @aliases seqNumAllele,VariantExperiment-method
 #' @export
 setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)        
@@ -133,8 +134,8 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
           ## into rowData(se)
 }
 
-#' @name hwe
-#' @rdname VariantExperiment-stats
+## #' @name hwe
+#' @rdname VariantExperiment-methods
 #' @aliases hwe,VariantExperiment-method
 #' @param gdsobj xx
 #' @param permute xx
@@ -148,8 +149,8 @@ setMethod("hwe", "VariantExperiment", .hwe)
     inbCoef   ## returns a named (if use.names=TRUE) vector
 }
 
-#' @name inbreedCoeff
-#' @rdname VariantExperiment-stats
+## #' @name inbreedCoeff
+#' @rdname VariantExperiment-methods
 #' @aliases inbreedCoeff,VariantExperiment-method
 #' @param margin xx
 #' @param use.names xx
@@ -161,8 +162,8 @@ setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
     pca   ## returns a list, $eigenval (vector), $eigenvect (matrix)
 }
 
-#' @name pca
-#' @rdname VariantExperiment-stats
+## #' @name pca
+#' @rdname VariantExperiment-methods
 #' @aliases pca,VariantExperiment-method
 #' @param eigen.cnt xx
 #' @export
@@ -174,8 +175,8 @@ setMethod("pca", "VariantExperiment", .pca)
     titv   ## returns a scalar / vector (if by.sample=TRUE)
 }
 
-#' @name titv
-#' @rdname VariantExperiment-stats
+## #' @name titv
+#' @rdname VariantExperiment-methods
 #' @aliases titv,variantExperiment-method
 #' @param by.sample xx
 #' @export
@@ -189,8 +190,8 @@ setMethod("titv", "VariantExperiment", .titv)
     dos
 }
 
-#' @name refDosage
-#' @rdname VariantExperiment-stats
+## #' @name refDosage
+#' @rdname VariantExperiment-methods
 #' @aliases refDosage,VariantExperiment-method
 #' @export
 setMethod("refDosage", "VariantExperiment", .refDosage)
@@ -204,8 +205,8 @@ setMethod("refDosage", "VariantExperiment", .refDosage)
     dos  
 }
 
-#' @name altDosage
-#' @rdname VariantExperiment-stats
+## #' @name altDosage
+#' @rdname VariantExperiment-methods
 #' @aliases altDosage,VariantExperiment-method
 #' @param sparse xx
 #' @export
@@ -217,8 +218,8 @@ setMethod("altDosage", "VariantExperiment", .altDosage)
     ct   ## returns a vector of the number of singleton variants per sample.
 }
 
-#' @name countSingletons
-#' @rdname VariantExperiment-stats
+## #' @name countSingletons
+#' @rdname VariantExperiment-methods
 #' @aliases countSingletons,VariantExperiment-method
 #' @export
 setMethod("countSingletons", "VariantExperiment", .ctSingleton)
@@ -232,8 +233,8 @@ setMethod("countSingletons", "VariantExperiment", .ctSingleton)
     hetero   ## returns a vector of the number of singleton variants per sample.
 }
 
-#' @name heterozygosity
-#' @rdname VariantExperiment-stats
+## #' @name heterozygosity
+#' @rdname VariantExperiment-methods
 #' @aliases heterozygosity,VariantExperiment-method
 #' @export
 setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
@@ -249,8 +250,8 @@ setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
     homo   ## returns a vector of the number of singleton variants per sample.
 }
 
-#' @name homozygosity
-#' @rdname VariantExperiment-stats
+## #' @name homozygosity
+#' @rdname VariantExperiment-methods
 #' @aliases homozygosity,VariantExperiment-method
 #' @param allele xx
 #' @export
@@ -268,8 +269,8 @@ setMethod("homozygosity", "VariantExperiment", .homozygosity)
     mean
 } 
 
-#' @name meanBySample
-#' @rdname VariantExperiment-stats
+## #' @name meanBySample
+#' @rdname VariantExperiment-methods
 #' @aliases meanBySample,VariantExperiment-method
 #' @param var.name xx
 #' @export
@@ -281,8 +282,8 @@ setMethod("meanBySample", "VariantExperiment", .meanBySample)
     issnv
 }
 
-#' @name isSNV
-#' @rdname VariantExperiment-stats
+## #' @name isSNV
+#' @rdname VariantExperiment-methods
 #' @aliases isSNV,VariantExperiment-method
 #' @param biallelic xx
 #' @export
@@ -296,8 +297,8 @@ setMethod("isSNV", "VariantExperiment", .isSNV)
     isvar
 }
 
-#' @name isVariant
-#' @rdname VariantExperiment-stats
+## #' @name isVariant
+#' @rdname VariantExperiment-methods
 #' @aliases isVariant,VariantExperiment-method
 #' @export
 setMethod("isVariant", "VariantExperiment", .isVariant)

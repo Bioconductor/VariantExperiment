@@ -5,7 +5,7 @@
 \title{The function to convert VCF files directly into VariantExperiment
 object.}
 \usage{
-VCF2VE(vcf.fn, out.dir = "my_gds_se", replace = FALSE, header = NULL,
+VCF2VE(vcf.fn, out.dir = tempfile(), replace = FALSE, header = NULL,
   info.import = NULL, fmt.import = NULL, sample.info = NULL,
   ignore.chr.prefix = "chr", reference = NULL, start = 1L, count = -1L,
   parallel = FALSE, verbose = FALSE)
@@ -18,7 +18,8 @@ vcf.fn.}
 \item{out.dir}{The directory to save the gds format of the vcf
 data, and the newly generated VariantExperiment object with
 array data in \code{GDSArray} format and annotation data in
-\code{DelayedDataFrame} format.}
+\code{DelayedDataFrame} format. The default is a temporary
+folder.}
 
 \item{replace}{Whether to replace the directory if it already
 exists. The default is FALSE.}

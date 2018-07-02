@@ -25,7 +25,8 @@
 #' @param out.dir The directory to save the gds format of the vcf
 #'     data, and the newly generated VariantExperiment object with
 #'     array data in \code{GDSArray} format and annotation data in
-#'     \code{DelayedDataFrame} format.
+#'     \code{DelayedDataFrame} format. The default is a temporary
+#'     folder.
 #' @param replace Whether to replace the directory if it already
 #'     exists. The default is FALSE.
 #' @param header if NULL, ‘header’ is set to be
@@ -58,7 +59,7 @@
 #'     is FALSE.
 #' @importFrom utils read.table
 #' @export
-VCF2VE <- function(vcf.fn, out.dir = "my_gds_se", replace = FALSE,
+VCF2VE <- function(vcf.fn, out.dir = tempfile(), replace = FALSE,
                    header = NULL, info.import = NULL,
                    fmt.import = NULL, sample.info = NULL, 
                    ignore.chr.prefix = "chr", reference = NULL,

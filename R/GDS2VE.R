@@ -81,8 +81,6 @@
     GDSArray(seed)  ## return a DelayedArray/GDSArray object without names.
 }
 
-### delayedArray in each column in DF, have individual index, which does not save spaces almost......
-
 #' @importMethodsFrom SeqArray info
 #' @import DelayedDataFrame
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
@@ -259,13 +257,16 @@
 }
 #' ShowAvailable
 #' 
-#' The function to show the available entries for the arguments within \code{makeSummarizedExperimentFromGDS}
+#' The function to show the available entries for the arguments within
+#' \code{GDS2VE}
 #' @name showAvailable
-#' @rdname makeSummarizedExperimentFromGDS
+#' @rdname GDS2VE
 #' @param file the path to the gds.class file.
-#' @param args the arguments in \code{makeSummarizedExperimentFromGDS}.
+#' @param args the arguments in
+#'     \code{GDS2VE}.
 #' @export
-showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
+showAvailable <- function(file,
+                          args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
     ## check if character.
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
@@ -306,10 +307,9 @@ showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns
     res
 }
 
-#' makeSummarizedExperimentFromGDS
+#' GDS2VE
 #' 
 #' Conversion of gds file into SummarizedExperiment.
-#' @param file the path to the gds.class file.
 #' @param name the components of the gds file that will be represented
 #'     as \code{GDSArray} file.
 #' @param rowDataColumns which columns of \code{rowData} to
@@ -329,23 +329,23 @@ showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns
 #' @examples
 #' \dontrun{
 #' file <- SNPRelate::snpgdsExampleFileName()
-#' se <- makeSummarizedExperimentFromGDS(file)
+#' se <- GDS2VE(file)
 #' rowData(se)
 #' SummarizedExperiment::colData(se)
 #' metadata(se)
 #' showAvailable(file)
-#' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
+#' se1 <- GDS2VE(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
 #' file <- SeqArray::seqExampleFileName(type="gds")
-#' se <- makeSummarizedExperimentFromGDS(file)
+#' se <- GDS2VE(file)
 #' names(assays(se))
 #' showAvailable(file)
 #' names <- showAvailable(file, "name")$name
 #' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 #' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
 #' infocols <- showAvailable(file, "infoColumns")$infoColumns
-#' se1 <- makeSummarizedExperimentFromGDS(
+#' se1 <- GDS2VE(
 #' file,
 #' name = names[2],
 #' rowDataColumns = rowdatacols[1:3],
@@ -360,7 +360,12 @@ showAvailable <- function(file, args=c("name", "rowDataColumns", "colDataColumns
 #' }
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NULL, rowDataColumns=character(), colDataColumns=character(), infoColumns=character(), rowDataOnDisk=TRUE, colDataOnDisk=TRUE){
+GDS2VE <- function(file, name=NULL,
+                   rowDataColumns=character(),
+                   colDataColumns=character(),
+                   infoColumns=character(),
+                   rowDataOnDisk=TRUE,
+                   colDataOnDisk=TRUE){
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))

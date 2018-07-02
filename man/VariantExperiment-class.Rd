@@ -3,7 +3,6 @@
 \docType{class}
 \name{VariantExperiment-class}
 \alias{VariantExperiment-class}
-\alias{.VariantExperiment}
 \alias{VariantExperiment}
 \alias{gdsfile,VariantExperiment-method}
 \alias{gdsfile<-,VariantExperiment-method}

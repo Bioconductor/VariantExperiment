@@ -258,12 +258,12 @@
 #' ShowAvailable
 #' 
 #' The function to show the available entries for the arguments within
-#' \code{GDS2VE}
+#' \code{makeSummarizedExperimentFromGDS}
 #' @name showAvailable
-#' @rdname GDS2VE
+#' @rdname makeSummarizedExperimentFromGDS
 #' @param file the path to the gds.class file.
 #' @param args the arguments in
-#'     \code{GDS2VE}.
+#'     \code{makeSummarizedExperimentFromGDS}.
 #' @export
 showAvailable <- function(file,
                           args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
@@ -307,7 +307,7 @@ showAvailable <- function(file,
     res
 }
 
-#' GDS2VE
+#' makeSummarizedExperimentFromGDS
 #' 
 #' Conversion of gds file into SummarizedExperiment.
 #' @param name the components of the gds file that will be represented
@@ -329,23 +329,23 @@ showAvailable <- function(file,
 #' @examples
 #' \dontrun{
 #' file <- SNPRelate::snpgdsExampleFileName()
-#' se <- GDS2VE(file)
+#' se <- makeSummarizedExperimentFromGDS(file)
 #' rowData(se)
 #' SummarizedExperiment::colData(se)
 #' metadata(se)
 #' showAvailable(file)
-#' se1 <- GDS2VE(file, rowDataColumns=c("ALLELE"))
+#' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
 #' file <- SeqArray::seqExampleFileName(type="gds")
-#' se <- GDS2VE(file)
+#' se <- makeSummarizedExperimentFromGDS(file)
 #' names(assays(se))
 #' showAvailable(file)
 #' names <- showAvailable(file, "name")$name
 #' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 #' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
 #' infocols <- showAvailable(file, "infoColumns")$infoColumns
-#' se1 <- GDS2VE(
+#' se1 <- makeSummarizedExperimentFromGDS(
 #' file,
 #' name = names[2],
 #' rowDataColumns = rowdatacols[1:3],
@@ -360,7 +360,7 @@ showAvailable <- function(file,
 #' }
 #' @export
 #' 
-GDS2VE <- function(file, name=NULL,
+makeSummarizedExperimentFromGDS <- function(file, name=NULL,
                    rowDataColumns=character(),
                    colDataColumns=character(),
                    infoColumns=character(),

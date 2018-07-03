@@ -179,14 +179,14 @@ For the above example, only 1000 variants are read into the
 
 ### Coercion function from `GDS` to `VariantExperiment`
 
-The coercion function of `GDS2VE` could coerce `GDS` files into
+The coercion function of `makeSummarizedExperimentFromGDS` could coerce `GDS` files into
 `VariantExperiment` objects directly, with the assay data saved as
 `GDSArray`, and the `rowData()/colData()` in `DelayedDataFrame` by
 default.
 
 ```{r GDS2VE}
 gds <- SeqArray::seqExampleFileName("gds")
-ve <- GDS2VE(gds)
+ve <- makeSummarizedExperimentFromGDS(gds)
 ve
 ```
 ```{r GDS2VE2}
@@ -194,9 +194,9 @@ rowData(ve)
 colData(ve)
 ```
 Arguments could be specified to take only specific annotation columns
-for features and samples. All available data entries for `GDS2VE`
-arguments could be retrieved by the `showAvailable()` function with
-the gds file name as input. 
+for features and samples. All available data entries for
+`makeSummarizedExperimentFromGDS` arguments could be retrieved by the
+`showAvailable()` function with the gds file name as input.
 
 ```{r showAvailable}
 showAvailable(gds)
@@ -208,10 +208,11 @@ inside the `rowData()`, with the prefix of
 saveall annotation data in ordinary `DataFrame` format.
 
 ```{r GDS2VEArgs}
-ve3 <- GDS2VE(gds, rowDataColumns = c("ID", "ALT", "REF"),
-             infoColumns = c("AC", "AN", "DP"),
-             rowDataOnDisk = TRUE,
-             colDataOnDisk = FALSE)
+ve3 <- makeSummarizedExperimentFromGDS(gds,
+                                       rowDataColumns = c("ID", "ALT", "REF"),
+                                       infoColumns = c("AC", "AN", "DP"),
+                                       rowDataOnDisk = TRUE,
+                                       colDataOnDisk = FALSE)
 rowData(ve3)  ## DelayedDataFrame object 
 colData(ve3)  ## DataFrame object
 ```
@@ -259,7 +260,7 @@ countSingletons(ve)
 
 ## `VariantExperiment` common operations
 
-### slot getters and setters
+### slot accessors
 
 We can use `rowRanges()` / `rowData()` to retrieve the feature-related
 annotation file, with/without a GenomicRange format. 
@@ -276,9 +277,6 @@ The `gdsfile()` will retrieve the gds file path associated with the
 `VariantExperiment` object.
 ```{r gdsfile}
 gdsfile(ve)
-## a <- tempfile(fileext=".gds")    ## FIXME: slot setter for "gdsfile() <- "
-## file.create(a)
-## gdsfile(ve) <- a
 ```
 Some other getter function like `metadata()` will return any metadata
 that we have saved inside the `VariantExperiment` object.

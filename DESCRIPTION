@@ -34,7 +34,7 @@ RoxygenNote: 6.0.1
 Suggests: testthat
 Collate:
     VariantExperiment-class.R
-    GDS2VE.R
+    makeSummarizedExperimentFromGDS.R
     saveGDSSummarizedExperiment.R
     AllGenerics.R
     VCF2VE.R

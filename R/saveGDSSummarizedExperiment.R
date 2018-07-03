@@ -84,7 +84,7 @@
                  )  ## "," separated.
 }
 
-## #' @importFrom utils head tail
+#' @importFrom utils head tail
 .write_sedata_as_gdsnode <- function(data, name, ff, gds_path,
                                      chunk_size, nrow, ncol, compress)
 {
@@ -233,11 +233,11 @@
     ### on-disk, only change the "file" slot to be newly generated gds
     ### file path.
     for (i in seq_along(assays(se))){
-        if (is(assays(se)[[i]], "DelayedArray")){
-            gdsfile(seed(assays(se)[[i]])) <- gds_path
-        }else {
+    ##     if (is(assays(se)[[i]], "DelayedArray")){
+    ##         gdsfile(seed(assays(se)[[i]])) <- gds_path
+    ##     }else {
         assays(se)[[i]] <- GDSArray(gds_path, name=names(assays(se))[i])
-        }
+    ##     }
     }
     names(assays(se)) <- names(assays(se))
 

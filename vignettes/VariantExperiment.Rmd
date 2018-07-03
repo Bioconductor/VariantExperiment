@@ -1,10 +1,8 @@
 ---
-title: "_VariantExperiment_: A RangedSummarizedExperiment container for VCF/GDS data with GDS back-end"
-author: "Qian Liu, Martin Morgan"
+title: "VariantExperiment: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Back-End"
+author: 
 - name: Qian Liu
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
-- name: Hervé Pagès
-  affiliation: Fred Hutchinson Cancer Research Center, Seattle, WA
 - name: Martin Morgan
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 date: "last edit: 07/02/2018"
@@ -12,9 +10,9 @@ output:
     BiocStyle::html_document:
         toc: true
         toc_float: true
-package: GDSArray
+package: VariantExperiment
 vignette: |
-    %\VignetteIndexEntry{VariantExperiment: A RangedSummarizedExperiment container for VCF/GDS data with GDS back-end}
+    %\VignetteIndexEntry{VariantExperiment}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---
@@ -26,13 +24,13 @@ options(showTailLines=3)
 
 # Introduction 
 
-[VariantExperiment][] is a Bioconductor package for saving the VCF/GDS
-format data into RangedSummarizedExperiment object. The
+[VariantExperiment][] is a _Bioconductor_ package for saving the
+VCF/GDS format data into RangedSummarizedExperiment object. The
 high-throughput genetic/genomic data are saved in [GDSArray][] objects
-with GDS back-end. The annotation data for variants/genes/samples are
-saved in [DelayedDataFrame][] format with mono-dimensional GDSArray in
-each column. The interface of RangedSummarizedExperiment-like data
-format enables easy and common manipulations for high-throughput
+with GDS back-end. The annotation data for features/samples are saved
+in [DelayedDataFrame][] format with mono-dimensional GDSArray in each
+column. The interface of RangedSummarizedExperiment data format
+enables easy and common manipulations for high-throughput
 genetic/genomic data and achieves on-disk reading and processing with
 common [SummarizedExperiment][] operation in _R_ and _Bioconductor_.
 
@@ -42,17 +40,17 @@ common [SummarizedExperiment][] operation in _R_ and _Bioconductor_.
 
 # Installation
 
-Users should download the package from Bioconductor.
+Download the package from Bioconductor: 
 
 ```{r getPackage, eval=FALSE}
 source("https://bioconductor.org/biocLite.R")
 biocLite("VariantExperiment")
 ```
-The development version is also available to download through github. 
+The development version is also available to download through github: 
 ```{r getDevel, eval=FALSE}
 devtools::install_github("Bioconductor/VariantExperiment")
 ```
-Load the package into R session.
+Load the package into R session before using:
 ```{r Load, message=FALSE}
 library(VariantExperiment)
 ```
@@ -63,19 +61,15 @@ library(VariantExperiment)
 
 [GDSArray][] is a _Bioconductor_ package that represents GDS files as
 objects derived from the [DelayedArray][] package and `DelayedArray`
-class. It converts a GDS node in the file into a
-`DelayedArray`-derived data structure. The rich common methods and
-data operations defined on `GDSArray` makes it more _R_-user-friendly
-than working with the GDS file directly. The array data from GDS files
-are always returned with the first dimension being features (e.g.,
-`genes/variants/snps`) and the second dimension being `samples`. This
-feature is consistent with the assay data saved in
-`SummarizedExperiment`, and makes the `GDSArray` package interoperable
-with other established _Bioconductor_ data
+class. It converts a GDS node into a `DelayedArray`-derived data
+structure. The rich common methods and data operations defined on
+`GDSArray` makes it more _R_-user-friendly than working with the GDS
+file directly. The array data from GDS files are always returned with
+the first dimension being features (genes/variants/snps) and the
+second dimension being `samples`. This feature is consistent with the
+assay data saved in `SummarizedExperiment`, and makes the `GDSArray`
+package more interoperable with other established _Bioconductor_ data
 infrastructure.   
-More details about GDS or GDSArray format can be found in the
-vignettes of the [gdsfmt][], [SNPRelate][], [SeqArray][], [GDSArray][]
-and [DelayedArrayy][] packages.
 
 [DelayedArray]: https://bioconductor.org/packages/DelayedArray
 [gdsfmt]: https://bioconductor.org/packages/gdsfmt
@@ -90,19 +84,24 @@ file <- SeqArray::seqExampleFileName("gds")
 GDSArray(file, "genotype/data")
 GDSArray(file, "sample.id")
 ```
+More details about GDS or GDSArray format can be found in the
+vignettes of the [gdsfmt][], [SNPRelate][], [SeqArray][], [GDSArray][]
+and [DelayedArray][] packages.
 
 ## DelayedDataFrame
+
 [DelayedDataFrame][] is a _Bioconductor_ package that implements
 delayed operations on DataFrame objects using standard DataFrame
 metaphor. Each column of data inside `DelayedDataFrame` is represented
-as `GDSArray` with on-disk GDS file. The slot of `lazyIndex` saves the
-mapping indexes of `GDSArray` data in each column for easy
-manipulations. Methods like `show`, `validity check`, `[`, `[[`
-subsetting, `rbind`, `cbind` are implemented for DelayedDataFrame to
-be operated around lazyIndex. The listData slot in `DelayedDataFrame`
-stays untouched until a realization call like `DataFrame()`
-constructor or `as.list()` incurred.
-[DelayedDataFrame][https://github.com/Bioconductor/DelayedDataFrame]
+as 1-dimensional `GDSArray` with on-disk GDS file. The slot of
+`lazyIndex` saves the mapping indexes of `GDSArray` data in each
+column for easy manipulations. Methods like `show`, `validity check`,
+`[`, `[[` subsetting, `rbind`, `cbind` are implemented for
+DelayedDataFrame to be operated around lazyIndex. The listData slot in
+`DelayedDataFrame` stays untouched until a realization call like
+`DataFrame()` constructor or `as.list()` incurred.
+
+[DelayedDataFrame]: https://github.com/Bioconductor/DelayedDataFrame
 
 # VariantExperiment
 
@@ -110,7 +109,7 @@ The package of `VariantExperiment` is implemented to represent VCF/GDS
 files using standard SummarizedExperiment metaphor. It is a container
 for high-through genetic/genomic data with GDS back-end, and is
 interoperable with the statistical functions/methods that are
-implemented in `SNPRelate`, `SeqArray` and `SeqVarTools` that are
+implemented in `SeqArray` and `SeqVarTools` that are
 designed for GDS data. The `SummarizedExperiment` metaphor also gets
 the benefit of common manipulations within _Bioconductor_ ecosystem
 that are more user-friendly.
@@ -138,7 +137,14 @@ annotations (Only when `sample.info` argument is specified).
 vcf <- SeqArray::seqExampleFileName("vcf")
 ve <- VCF2VE(vcf)
 ve
+```
+assay data in `GDSArray` format:
+```{r VCF2VE2}
+names(assays(ve))
 assay(ve, 1)
+```
+feature-related annotation in `DelayedDataFrame` format:
+```{r VCF2VE3}
 rowData(ve)
 ``` 
 
@@ -153,149 +159,226 @@ colData(ve)
 ```
 
 Arguments could be specified to take specific info columns or format
-columns from the vcf file. The `start` and `count` arguments could be
-used to specify the start position and number of variants to read into
-`Variantexperiment` object.
+columns from the vcf file. 
 
 ```{r VCF2VEArgs}
 ve1 <- VCF2VE(vcf, info.import=c("OR", "GP"))
 rowData(ve1)
-ve2 <- VCF2VE(vcf, start=101, count=1000)
-dim(ve2)
 ```
+
+The `start` and `count` arguments could be used to specify the start
+position and number of variants to read into `Variantexperiment`
+object.
+
+```{r VCF2VEArgs_startCount}
+ve2 <- VCF2VE(vcf, start=101, count=1000)
+ve2
+```
+For the above example, only 1000 variants are read into the
+`VariantExperiment` object, starting from the position of 101.       
 
 ### Coercion function from `GDS` to `VariantExperiment`
 
+The coercion function of `GDS2VE` could coerce `GDS` files into
+`VariantExperiment` objects directly, with the assay data saved as
+`GDSArray`, and the `rowData()/colData()` in `DelayedDataFrame` by
+default.
+
 ```{r GDS2VE}
 gds <- SeqArray::seqExampleFileName("gds")
-ve <- makeSummarizedExperimentFromGDS(gds)
+ve <- GDS2VE(gds)
 ve
 ```
-## VariantExperiment-methods (VCF2VE, makeSummarizedExperimentfromGDS, titv... vcf related.)
-## common manipulations... (subsetting, save new VE file, load VE file, ... )
+```{r GDS2VE2}
+rowData(ve)
+colData(ve)
+```
+Arguments could be specified to take only specific annotation columns
+for features and samples. All available data entries for `GDS2VE`
+arguments could be retrieved by the `showAvailable()` function with
+the gds file name as input. 
 
-
-## SummarizedExperiment with GDS back-end assay data.
-
-GDSArray is the GDS back-end DelayedArray, which could stick into the SummarizedExperiment by function `makeSummarizedExperimentFromGDS()`. 
-```{r, SEGDSArray}
-se <- makeSummarizedExperimentFromGDS(file)
-se
-names(assays(se))
-assay(se, 1)
+```{r showAvailable}
+showAvailable(gds)
 ```
 
-By default, the `rowData` and `colData` are also read into the SummarizedExperiment object in `GDSArray` format. User could use the arguments `rowDataOnDisk` and `colDataOnDisk` to change the setting.
-```{r, rowColData}
-rowData(se)
-colData(se)
-se1 <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=FALSE, colDataOnDisk=FALSE)
-rowData(se1)
-colData(se1)
-```
-User could also use the function `showAvailable` for available values for other arguments in the function of `makeSummarizedExperimentFromGDS`. Note that the `infoColumns` for `SEQ_ARRAY` data will save as columns inside the `rowData(SE)`, with the prefix of "info_".
-```{r, showAvail}
-args(makeSummarizedExperimentFromGDS)
-showAvailable(file)
-se2 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ID", "REF", "ALT"), infoColumns=c("AA", "DP", "OR", "GP"), rowDataOnDisk=FALSE)
-rowData(se2)
-rowRanges(se2)
+Note that the `infoColumns` from gds file will be saved as columns
+inside the `rowData()`, with the prefix of
+"info_". `rowDataOnDisk/colDataOnDisk` could be set as `FALSE` to
+saveall annotation data in ordinary `DataFrame` format.
+
+```{r GDS2VEArgs}
+ve3 <- GDS2VE(gds, rowDataColumns = c("ID", "ALT", "REF"),
+             infoColumns = c("AC", "AN", "DP"),
+             rowDataOnDisk = TRUE,
+             colDataOnDisk = FALSE)
+rowData(ve3)  ## DelayedDataFrame object 
+colData(ve3)  ## DataFrame object
 ```
 
-## `save/loadGDSSummarizedExperiment`
-Use the function `saveGDSSummarizedExperiment` to save any SE object (with ordinary in-memory / GDSArray-based assay data) into the GDSArray-based SE object. Arguments of `rowDataOnDisk` and `colDataOnDisk` are supplied for users to save the `rowData(se) / colData(se)` with GDSArray-based `DataFrame`. By default, all the data slots of `SummarizedExperiment` objects (`assays()`, `rowData()`, `colData()`) are saved with GDSArray-based data.
+## VariantExperiment methods and statistical analysis
 
-```{r, save}
-## save se1 as ordinary in-memory for all data slots
-file <- SeqArray::seqExampleFileName("gds")
-se <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=F, colDataOnDisk=F)
-se1 <- se
-for(i in seq_along(assays(se1))){
-    assays(se1)[[i]] <- unname(as.array(assays(se1)[[i]]))
-}
-lapply(assays(se1), class)
-rowData(se1)
-colData(se1)
+Many statistical functions and methods are defined on `VariantExperiment` objects, most of which has their generic defined in _Bioconductor_ package of `SeqArray` and `SeqVarTools`. These functions could be called directly on `VariantExperiment` object as input, with other arguments to specify for user's need. More details please refer the vignettes of [SeqArray][] and [SeqVarTools][].  
 
-## saveGDSSummarizedExperiment
-## drty <- tempdir()
-se2 <- saveGDSSummarizedExperiment(se1, replace=T, fileFormat="SEQ_ARRAY")
-se2
-lapply(assays(se2), class)
-assays(se2)[[1]]
-rowData(se2)
-colData(se2)
+Here is a list of them:
+
+statistical functions | Description
+--------------------- | ------------
+seqAlleleFreq         | Calculates the allele frequencies
+seqAlleleCount        | Calculates the allele counts 
+seqMissing            | Calculates the missing rate for variant/sample
+seqNumAllele          | Calculates the number of alleles (for ref/alt allele)
+hwe                   | Exact test for Hardy-Weinberg equilibrium on Single-Nucleotide Variants
+inbreedCoeff          | Calculates the inbreeding coefficient by variant/sample
+pca                   | Calculates the eigenvalues and eignevectors with Principal Component Analysis
+titv                  | Calculate transition/transversion ratio overall or by sample
+refDosage             | Calculate the dosage of reference allele (matrix with integers of 0/1/2)
+altDosage             | Calculate the dosage of alternative allele (matrix with integers of 0/1/2)
+countSingletons       | Count singleton variants for each sample
+heterozygosity        | Calculate heterozygosity rate by sample or by variants
+homozygosity          | Calculate homozygosity rate by sample or by variants
+meanBySample          | Calculate the mean value of a variable by sample over all variants
+isSNV                 | Flag a single nucleotide variant 
+isVariant             | Locate which samples are variant for each site
+
+Here are some examples: 
+```{r stats}
+## sample missing rate
+mr.samp <- seqMissing(ve, per.variant = FALSE)
+head(mr.samp)
+## hwe
+hwe <- hwe(ve)
+head(hwe)
+## titv ratio by sample / overall
+titv <- titv(ve, by.sample=TRUE)
+head(titv)
+titv(ve, by.sample=FALSE)
+## countSingletons
+countSingletons(ve)
 ```
 
-```{r, object_size}
-## global parameter for showing less rows in each R output
-options()
-se0 <- makeSummarizedExperimentFromGDS(file)
-print(object.size(se0), units="auto")  ## assays on-disk, row/colData on-disk
-print(object.size(se), units="auto")  ## assays on-disk, row/colData in-memory
-print(object.size(se0[TRUE, TRUE]), units="auto")
-print(object.size(se[TRUE, TRUE]), units="auto")
+## `VariantExperiment` common operations
 
-print(object.size(assays(se)), units="auto")
-## 280.7 Kb
-print(object.size(se1), units="auto") ## assays/row/colData in-memory
-print(object.size(assays(se1)), units="auto")
-print(object.size(assays(se1, withDimnames=FALSE)), units="auto")
-## 2.1 Mb
-print(object.size(se2), units="auto")  ## row/colData on-disk
-print(object.size(assays(se2)), units="auto")
-```
+### slot getters and setters
 
-Use the function `loadGDSSummarizedExperiment` to load the newly generated GDSArray-based SE object. 
-```{r, load}
-se3 <- loadGDSSummarizedExperiment()
-se3
-all.equal(assays(se2), assays(se3))
-rm(se3)
+We can use `rowRanges()` / `rowData()` to retrieve the feature-related
+annotation file, with/without a GenomicRange format. 
+```{r rrrd}
+rowRanges(ve)
+rowData(ve)
 ```
-
-## VariantExperiment common SE operations
-### Getters and setters
-- `rowRanges()` / (`rowData()`), `colData()`, `metadata()`
-```{r getSet}
-library(SummarizedExperiment)
-rowRanges(se2)
-head(colData(se2))
-head(rowData(se2))
+We can also use `colData()` to retrieve the sample-related annotation
+file.
+```{r colData}
+colData(ve)
 ```
+The `gdsfile()` will retrieve the gds file path associated with the
+`VariantExperiment` object.
+```{r gdsfile}
+gdsfile(ve)
+## a <- tempfile(fileext=".gds")    ## FIXME: slot setter for "gdsfile() <- "
+## file.create(a)
+## gdsfile(ve) <- a
+```
+Some other getter function like `metadata()` will return any metadata
+that we have saved inside the `VariantExperiment` object.
+```{r metaData}
+metadata(ve)
+``` 
 
 ### subsetting functions
+
+The `VariantExperiment` object supports subsetting methods with `[`,
+and `$` as in `SummarizedExperiment`.
+
 - two-dimensional subsetting
 ```{r, 2d}
-se2[1:10, 1:5]
+ve[1:10, 1:5]
 ```
-- `$` operates on `colData()` columns, for easy sample extraction.
+
+- `$` operation on `colData()` columns, for easy sample extraction.  
+Note that the `colData` are in the `DelayedDataFrame` format, with
+each column saved as `GDSArray`. So when doing subsetting, we need to
+use `as.logical()` to convert the 1-dimensional `GDSArray` into
+ordinary vector.
+
 ```{r colDataExtraction}
-head(colData(se2))
-se2[, as.logical(se2$family == "1328")]   ## FIXME
+colData(ve)
+ve[, as.logical(ve$family == "1328")]
 ```
 - subsetting by `rowData()` columns.
 ```{r rowDataExtraction}
-head(rowData(se2))
-se2[as.logical(rowData(se2)$REF == "T"),]   ## FIXME
+rowData(ve)
+ve[as.logical(rowData(ve)$REF == "T"),]
 ```
 
 ### Range-based operations
 
-- `subsetByOverlaps()`
-`SummarizedExperiment` objects support all of the `findOverlaps()` methods and associated functions.  This includes `subsetByOverlaps()`, which makes it easy to subset a `SummarizedExperiment` object by an interval.
+`VariantExperiment` objects support all of the `findOverlaps()`
+methods and associated functions.  This includes `subsetByOverlaps()`,
+which makes it easy to subset a `VariantExperiment` object by an
+interval.
 
 ```{r overlap}
-subsetByOverlaps(se2, GRanges("22:1-48958933"))
-assay(subsetByOverlaps(se2, GRanges("22:1-48958933")))
-rowData(subsetByOverlaps(se2, GRanges("22:1-48958933")))
+ve4 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+ve4
 ```
 
+## Save / load `VariantExperiment` object
+
+Note that after the subsetting by `[`, `$` or `Ranged-based
+operations`, we need to save the new `VariantExperiment` object to
+synchronize the gds file (on-disk) associated with the subset of data
+(in-memory representation) before any statistical analysis. Otherwise,
+an error will be returned.
+
+For example, after we subset the `ve` by `GRanges("22:1-48958933")`,
+and we want to calculate the hwe based on the 23 variants, an error
+will be generated indicating that we need to sync the on-disk and
+in-memory representations.
+
+```{r saveLoad, eval=FALSE}
+hwe(ve4)
+## Error in .saveGDSMaybe(gdsfile) : use
+##   'saveGDSSummarizedExperiment()' to synchronize on-disk and
+##   in-memory representations
+```
+
+### save `VariantExperiment` object
+
+Use the function `saveGDSSummarizedExperiment` to synchronize the
+on-disk and in-memory representation.
+
+```{r saveVE}
+a <- tempfile()
+saveGDSSummarizedExperiment(ve4, dir=a, replace=TRUE)
+```
+
+### load `VariantExperiment` object
+
+reload the synchronized `VariantExperiment` object. The gds file path
+to the new `VariantExperiment` object will be the `se.gds` in the
+specified directory `r a`.
+
+```{r loadVE}
+ve4 <- loadGDSSummarizedExperiment(dir=a)
+gdsfile(ve4)
+```
+
+Now we can do any statistical analysis as needed.
+```{r newVEstats}
+head(hwe(ve4))
+```
 
 # Future work
-- Make the meta data for rows and cols on-disk reading.  -- done!
-- More interoperable with other GDS based functions, including DNA-sequencing data annotation, filteration, and statistical analysis.   -- done!
-- Develop a pipeline for using `VariantExperiment` as the basic data structure for DNA-sequencing data analysis.  -- next version. 
+In the future version of `VariantExperiment` package, we plan to
+implement more sample-related statistical functions, like mendelian
+error, etc. Also we plan to connect `VariantExperiment` with
+_Bioconductor_ package `VariantAnnotation` to implement the variant
+filtering and annotation functions based on `VariantExperiment`
+format. After that, we'll develop a pipeline for using
+`VariantExperiment` object as the basic data structure for
+DNA-sequencing data analysis.
 
 # Session Info
 ```{r sessionInfo}

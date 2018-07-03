@@ -241,7 +241,7 @@
             node <- paste0(pre, "/", colDataColumns)
             annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
             names(annot) <- colDataColumns
-            DelayedDataFrame(annot, row.names=sample.id)
+            DataFrame(annot, row.names=sample.id)
         }
     } else {
         f <- openfn.gds(file)

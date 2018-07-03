@@ -1,6 +1,5 @@
 Package: VariantExperiment
-Title: GDS back-end data for DelayedArray to represent gdsfmt using
-    standard SummarizedExperiment metaphor
+Title: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Back-End
 Version: 0.2.0
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>

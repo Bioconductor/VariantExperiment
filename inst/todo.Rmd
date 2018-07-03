@@ -43,5 +43,7 @@
 - VariantExperiment-class (class, setters and getters)
 - VariantExperiment-methods (VCF2VE, titv... vcf related.)
 - common manipulations... (subsetting, save new VE file, load VE file, ... )
+FIXME: slot setter? gdsfile() <-
+FIXME: saveGDSSE(dir="my_gds_se") or use tempfile() here?   -- use "tempdir()" in vignette. 
 
 5. sessionInfo

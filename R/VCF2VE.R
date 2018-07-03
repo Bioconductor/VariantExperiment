@@ -118,7 +118,7 @@ VCF2VE <- function(vcf.fn, out.dir = tempfile(), replace = FALSE,
     }
 
     ## run GDS to VE
-    makeSummarizedExperimentFromGDS(
+    GDS2VE(
         file=out.gds.fn, name=NULL,
         ## rowDataColumns = rowDataColumns,
         ## colDataColumns = colDataColumns,

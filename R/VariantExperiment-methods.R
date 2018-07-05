@@ -1,20 +1,17 @@
 .saveGDSMaybe <- function(gdsfile) {
-    file <- gdsfile(gdsfile)[1]
+    file <- gdsfile(gdsfile)
     gdsdim <- c(seqSummary(file, verbose=FALSE)$num.variant,
                 seqSummary(file, verbose=FALSE)$num.sample)
     sedim <- dim(gdsfile) ## variants * samples
     if(!identical(sedim, gdsdim))
-        stop("use 'saveGDSSummarizedExperiment()' to synchronize on-disk and in-memory representations")
-        ## tmpdir <- tempfile()
-        ## dir.create(tmpdir)
-        ## gdsfile <- saveGDSSummarizedExperiment(gdsfile, dir=tmpdir, replace=TRUE)
-        ## warning("updated 'gdsfile' to temporary on-disk location")
+        stop(paste("use 'saveVariantExperiment()'",
+                   " to synchronize on-disk and in-memory representations"))
     gdsfile
 }
-
+        
 .doCompatibleFunction <- function(gdsfile, ..., FUN) {
     gdsfile <- .saveGDSMaybe(gdsfile)
-    file <- gdsfile(gdsfile)[1]
+    file <- gdsfile(gdsfile)
     f <- SeqArray::seqOpen(file)
     on.exit(SeqArray::seqClose(f))
     FUN(f, ...)
@@ -28,25 +25,29 @@
     }
 }
 
-.seqAlleleFreq <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){
+.seqAlleleFreq <- function(gdsfile, ref.allele=0L, .progress=FALSE,
+                               parallel = seqGetParallel()){
     alleleFreq <- .doCompatibleFunction(
         gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
         FUN=SeqArray::seqAlleleFreq
     )
     alleleFreq
-    ## id <- paste(ref.allele, collapse="_")
-    ## rowData(gdsfile)[[paste0("seqAlleleFreq_", id)]] <- alleleFreq
-    ## gdsfile
 }
 
 #' Statistical functions for \code{VariantExperiment} objects.
 #' @name VariantExperiment-methods
 #' @rdname VariantExperiment-methods
-#' @aliases seqAlleleFreq,VariantExperiment-method
-#' @param gdsfile xx
-#' @param ref.allele xx
-#' @param .progress xx 
-#' @param parallel xx
+#' @aliases seqAlleleFreq seqAlleleFreq,VariantExperiment-method
+#' @param gdsfile an \code{VariantExperiment} object that with
+#'     synchronized gds file.
+#' @param ref.allele a single numeric value, a numeric vector or a
+#'     character vector; see \code{?SeqArray::seqAlleleFreq} for more
+#'     details.
+#' @param .progress Logical, show process information if \code{TRUE}.
+#' @param parallel A logical value to indicate serial processing
+#'     (\code{FALSE}) or multicore processing (\code{TRUE}). Takes
+#'     numeric value or other value; see \code{?SeqArray::seqParallel}
+#'     for more details.
 #' @export
 setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 
@@ -56,43 +57,36 @@ setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)
         FUN=SeqArray::seqAlleleCount
     )
     alleleCount
-    ## id <- paste(ref.allele, collapse="_")
-    ## rowData(gdsfile)[[paste0("seqAlleleCount_", id)]] <- alleleCount
-    ## gdsfile
 }
-## #' @name seqAlleleCount
 #' @rdname VariantExperiment-methods
-#' @aliases seqAlleleCount,VariantExperiment-method
+#' @aliases seqAlleleCount seqAlleleCount,VariantExperiment-method
 #' @export
 setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)        
 
-.seqMissing <- function(gdsfile, per.variant=TRUE, .progress=FALSE, parallel = seqGetParallel()){
-    seqMissing <- .doCompatibleFunction(
-        gdsfile, per.variant=per.variant, .progress =.progress, parallel=parallel,
-        FUN=SeqArray::seqMissing
-    )
+.seqMissing <- function(gdsfile, per.variant=TRUE, .progress=FALSE,
+                        parallel = seqGetParallel())
+{
+    seqMissing <- .doCompatibleFunction(gdsfile,
+                                        per.variant=per.variant,
+                                        .progress =.progress,
+                                        parallel=parallel,
+                                        FUN=SeqArray::seqMissing )
     seqMissing
-    ## if (per.variant)
-    ##     rowData(gdsfile)[["variant_missing"]] <- seqMissing
-    ## else
-    ##     VariantExperiment::colData(gdsfile)[["sample_missing"]] <- seqMissing
-    ## gdsfile
 }
-## #' @name seqMissing
+
 #' @rdname VariantExperiment-methods
-#' @aliases seqMissing,VariantExperiment-method
-#' @param per.variant xx
+#' @aliases seqMissing seqMissing,VariantExperiment-method
+#' @param per.variant A logical value to indicate whether to calculate
+#'     missing rate for variant (\code{TRUE}), or samples
+#'     (\code{FALSE}).
 #' @export
 setMethod("seqMissing", "VariantExperiment", .seqMissing)        
 
 .seqNumAllele <- function(gdsfile){
     numAllele <- .doCompatibleFunction(gdsfile, FUN=SeqArray::seqNumAllele)
     numAllele
-    ## rowData(gdsfile)[["numAllele"]] <- numAllele
-    ## gdsfile
 }
 
-## #' @name seqNumAllele
 #' @rdname VariantExperiment-methods
 #' @aliases seqNumAllele,VariantExperiment-method
 #' @export
@@ -102,7 +96,7 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
 
 ## already works: alleleFrequency(SeqArray::seqAlleleFreq), duplicateDiscordance, granges(SummarizedExperiment::granges), nAlleles(SeqArray::seqNumAllele), nAllele(SeqArray::seqAlleleCount)
 
-## implemented: hwe, inbreedCoeff, pca, titv, refDosage, altDosage, countSingletons, homozygosity, heterozygosity, meanBySample, missingGenotypeRate, isSNV, isVariant
+## implemented: hwe, inbreedCoeff, pca, titv, refDosage, altDosage, countSingletons, homozygosity, heterozygosity, meanBySample, isSNV, isVariant
 
 ## remove: getGenotype/getGenotypeAlleles/expandedAltDosage/alleleDosage(SeqVarGDSClass,numeric)/alleleDosage(SeqVarGDSClass,list)
 
@@ -134,11 +128,11 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
           ## into rowData(se)
 }
 
-## #' @name hwe
 #' @rdname VariantExperiment-methods
 #' @aliases hwe,VariantExperiment-method
-#' @param gdsobj xx
-#' @param permute xx
+#' @param gdsobj same as above \code{gdsfile} argument.
+#' @param permute A logical value indicating whether to permute the
+#'     genotypes. See \code{?SeqVarTools::hwe} for more details.
 #' @export
 setMethod("hwe", "VariantExperiment", .hwe)
 
@@ -149,11 +143,14 @@ setMethod("hwe", "VariantExperiment", .hwe)
     inbCoef   ## returns a named (if use.names=TRUE) vector
 }
 
-## #' @name inbreedCoeff
 #' @rdname VariantExperiment-methods
 #' @aliases inbreedCoeff,VariantExperiment-method
-#' @param margin xx
-#' @param use.names xx
+#' @param margin "by.variant" OR "by.sample" to indicate
+#'     whether the calculation should be done over all samples for
+#'     each variant, or over all variants for each sample. See
+#'     \code{?SeqVarTools::inbreedCoeff} for more details.
+#' @param use.names A logical value indicating whether to assign
+#'     variant or sample IDs as names of the output vector.
 #' @export
 setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
 
@@ -162,10 +159,10 @@ setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
     pca   ## returns a list, $eigenval (vector), $eigenvect (matrix)
 }
 
-## #' @name pca
 #' @rdname VariantExperiment-methods
 #' @aliases pca,VariantExperiment-method
-#' @param eigen.cnt xx
+#' @param eigen.cnt An integer value indicating how many eigenvalues
+#'     and eignvectors to return. The default is 32.
 #' @export
 setMethod("pca", "VariantExperiment", .pca)
 
@@ -175,10 +172,12 @@ setMethod("pca", "VariantExperiment", .pca)
     titv   ## returns a scalar / vector (if by.sample=TRUE)
 }
 
-## #' @name titv
 #' @rdname VariantExperiment-methods
 #' @aliases titv,variantExperiment-method
-#' @param by.sample xx
+#' @param by.sample A logical value indicating whether TiTv should be
+#'     calculated by sample or overall for the entire
+#'     \code{VariantExperiment} object. See \code{?SeqVarTools::titv}
+#'     for more details.
 #' @export
 setMethod("titv", "VariantExperiment", .titv)
 
@@ -190,7 +189,6 @@ setMethod("titv", "VariantExperiment", .titv)
     dos
 }
 
-## #' @name refDosage
 #' @rdname VariantExperiment-methods
 #' @aliases refDosage,VariantExperiment-method
 #' @export
@@ -205,10 +203,12 @@ setMethod("refDosage", "VariantExperiment", .refDosage)
     dos  
 }
 
-## #' @name altDosage
 #' @rdname VariantExperiment-methods
 #' @aliases altDosage,VariantExperiment-method
-#' @param sparse xx
+#' @param sparse A Logical value indicating whether or not to return
+#'     the alterate allele dosage as a sparse matrix. In most cases,
+#'     it will dramatically reduce the size of the returned
+#'     object. See \code{?SeqVarTools::altDosage} for more details.
 #' @export
 setMethod("altDosage", "VariantExperiment", .altDosage)
 
@@ -218,7 +218,6 @@ setMethod("altDosage", "VariantExperiment", .altDosage)
     ct   ## returns a vector of the number of singleton variants per sample.
 }
 
-## #' @name countSingletons
 #' @rdname VariantExperiment-methods
 #' @aliases countSingletons,VariantExperiment-method
 #' @export
@@ -233,7 +232,6 @@ setMethod("countSingletons", "VariantExperiment", .ctSingleton)
     hetero   ## returns a vector of the number of singleton variants per sample.
 }
 
-## #' @name heterozygosity
 #' @rdname VariantExperiment-methods
 #' @aliases heterozygosity,VariantExperiment-method
 #' @export
@@ -247,13 +245,16 @@ setMethod("heterozygosity", "VariantExperiment", .heterozygosity)
     homo <- .doCompatibleFunction(gdsobj, allele=allele, margin=margin,
                                   use.names=use.names,
                                   FUN = SeqVarTools::homozygosity)
-    homo   ## returns a vector of the number of singleton variants per sample.
+    homo   ## returns a vector of the number of singleton variants per
+           ## sample.
 }
 
-## #' @name homozygosity
 #' @rdname VariantExperiment-methods
 #' @aliases homozygosity,VariantExperiment-method
-#' @param allele xx
+#' @param allele Choose from "any", "ref," or "alt," to indicate which
+#'     alleles to consider when calculating homozygosity. See
+#'     \code{?SeqVarTools::homozygosity} for more details.
+
 #' @export
 setMethod("homozygosity", "VariantExperiment", .homozygosity)
 
@@ -269,10 +270,11 @@ setMethod("homozygosity", "VariantExperiment", .homozygosity)
     mean
 } 
 
-## #' @name meanBySample
 #' @rdname VariantExperiment-methods
 #' @aliases meanBySample,VariantExperiment-method
-#' @param var.name xx
+#' @param var.name Character string with name of the variable. Choose
+#'     from \code{names(assays(VE_Object))}. See
+#'     \code{?SeqVarTools::meanBySample} for more details.
 #' @export
 setMethod("meanBySample", "VariantExperiment", .meanBySample)
 
@@ -282,10 +284,11 @@ setMethod("meanBySample", "VariantExperiment", .meanBySample)
     issnv
 }
 
-## #' @name isSNV
 #' @rdname VariantExperiment-methods
 #' @aliases isSNV,VariantExperiment-method
-#' @param biallelic xx
+#' @param biallelic A logical indicating whether to only consider
+#'     biallelic SNVs. See \code{?SeqVarTools::isSNV} for more
+#'     details.
 #' @export
 setMethod("isSNV", "VariantExperiment", .isSNV)
 
@@ -297,7 +300,6 @@ setMethod("isSNV", "VariantExperiment", .isSNV)
     isvar
 }
 
-## #' @name isVariant
 #' @rdname VariantExperiment-methods
 #' @aliases isVariant,VariantExperiment-method
 #' @export

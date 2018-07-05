@@ -1,24 +1,37 @@
 07/02/2018
 
 - to pass check() and BiocCheck::check(). 
-  -- documentation. "VE-stats.R", parameters.
-  -- aliass, for functions with \usage entries. 
-  
+  -- no "inst/doc/VariantExperiment.html" detected. 
+
 - adding new stats functions: 
-  -- seqBCF2GDS, seqVCF2GDS (vcf.fn argument?)
+  -- BCF2VE, VCF2VE (vcf.fn argument?)  -- only keep VCF2VE now!
+- add examples for: 
+  - VCF2VE  -- done!
+  - makeSEFromGDS -- done!
+  - showAvailable() -- done!
+  - ... 
   
-- vignette. 
-- documentation for arguments. 
-- gdsfile() return an atomic vector. (currently using vapply).
-- gds attributes to save in metadata? 
-- test functions for VE-class...
+- vignette.  -- done! 
+- documentation for arguments.  -- done! 
+- gdsfile() return an atomic vector. (currently using vapply).  -- done!
 - construct a valid empty VE object, by `VariantExperiment()`.  -- done! 
 - disable the "gdsfile()<-" setter function. -- done!
+- consistent argument values. -- done!
+- "makeSummarizedExperimentFromVCF(info.import)" with "makeSummarizedExperimentFromGDS(info.columns)". Make default as "NULL" to import all info, and when "character(0)", import nothing. 
 
 - renaming: 
-  save/loadGDSSummarizedExperiment ==> save/loadVariantExperiment ?? 
-  makeSummarizedExperimentFromGDS ==> GDS2VE ? 
-  VCF2VE ==> makeSummarizedExperimentFromVCF ?? 
+  save/loadGDSSummarizedExperiment ==> save/loadVariantExperiment  -- done! 
+  keep "makeSummarizedExperimentFromGDS"  -- done!
+  VCF2VE ==> makeSummarizedExperimentFromVCF ??  -- done!  
+
+- bugs
+  - ?VariantExperiment-methods (last line). -- done!
+  - vignette not generating in inst/doc.    -- done! 
+	-- DESCRIPTION: VignetteBuilder: knitr  Suggests: knitr
+
+- add example ve.gds, ve.rd file under "inst/extdata".   ?? 
+- reactivate the "gdsfile<-" setter function... ?? 
+
 
 - bugs:   -- workaround fixed!
   -- devtools::document(), first time document() reserves SeqVarTools::titv() methods/functions, second time document() lost all methods for "SeqVarGDSClass"...
@@ -37,6 +50,9 @@
 - filtering, using rowRanges, overlap...
 - sample.annotation related stat analysis: mendelian errors? (use family info, test!!) - next phase!
 - association test associated analysis?  -- next phase!
+- gds attributes to save in metadata? 
+  -- header info. no need to save vcf file now... wait until connecting to VariantAnnotation. 
+  -- sample.order / snp.order, VCF version, ... not super important for VE analysis. 
 
 
 

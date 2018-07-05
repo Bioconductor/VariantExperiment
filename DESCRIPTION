@@ -1,6 +1,6 @@
 Package: VariantExperiment
 Title: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Back-End
-Version: 0.2.0
+Version: 0.3.0
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
 Description: Implement `GDSArray` and `GDSArraySeed` classes for GDS 
@@ -31,12 +31,13 @@ Imports:
     IRanges
 LazyData: true
 RoxygenNote: 6.0.1
-Suggests: testthat
+Suggests: testthat, knitr
+VignetteBuilder: knitr
 Collate:
     VariantExperiment-class.R
     makeSummarizedExperimentFromGDS.R
-    saveGDSSummarizedExperiment.R
+    saveVariantExperiment.R
     AllGenerics.R
-    VCF2VE.R
+    makeSummarizedExperimentFromVCF.R
     VariantExperiment-methods.R
     VariantExperiment-package.R

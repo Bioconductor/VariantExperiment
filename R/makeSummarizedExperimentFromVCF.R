@@ -1,27 +1,15 @@
-## VCF2VE function VCF2VE <- function(vcf.fn, out.fn, header=NULL,
-## storage.option="LZMA_RA", info.import=NULL, fmt.import=NULL,
-## genotype.var.name="GT", ignore.chr.prefix="chr", reference=NULL,
-## start=1L, count=-1L, optimize=TRUE, raise.error=TRUE, digest=TRUE,
-## parallel=FALSE, verbose=TRUE) #' @param compress the compression
-## method for writing the gds #' file. The default is "LZMA_RA". See
-## ‘?SeqArray::seqVCF2GDS’ for #' more details of this argument.  #'
-## @param annotationOnDisk whether to save the annotation info for #'
-## samples and variants as Delayed object. The default is TRUE.  #'
-## VCF2VE
-
 #' The function to convert VCF files directly into VariantExperiment
 #' object.
-#' @name VCF2VE
-#' @rdname VCF2VE
-#' @description \code{VCF2VE} is the function to convert a vcf file
-#'     into \code{VariantExperiment} object. The genotype data will be
-#'     written as \code{GDSArray} format, which is saved in the
-#'     \code{assays} slot. The annotation info for variants or samples
-#'     will be written as \code{DelayedDataFrame} object, and saved in
-#'     the \code{rowData} or \code{colData} slot.
-#' @param vcf.fn the file name(s) of VCF format; or a ‘connection’
-#'     object.  ## FIXME: need to test the "connection" object of
-#'     vcf.fn.
+#' @name makeSummarizedExperimentFromVCF
+#' @rdname makeSummarizedExperimentFromVCF
+#' @description \code{makeSummarizedExperimentFromVCF} is the function
+#'     to convert a vcf file into \code{VariantExperiment} object. The
+#'     genotype data will be written as \code{GDSArray} format, which
+#'     is saved in the \code{assays} slot. The annotation info for
+#'     variants or samples will be written as \code{DelayedDataFrame}
+#'     object, and saved in the \code{rowData} or \code{colData} slot.
+#' @param vcf.fn the file name(s) of (compressed) VCF format; or a
+#'     ‘connection’ object.
 #' @param out.dir The directory to save the gds format of the vcf
 #'     data, and the newly generated VariantExperiment object with
 #'     array data in \code{GDSArray} format and annotation data in
@@ -59,23 +47,46 @@
 #'     is FALSE.
 #' @importFrom utils read.table
 #' @export
-VCF2VE <- function(vcf.fn, out.dir = tempfile(), replace = FALSE,
-                   header = NULL, info.import = NULL,
-                   fmt.import = NULL, sample.info = NULL, 
-                   ignore.chr.prefix = "chr", reference = NULL,
-                   start = 1L, count = -1L, parallel = FALSE,
-                   verbose = FALSE){
-    ## browser()
-    ## check
+#' @examples
+#' ## the vcf file
+#' vcf <- SeqArray::seqExampleFileName("vcf")
+#' ## conversion
+#' ve <- makeSummarizedExperimentFromVCF(vcf)
+#' ve
+#' ## the filepath to the gds file.
+#' gdsfile(ve)
+#' 
+#' ## only read in specific info columns
+#' ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                       info.import=c("OR", "GP"))
+#' ve
+#' ## convert without the INFO and FORMAT fields
+#' ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                       info.import=character(0),
+#'                                       fmt.import=character(0))
+#' ve
+#' ## now the assay data does not include the
+#' #"annotation/format/DP/data", and the rowData(ve) does not include
+#' #any info columns.
+ 
+makeSummarizedExperimentFromVCF <- function(vcf.fn,
+                                            out.dir = tempfile(),
+                                            replace = FALSE,
+                                            header = NULL,
+                                            info.import = NULL,
+                                            fmt.import = NULL,
+                                            sample.info = NULL,
+                                            ignore.chr.prefix = "chr",
+                                            reference = NULL,
+                                            start = 1L, count = -1L,
+                                            parallel = FALSE,
+                                            verbose = FALSE)
+{
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
     if (!isSingleString(out.dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
                   "to the directory where to save the ", "VariantExperiment",
                   " object (the directory will be created)"))
-    if (!isTRUEorFALSE(replace))
-        stop("'replace' must be TRUE or FALSE")
-    if (!isTRUEorFALSE(parallel))
-        stop("'parallel' must be TRUE or FALSE")
     
     ## stopifnot(is.character(out.dir), length(out.dir)==1L)
 
@@ -120,8 +131,6 @@ VCF2VE <- function(vcf.fn, out.dir = tempfile(), replace = FALSE,
     ## run GDS to VE
     makeSummarizedExperimentFromGDS(
         file=out.gds.fn, name=NULL,
-        ## rowDataColumns = rowDataColumns,
-        ## colDataColumns = colDataColumns,
         infoColumns = info.import,  ## ??
         rowDataOnDisk = TRUE,
         colDataOnDisk = TRUE)

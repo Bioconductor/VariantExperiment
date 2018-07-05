@@ -2,7 +2,8 @@
 #' @title VariantExperiment-class
 #' @rdname VariantExperiment-class
 #' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
-#' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
+## #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
+#' @import SummarizedExperiment
 #' @export
 
 setClass(
@@ -62,7 +63,7 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 
 ## setAs("SummarizedExperiment", "VariantExperiment", function(from)
 ## {
-##     ## gf <- gdsfile(from)[[1]]
+##     ## gf <- gdsfile(from)
 ##     ## .VariantExperiment(from, gdsfile = gf)
 ##     .VariantExperiment(from)
 ## })
@@ -83,7 +84,7 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
         return(wmsg("'assays(x)' must be GDSArray object"))
     
     ## ## gdsfile correlated with assay data
-    ## if(is.character(gdsfile(x)[[1]]))
+    ## if(is.character(gdsfile(x)))
     ##     return(wmsg("There should be an gds file correlated with 'x'"))
     TRUE
 }
@@ -99,11 +100,11 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 #' @param object a \code{VariantExperiment} object.
 setMethod("gdsfile", "VariantExperiment", function(object)
     ## vapply(assays(object), gdsfile, character(1)))
-    gdsfile(assay(ve)))   ## here we assume all assay data are
-                         ## correlated with the same gds file.
-
+    gdsfile(assays(object)[[1]])   ## here we assume all assay data are
+                          ## correlated with the same gds file.
+)
 ### disable the "gdsfile" setter for now. Use
-### "saveGDSSummarizedExperiment" to save to a new file path.
+### "saveVariantExperiment" to save to a new file path.
 ## #' @export "gdsfile<-"
 ## #' @param value the new gds file path for VariantExperiment object.
 ## #' @rdname VariantExperiment-class
@@ -121,5 +122,3 @@ setMethod("gdsfile", "VariantExperiment", function(object)
 ##     }
 ##     object
 ## })
-
-

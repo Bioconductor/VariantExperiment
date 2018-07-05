@@ -1,7 +1,7 @@
 test_that("Allele related functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
     sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve <- VCF2VE(vcf, out.dir = tempfile(), sample.info = sample.info)
+    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
 
     ## seqAlleleFreq
     freqAll <- seqAlleleFreq(ve, ref.allele=NULL)
@@ -47,7 +47,7 @@ test_that("Allele related functions work", {
 test_that("other statistical functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
     sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve <- VCF2VE(vcf, out.dir = tempfile(), sample.info = sample.info)
+    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
 
     ## hwe
     h <- hwe(ve)
@@ -123,5 +123,3 @@ test_that("other statistical functions work", {
     expect_identical(dim(isvar), dim(ve))
 })
 
-
-## FIXME: return all matrix like output as the same dimension of ve. 

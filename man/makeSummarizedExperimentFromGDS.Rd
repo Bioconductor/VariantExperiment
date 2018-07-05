@@ -8,9 +8,9 @@
 showAvailable(file, args = c("name", "rowDataColumns", "colDataColumns",
   "infoColumns"))
 
-makeSummarizedExperimentFromGDS(file, name = NULL,
-  rowDataColumns = character(), colDataColumns = character(),
-  infoColumns = character(), rowDataOnDisk = TRUE, colDataOnDisk = TRUE)
+makeSummarizedExperimentFromGDS(file, name = NULL, rowDataColumns = NULL,
+  colDataColumns = NULL, infoColumns = NULL, rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
@@ -22,13 +22,15 @@ makeSummarizedExperimentFromGDS(file, name = NULL,
 as \code{GDSArray} file.}
 
 \item{rowDataColumns}{which columns of \code{rowData} to
-import. The default is ALL.}
+import. The default is NULL to read in all variant annotation
+info.}
 
 \item{colDataColumns}{which columns of \code{colData} to
-import. The default is ALL.}
+import. The default is NULL to read in all sample related
+annotation info.}
 
-\item{infoColumns}{which columns of \code{infoColumns} to import. The default is
-ALL.}
+\item{infoColumns}{which columns of \code{infoColumns} to
+import. The default is NULL to read in all info columns.}
 
 \item{rowDataOnDisk}{whether to save the \code{rowData} as
 DelayedArray object. The default is TRUE.}
@@ -43,19 +45,31 @@ The function to show the available entries for the arguments within
 Conversion of gds file into SummarizedExperiment.
 }
 \examples{
-\dontrun{
+## snp gds file
+gds <- SNPRelate::snpgdsExampleFileName()
+showAvailable(gds)
+
+## sequencing gds file
+gds <- SeqArray::seqExampleFileName("gds")
+showAvailable(gds)
+
+
 file <- SNPRelate::snpgdsExampleFileName()
 se <- makeSummarizedExperimentFromGDS(file)
 rowData(se)
-SummarizedExperiment::colData(se)
+colData(se)
 metadata(se)
+## Only read specific columns for feature annotation.
 showAvailable(file)
 se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 SummarizedExperiment::rowRanges(se1)
 file <- SeqArray::seqExampleFileName(type="gds")
 se <- makeSummarizedExperimentFromGDS(file)
+## all assay data
 names(assays(se))
 showAvailable(file)
+
+## only read specific columns for feature / sample annotation. 
 names <- showAvailable(file, "name")$name
 rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
@@ -69,8 +83,8 @@ infoColumns = infocols[c(1,3,5,7)],
 rowDataOnDisk = FALSE,
 colDataOnDisk = FALSE)
 assay(se1)
-rowRanges(se1)
+
+## the rowData(se1) and colData(se1) are now in DataFrame format 
+rowData(se1)
 colData(se1)
-print(object.size(se[TRUE, TRUE]), units="auto")
-}
 }

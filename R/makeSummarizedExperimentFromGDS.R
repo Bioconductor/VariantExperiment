@@ -87,7 +87,9 @@
     f <- seqOpen(seqArrayFile)
     on.exit(seqClose(f))
     infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
-    if(length(infoColumns) > 0){
+    if (is.null(infoColumns)) {
+        infoColumns <- infonodes
+    } else {
         idx <- toupper(infoColumns) %in% infonodes
         if(any(!idx)){
             warning("\n", 'The "infoColumns" argument of "',
@@ -99,8 +101,6 @@
         infoColumns <- toupper(infoColumns[idx])
         if(length(infoColumns) == 0)
             infoColumns <- infonodes
-    }else{
-        infoColumns <- infonodes
     }
     infonodes <- paste0("annotation/info/", infoColumns)
     if(rowDataOnDisk){
@@ -127,8 +127,21 @@
 .rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns, rowDataOnDisk){
     rr <- .granges_gdsdata(file, fileFormat)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
-    if(!is.null(rowDataColumns)){
-        if(length(rowDataColumns) > 0){
+    if (is.character(rowDataColumns) && length(rowDataColumns) == 0) { ## character(0)
+        f <- openfn.gds(file)
+        on.exit(closefn.gds(f))
+        stopifnot(inherits(f, "gds.class"))
+        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+        if (rowDataOnDisk) {
+            resDF <- DelayedDataFrame(row.names=sample.id)
+        } else {
+            resDF <- DataFrame(row.names=sample.id)
+        }
+        ## mcols(rr) <- resDF
+    } else {
+        if (is.null(rowDataColumns)) {
+            rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
+        } else {
             idx.within <- toupper(rowDataColumns) %in%
                 showAvailable(file)$rowDataColumns
             if(any(!idx.within)){
@@ -141,8 +154,6 @@
             rowDataColumns <- tolower(rowDataColumns[idx.within])
             if(length(rowDataColumns)==0)
                 rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-        }else{
-            rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
         }
         if(rowDataOnDisk){
             res <- setNames(
@@ -205,23 +216,33 @@
 
 .colData_gdsdata <- function(file, fileFormat, colDataColumns, colDataOnDisk)
 {
-    if (length(colDataColumns) > 0) {
-        idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
-        if (any(!idx.within)) {
-            warning("\n", 'The sample annotation of "',
-                    paste(colDataColumns[!idx.within], collapse = ", "),
-                    '" does not exist!', "\n",
-                    'Please use showAvailable(file, "colDataColumns") ',
-                    'to get the available columns for "colData."',
-                    "\n")
-            colDataColumns <- colDataColumns[idx.within]
-            if (length(colDataColumns) == 0)
-                colDataColumns <- showAvailable(file)$colDataColumns
+    if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
+        f <- openfn.gds(file)
+        on.exit(closefn.gds(f))
+        stopifnot(inherits(f, "gds.class"))
+        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+        if (colDataOnDisk) {
+            DelayedDataFrame(row.names=sample.id)
+        } else {
+            DataFrame(row.names=sample.id)
         }
-    } else {   ## colDataColumns=character()
-        colDataColumns <- showAvailable(file)$colDataColumns
-    }
-    if (length(colDataColumns) > 0) {
+    } else {
+        if (is.null(colDataColumns)) {
+            colDataColumns <- showAvailable(file)$colDataColumns
+        } else {
+            idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
+            if (any(!idx.within)) {
+                warning("\n", 'The sample annotation of "',
+                        paste(colDataColumns[!idx.within], collapse = ", "),
+                        '" does not exist!', "\n",
+                        'Please use showAvailable(file, "colDataColumns") ',
+                        'to get the available columns for "colData."',
+                        "\n")
+                colDataColumns <- colDataColumns[idx.within]
+                if (length(colDataColumns) == 0)
+                    colDataColumns <- showAvailable(file)$colDataColumns
+            }
+        } 
         if (colDataOnDisk) {
             sample.id <- .sampnode_gdsdata_ondisk(
                 file, fileFormat, "sample.id")
@@ -243,16 +264,6 @@
             names(annot) <- colDataColumns
             DataFrame(annot, row.names=sample.id)
         }
-    } else {
-        f <- openfn.gds(file)
-        on.exit(closefn.gds(f))
-        stopifnot(inherits(f, "gds.class"))
-        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        if (colDataOnDisk) {
-            DelayedDataFrame(row.names=sample.id)
-        } else {
-            DataFrame(row.names=sample.id)
-        }
     }
 }
 #' ShowAvailable
@@ -264,6 +275,16 @@
 #' @param file the path to the gds.class file.
 #' @param args the arguments in
 #'     \code{makeSummarizedExperimentFromGDS}.
+#' @examples
+#' ## snp gds file
+#' gds <- SNPRelate::snpgdsExampleFileName()
+#' showAvailable(gds)
+#'
+#' ## sequencing gds file
+#' gds <- SeqArray::seqExampleFileName("gds")
+#' showAvailable(gds)
+#'
+#' 
 #' @export
 showAvailable <- function(file,
                           args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
@@ -313,11 +334,13 @@ showAvailable <- function(file,
 #' @param name the components of the gds file that will be represented
 #'     as \code{GDSArray} file.
 #' @param rowDataColumns which columns of \code{rowData} to
-#'     import. The default is ALL.
+#'     import. The default is NULL to read in all variant annotation
+#'     info.
 #' @param colDataColumns which columns of \code{colData} to
-#'     import. The default is ALL.
-#' @param infoColumns which columns of \code{infoColumns} to import. The default is
-#'     ALL.
+#'     import. The default is NULL to read in all sample related
+#'     annotation info.
+#' @param infoColumns which columns of \code{infoColumns} to
+#'     import. The default is NULL to read in all info columns.
 #' @param rowDataOnDisk whether to save the \code{rowData} as
 #'     DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as
@@ -325,22 +348,24 @@ showAvailable <- function(file,
 #' @importFrom tools file_path_as_absolute
 #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom stats setNames
-#' 
 #' @examples
-#' \dontrun{
 #' file <- SNPRelate::snpgdsExampleFileName()
 #' se <- makeSummarizedExperimentFromGDS(file)
 #' rowData(se)
-#' SummarizedExperiment::colData(se)
+#' colData(se)
 #' metadata(se)
+#' ## Only read specific columns for feature annotation.
 #' showAvailable(file)
 #' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
 #' file <- SeqArray::seqExampleFileName(type="gds")
 #' se <- makeSummarizedExperimentFromGDS(file)
+#' ## all assay data
 #' names(assays(se))
 #' showAvailable(file)
+#'
+#' ## only read specific columns for feature / sample annotation. 
 #' names <- showAvailable(file, "name")$name
 #' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 #' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
@@ -354,18 +379,20 @@ showAvailable <- function(file,
 #' rowDataOnDisk = FALSE,
 #' colDataOnDisk = FALSE)
 #' assay(se1)
-#' rowRanges(se1)
+#' 
+#' ## the rowData(se1) and colData(se1) are now in DataFrame format 
+#' rowData(se1)
 #' colData(se1)
-#' print(object.size(se[TRUE, TRUE]), units="auto")
-#' }
+
 #' @export
 #' 
 makeSummarizedExperimentFromGDS <- function(file, name=NULL,
-                   rowDataColumns=character(),
-                   colDataColumns=character(),
-                   infoColumns=character(),
-                   rowDataOnDisk=TRUE,
-                   colDataOnDisk=TRUE){
+                   rowDataColumns = NULL,
+                   colDataColumns = NULL,
+                   infoColumns = NULL,
+                   rowDataOnDisk = TRUE,
+                   colDataOnDisk = TRUE)
+{
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
@@ -389,7 +416,7 @@ makeSummarizedExperimentFromGDS <- function(file, name=NULL,
     assays <- setNames(lapply(name, function(x) GDSArray(file, x)), name)
     colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
-    if(ff == "SEQ_ARRAY"){
+    if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- DelayedDataFrame(mcols(rowRange), infocols)
     }

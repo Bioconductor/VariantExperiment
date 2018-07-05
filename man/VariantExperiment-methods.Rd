@@ -3,9 +3,12 @@
 \docType{methods}
 \name{VariantExperiment-methods}
 \alias{VariantExperiment-methods}
+\alias{seqAlleleFreq}
 \alias{seqAlleleFreq,VariantExperiment-method}
 \alias{seqAlleleCount,VariantExperiment-method}
+\alias{seqAlleleCount}
 \alias{seqMissing,VariantExperiment-method}
+\alias{seqMissing}
 \alias{seqNumAllele,VariantExperiment-method}
 \alias{hwe,VariantExperiment-method}
 \alias{inbreedCoeff,VariantExperiment-method}
@@ -64,35 +67,61 @@
 \S4method{isVariant}{VariantExperiment}(gdsobj, use.names = FALSE)
 }
 \arguments{
-\item{gdsfile}{xx}
+\item{gdsfile}{an \code{VariantExperiment} object that with
+synchronized gds file.}
 
-\item{ref.allele}{xx}
+\item{ref.allele}{a single numeric value, a numeric vector or a
+character vector; see \code{?SeqArray::seqAlleleFreq} for more
+details.}
 
-\item{.progress}{xx}
+\item{.progress}{Logical, show process information if \code{TRUE}.}
 
-\item{parallel}{xx}
+\item{parallel}{A logical value to indicate serial processing
+(\code{FALSE}) or multicore processing (\code{TRUE}). Takes
+numeric value or other value; see \code{?SeqArray::seqParallel}
+for more details.}
 
-\item{per.variant}{xx}
+\item{per.variant}{A logical value to indicate whether to calculate
+missing rate for variant (\code{TRUE}), or samples
+(\code{FALSE}).}
 
-\item{gdsobj}{xx}
+\item{gdsobj}{same as above \code{gdsfile} argument.}
 
-\item{permute}{xx}
+\item{permute}{A logical value indicating whether to permute the
+genotypes. See \code{?SeqVarTools::hwe} for more details.}
 
-\item{margin}{xx}
+\item{margin}{"by.variant" OR "by.sample" to indicate
+whether the calculation should be done over all samples for
+each variant, or over all variants for each sample. See
+\code{?SeqVarTools::inbreedCoeff} for more details.}
 
-\item{use.names}{xx}
+\item{use.names}{A logical value indicating whether to assign
+variant or sample IDs as names of the output vector.}
 
-\item{eigen.cnt}{xx}
+\item{eigen.cnt}{An integer value indicating how many eigenvalues
+and eignvectors to return. The default is 32.}
 
-\item{by.sample}{xx}
+\item{by.sample}{A logical value indicating whether TiTv should be
+calculated by sample or overall for the entire
+\code{VariantExperiment} object. See \code{?SeqVarTools::titv}
+for more details.}
 
-\item{sparse}{xx}
+\item{sparse}{A Logical value indicating whether or not to return
+the alterate allele dosage as a sparse matrix. In most cases,
+it will dramatically reduce the size of the returned
+object. See \code{?SeqVarTools::altDosage} for more details.}
 
-\item{allele}{xx}
+\item{allele}{Choose from "any", "ref," or "alt," to indicate which
+alleles to consider when calculating homozygosity. See
+\code{?SeqVarTools::homozygosity} for more details.}
 
-\item{var.name}{xx}
+\item{var.name}{Character string with name of the variable. Choose
+from \code{names(assays(VE_Object))}. See
+\code{?SeqVarTools::meanBySample} for more details.}
 
-\item{biallelic}{xx}
+\item{biallelic}{A logical indicating whether to only consider
+biallelic SNVs. See \code{?SeqVarTools::isSNV} for more
+details.}
 }
 \description{
 Statistical functions for \code{VariantExperiment} objects.

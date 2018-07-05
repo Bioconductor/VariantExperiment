@@ -39,9 +39,7 @@
              ranges(SummarizedExperiment::rowRanges(ve))@start,
              compress=compress, closezip=TRUE) ## ??
     if (all(c("REF", "ALT") %in% names(rowData(ve)))){
-        ## ref <- mcols(rowRanges(ve))$REF
-        ## alt <- mcols(rowRanges(ve))$ALT
-        ref <- rowData(ve)$REF
+          ref <- rowData(ve)$REF
         alt <- rowData(ve)$ALT
         if (is(ref, "List"))  ## "DNAStringSet" in-memory way
             ref <- unlist(lapply(ref, function(x) paste(x, collapse=",")))
@@ -75,9 +73,7 @@
              compress=compress, closezip=TRUE) ## ??
     if (all(c("ALLELE1", "ALLELE2") %in% names(rowData(ve))))
         add.gdsn(gfile, "snp.allele",
-                 val = paste(## mcols(rowRanges(ve))$ALLELE1,
-                             ## mcols(rowRanges(ve))$ALLELE2,
-                             rowData(ve)$ALLELE1,
+                 val = paste(rowData(ve)$ALLELE1,
                              rowData(ve)$ALLELE2,
                              sep="/"),
                  compress=compress, closezip=TRUE
@@ -125,9 +121,6 @@
     for (start in idx) {
         ridx = (start - 1) +
             seq_len( min(start + chunk_size, nrow(data) + 1) - start )
-        ## ridxl <- logical(NROW(data))
-        ## ridxl[ridx] <- TRUE
-        ## value <- array(data[ridxl], c(sum(ridxl), dim(data)[-1]))
         if (length(dim(data)) == 1){
             value <- unname(as.array(data[ridx, drop=FALSE]))
         }else if (length(dim(data)) == 2){
@@ -311,9 +304,6 @@
 #'     DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default
 #'     is FALSE.
-#' @importFrom SummarizedExperiment colData "colData<-" rowRanges
-#'     "rowRanges<-" rowData "rowData<-" assays assay "assays<-" mcols
-#'     "mcols<-"
 #' @export
 #' @details If the input \code{SummarizedExperiment} object has
 #'     GDSArray-based assay data, there is no need to specify the

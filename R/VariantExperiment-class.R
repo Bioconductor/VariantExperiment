@@ -2,7 +2,6 @@
 #' @title VariantExperiment-class
 #' @rdname VariantExperiment-class
 #' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
-## #' @importClassesFrom SummarizedExperiment SummarizedExperiment RangedSummarizedExperiment 
 #' @import SummarizedExperiment
 #' @export
 
@@ -31,7 +30,6 @@ setClass(
 #' @return a \code{VariantExperiment} object.
 #' @details check "?RangedSummarizedExperiment" for more details.
 #' @importFrom GenomicRanges GRangesList
-#' @importFrom SummarizedExperiment Assays
 #' @export VariantExperiment
 
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())

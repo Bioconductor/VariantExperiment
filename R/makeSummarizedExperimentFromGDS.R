@@ -346,7 +346,7 @@ showAvailable <- function(file,
 #' @param colDataOnDisk whether to save the \code{colData} as
 #'     DelayedArray object. The default is TRUE.
 #' @importFrom tools file_path_as_absolute
-#' @importFrom SummarizedExperiment SummarizedExperiment
+## #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom stats setNames
 #' @examples
 #' file <- SNPRelate::snpgdsExampleFileName()

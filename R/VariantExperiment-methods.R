@@ -83,7 +83,8 @@ setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)
 setMethod("seqMissing", "VariantExperiment", .seqMissing)        
 
 .seqNumAllele <- function(gdsfile){
-    numAllele <- .doCompatibleFunction(gdsfile, FUN=SeqArray::seqNumAllele)
+    numAllele <- .doCompatibleFunction(gdsfile,
+                                       FUN=SeqArray::seqNumAllele)
     numAllele
 }
 
@@ -94,11 +95,17 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
 
 ## SeqVarTools stats functions:
 
-## already works: alleleFrequency(SeqArray::seqAlleleFreq), duplicateDiscordance, granges(SummarizedExperiment::granges), nAlleles(SeqArray::seqNumAllele), nAllele(SeqArray::seqAlleleCount)
+## already works: alleleFrequency(SeqArray::seqAlleleFreq),
+## duplicateDiscordance, granges(SummarizedExperiment::granges),
+## nAlleles(SeqArray::seqNumAllele), nAllele(SeqArray::seqAlleleCount)
 
-## implemented: hwe, inbreedCoeff, pca, titv, refDosage, altDosage, countSingletons, homozygosity, heterozygosity, meanBySample, isSNV, isVariant
+## implemented: hwe, inbreedCoeff, pca, titv, refDosage, altDosage,
+## countSingletons, homozygosity, heterozygosity, meanBySample, isSNV,
+## isVariant
 
-## remove: getGenotype/getGenotypeAlleles/expandedAltDosage/alleleDosage(SeqVarGDSClass,numeric)/alleleDosage(SeqVarGDSClass,list)
+## removed:
+## getGenotype/getGenotypeAlleles/expandedAltDosage/alleleDosage
+## (SeqVarGDSClass,numeric)/alleleDosage(SeqVarGDSClass,list)
 
 ## Iterators(Extends ‘SeqVarData’ to provide iterators over variants.?)
 ## variantRanges(x): Get the variant ranges.
@@ -108,7 +115,8 @@ setMethod("seqNumAllele", "VariantExperiment", .seqNumAllele)
 ## granges(already works for SE),
 
 ## Methods for class "SeqVarData" in package "SeqVarTools":
-## SeqVarData(gds, sample.data) ## "sample.data" in class "AnnotatedDataFrame". 
+## SeqVarData(gds, sample.data)
+## "sample.data" in class "AnnotatedDataFrame". 
 ## 1. alternateAlleleDetection
 ## 2. alleleFrequency
 ## 3. duplicateDiscordance
@@ -138,8 +146,9 @@ setMethod("hwe", "VariantExperiment", .hwe)
 
 .inbreedCoeff <- function(gdsobj, margin=c("by.variant", "by.sample"),
                           use.names=FALSE){
-    inbCoef <- .doCompatibleFunction(
-        gdsobj, margin=margin, use.names=use.names, FUN = SeqVarTools::inbreedCoeff)
+    inbCoef <- .doCompatibleFunction(gdsobj, margin=margin,
+                                     use.names=use.names,
+                                     FUN = SeqVarTools::inbreedCoeff)
     inbCoef   ## returns a named (if use.names=TRUE) vector
 }
 
@@ -155,7 +164,8 @@ setMethod("hwe", "VariantExperiment", .hwe)
 setMethod("inbreedCoeff", "VariantExperiment", .inbreedCoeff)
 
 .pca <- function(gdsobj, eigen.cnt=32){
-    pca <- .doCompatibleFunction(gdsobj, eigen.cnt=eigen.cnt, FUN = SeqVarTools::pca)
+    pca <- .doCompatibleFunction(gdsobj, eigen.cnt=eigen.cnt,
+                                 FUN = SeqVarTools::pca)
     pca   ## returns a list, $eigenval (vector), $eigenvect (matrix)
 }
 
@@ -168,7 +178,8 @@ setMethod("pca", "VariantExperiment", .pca)
 
 .titv <- function(gdsobj, by.sample=FALSE, use.names=FALSE){
     titv <- .doCompatibleFunction(gdsobj, by.sample=by.sample,
-                                  use.names=use.names, FUN = SeqVarTools::titv)
+                                  use.names=use.names,
+                                  FUN = SeqVarTools::titv)
     titv   ## returns a scalar / vector (if by.sample=TRUE)
 }
 
@@ -185,7 +196,8 @@ setMethod("titv", "VariantExperiment", .titv)
     dos <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::refDosage)
     if (.permDim(dos, gdsobj))
-        return(t(dos))   ## always return a matrix with same dimension of ve
+        return(t(dos))   ## always return a matrix with same dimension
+                         ## of ve
     dos
 }
 
@@ -199,7 +211,8 @@ setMethod("refDosage", "VariantExperiment", .refDosage)
                                  sparse=sparse,
                                  FUN = SeqVarTools::altDosage)
     if (.permDim(dos, gdsobj))
-        return(t(dos))   ## always return a matrix with same dimension of ve
+        return(t(dos))   ## always return a matrix with same dimension
+                         ## of ve
     dos  
 }
 
@@ -215,7 +228,8 @@ setMethod("altDosage", "VariantExperiment", .altDosage)
 .ctSingleton <- function(gdsobj, use.names=FALSE){
     ct <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                   FUN = SeqVarTools::countSingletons)
-    ct   ## returns a vector of the number of singleton variants per sample.
+    ct   ## returns a vector of the number of singleton variants per
+         ## sample.
 }
 
 #' @rdname VariantExperiment-methods
@@ -227,8 +241,9 @@ setMethod("countSingletons", "VariantExperiment", .ctSingleton)
                             margin=c("by.variant", "by.sample"),
                             use.names=FALSE){
     margin <- match.arg(margin)
-    hetero <- .doCompatibleFunction(gdsobj, margin=margin, use.names=use.names,
-                                  FUN = SeqVarTools::heterozygosity)
+    hetero <- .doCompatibleFunction(gdsobj, margin=margin,
+                                    use.names=use.names,
+                                    FUN = SeqVarTools::heterozygosity)
     hetero   ## returns a vector of the number of singleton variants per sample.
 }
 
@@ -296,7 +311,8 @@ setMethod("isSNV", "VariantExperiment", .isSNV)
     isvar <- .doCompatibleFunction(gdsobj, use.names=use.names,
                                    FUN = SeqVarTools::isVariant)
     if (.permDim(isvar, gdsobj))
-        return(t(isvar))   ## always return a matrix with same dimension of ve
+        return(t(isvar))   ## always return a matrix with same
+                           ## dimension of ve
     isvar
 }
 

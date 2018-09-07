@@ -25,11 +25,4 @@ setGeneric("seqNumAllele",
                standardGeneric("seqNumAllele"),
            useAsDefault=SeqArrayseqNumAllele,
            signature="gdsfile")
-### note:
-## seqNumAllele@generic
-## [1] "seqNumAllele"
-## attr(,"package")
-## [1] "SeqArray"
-## document()
-## Creating a generic function for ‘seqNumAllele’ from package ‘SeqArray’ in package ‘VariantExperiment’
 

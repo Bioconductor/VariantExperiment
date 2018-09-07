@@ -8,9 +8,9 @@
 showAvailable(file, args = c("name", "rowDataColumns", "colDataColumns",
   "infoColumns"))
 
-makeSummarizedExperimentFromGDS(file, name = NULL, rowDataColumns = NULL,
-  colDataColumns = NULL, infoColumns = NULL, rowDataOnDisk = TRUE,
-  colDataOnDisk = TRUE)
+makeSummarizedExperimentFromGDS(file, name = NULL,
+  rowDataColumns = NULL, colDataColumns = NULL, infoColumns = NULL,
+  rowDataOnDisk = TRUE, colDataOnDisk = TRUE)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}

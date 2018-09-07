@@ -1,6 +1,6 @@
 Package: VariantExperiment
 Title: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Back-End
-Version: 0.99.0
+Version: 0.99.1
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
 Description: VariantExperiment is a Bioconductor package for saving
@@ -38,7 +38,7 @@ Imports:
     Biostrings, 
     IRanges
 LazyData: true
-RoxygenNote: 6.0.1
+RoxygenNote: 6.1.0
 Suggests: testthat, knitr
 VignetteBuilder: knitr
 Collate:

@@ -38,8 +38,8 @@
 
 \S4method{hwe}{VariantExperiment}(gdsobj, permute = FALSE)
 
-\S4method{inbreedCoeff}{VariantExperiment}(gdsobj, margin = c("by.variant",
-  "by.sample"), use.names = FALSE)
+\S4method{inbreedCoeff}{VariantExperiment}(gdsobj,
+  margin = c("by.variant", "by.sample"), use.names = FALSE)
 
 \S4method{pca}{VariantExperiment}(gdsobj, eigen.cnt = 32)
 
@@ -53,11 +53,12 @@
 
 \S4method{countSingletons}{VariantExperiment}(gdsobj, use.names = FALSE)
 
-\S4method{heterozygosity}{VariantExperiment}(gdsobj, margin = c("by.variant",
-  "by.sample"), use.names = FALSE)
+\S4method{heterozygosity}{VariantExperiment}(gdsobj,
+  margin = c("by.variant", "by.sample"), use.names = FALSE)
 
-\S4method{homozygosity}{VariantExperiment}(gdsobj, allele = c("any", "ref",
-  "alt"), margin = c("by.variant", "by.sample"), use.names = FALSE)
+\S4method{homozygosity}{VariantExperiment}(gdsobj, allele = c("any",
+  "ref", "alt"), margin = c("by.variant", "by.sample"),
+  use.names = FALSE)
 
 \S4method{meanBySample}{VariantExperiment}(gdsobj, var.name,
   use.names = FALSE)

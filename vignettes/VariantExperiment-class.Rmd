@@ -1,5 +1,5 @@
 ---
-title: "VariantExperiment: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Back-End"
+title: "VariantExperiment: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Backend"
 author: 
 - name: Qian Liu
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY

@@ -23,6 +23,6 @@ setGeneric("seqMissing",
 setGeneric("seqNumAllele",
            function(gdsfile)
                standardGeneric("seqNumAllele"),
-           useAsDefault=SeqArrayseqNumAllele,
+           useAsDefault=SeqArray::seqNumAllele,
            signature="gdsfile")
 

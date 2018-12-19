@@ -1,7 +1,9 @@
 test_that("Allele related functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
-    sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
+    sample.info <- system.file("extdata", "Example_sampleInfo.txt",
+                               package="VariantExperiment")
+    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+                                          sample.info = sample.info)
 
     ## seqAlleleFreq
     freqAll <- seqAlleleFreq(ve, ref.allele=NULL)
@@ -31,7 +33,8 @@ test_that("Allele related functions work", {
 
     ## seqNumAllele
     nm.allele <- seqNumAllele(ve)
-    expect_equal(nm.allele, c(rep(2L, 1322), 3L, rep(2L, 14), 3L, rep(2L, 10)))
+    expect_equal(nm.allele,
+                 c(rep(2L, 1322), 3L, rep(2L, 14), 3L, rep(2L, 10)))
 
     ## seqMissing
     mr.var <- seqMissing(ve, per.variant=TRUE)
@@ -42,17 +45,22 @@ test_that("Allele related functions work", {
 
 })
 
-### hwe, inbreedCoeff, pca, titv, refDosage, altDosage, countSingletons, heterozygosity, homozygosity, meanBySample, missingGenotypeRate (by sample/variant), isSNV, isVariant
+### hwe, inbreedCoeff, pca, titv, refDosage, altDosage,
+### countSingletons, heterozygosity, homozygosity, meanBySample,
+### missingGenotypeRate (by sample/variant), isSNV, isVariant
 
 test_that("other statistical functions work", {
     vcf <- SeqArray::seqExampleFileName("vcf")
-    sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
+    sample.info <- system.file("extdata", "Example_sampleInfo.txt",
+                               package="VariantExperiment")
+    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+                                          sample.info = sample.info)
 
     ## hwe
     h <- hwe(ve)
     expect_equal(dim(h), c(1348L, 7L))
-    expect_equal(colnames(h), c("variant.id", "nAA", "nAa", "naa", "afreq", "p", "f"))
+    expect_equal(colnames(h),
+                 c("variant.id", "nAA", "nAa", "naa", "afreq", "p", "f"))
 
     ## inbreedCoeff
     inb.samp <- inbreedCoeff(ve, margin="by.sample", use.names=TRUE)
@@ -106,7 +114,8 @@ test_that("other statistical functions work", {
     expect_true(max(homr.all) == 1)
     
     ## meanBySample
-    mn <- meanBySample(ve, var.name="annotation/format/DP/data", use.names=TRUE)
+    mn <- meanBySample(ve, var.name="annotation/format/DP/data",
+                       use.names=TRUE)
     expect_equal(names(mn), colnames(ve))
     expect_error(meanBySample(ve, var.name="genotype", use.names=TRUE))
     

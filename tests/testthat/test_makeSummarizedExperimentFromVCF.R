@@ -44,4 +44,7 @@ test_that("makeSummarizedExperimentFromVCF works", {
     ve8 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
     expect_equal(dim(colData(ve8)), c(90L, 1L))
     expect_equal(colnames(colData(ve8)), "family")
+    ## FIXME: Warning message:
+    ## In (function (node, name, val = NULL, storage = storage.mode(val),  :
+    ##   Missing characters are converted to "".
 })

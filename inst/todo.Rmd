@@ -1,3 +1,9 @@
+12/19/2018, pre-submission todo: 
+- fix "FIXME" tags in testthat.
+- bump version.
+- check dependencies.
+- check DelayedDataFrame problem. 
+
 07/02/2018
 
 - to pass check() and BiocCheck::check(). 

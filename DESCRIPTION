@@ -1,7 +1,7 @@
 Package: VariantExperiment
 Title: A RangedSummarizedExperiment Container for VCF/GDS Data with
     GDS Backend
-Version: 0.99.6
+Version: 0.99.7
 Author: Qian Liu, Hervé Pagès, Martin Morgan
 Maintainer: Qian Liu <Qian.Liu@roswellpark.org>
 Description: VariantExperiment is a Bioconductor package for saving
@@ -18,11 +18,11 @@ Description: VariantExperiment is a Bioconductor package for saving
 biocViews: Infrastructure, DataRepresentation, Sequencing, Annotation,
     GenomeAnnotation
 Depends:
-    R (>= 3.5),
-    S4Vectors (>= 0.19.5),
-    SummarizedExperiment (>= 1.9.15),
+    R (>= 3.6.0),
+    S4Vectors (>= 0.21.24),
+    SummarizedExperiment (>= 1.13.0),
     GenomicRanges,
-    GDSArray (>= 0.9.14),
+    GDSArray (>= 1.3.0),
     DelayedDataFrame
 License: GPL-3
 Encoding: UTF-8

@@ -12,7 +12,7 @@ output:
         toc_float: true
 package: VariantExperiment
 vignette: |
-    %\VignetteIndexEntry{VariantExperiment}
+    %\VignetteIndexEntry{VariantExperiment-methods}
     %\VignetteEngine{knitr::rmarkdown}
     %\VignetteEncoding{UTF-8}
 ---

@@ -43,11 +43,3 @@ Imports:
 RoxygenNote: 6.1.1
 Suggests: testthat, knitr
 VignetteBuilder: knitr
-Collate:
-    VariantExperiment-class.R
-    makeSummarizedExperimentFromGDS.R
-    saveVariantExperiment.R
-    AllGenerics.R
-    makeSummarizedExperimentFromVCF.R
-    VariantExperiment-methods.R
-    VariantExperiment-package.R

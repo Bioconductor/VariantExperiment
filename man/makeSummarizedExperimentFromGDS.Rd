@@ -38,6 +38,9 @@ DelayedArray object. The default is TRUE.}
 \item{colDataOnDisk}{whether to save the \code{colData} as
 DelayedArray object. The default is TRUE.}
 }
+\value{
+An \code{VariantExperiment} object.
+}
 \description{
 The function to show the available entries for the arguments within
 \code{makeSummarizedExperimentFromGDS}

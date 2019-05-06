@@ -48,7 +48,29 @@
 #'     (\code{FALSE}) or multicore processing (\code{TRUE}). Takes
 #'     numeric value or other value; see \code{?SeqArray::seqParallel}
 #'     for more details.
+#' @return Statistical results in \code{vector} or \code{data.frame} format. 
 #' @export
+#' @examples
+#' gds <- SeqArray::seqExampleFileName("gds")
+#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' ve
+#' 
+#' ## sample missing rate
+#' mr.samp <- seqMissing(ve, per.variant = FALSE)
+#' head(mr.samp)
+#'
+#' ## hwe
+#' hwe <- hwe(ve)
+#' head(hwe)
+#'
+#' ## titv ratio by sample / overall
+#' titv <- titv(ve, by.sample=TRUE)
+#' head(titv)
+#' titv(ve, by.sample=FALSE)
+#'
+#' ## countSingletons
+#' countSingletons(ve)
+
 setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 
 .seqAlleleCount <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){

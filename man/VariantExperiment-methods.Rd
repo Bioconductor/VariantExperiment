@@ -124,6 +124,30 @@ from \code{names(assays(VE_Object))}. See
 biallelic SNVs. See \code{?SeqVarTools::isSNV} for more
 details.}
 }
+\value{
+Statistical results in \code{vector} or \code{data.frame} format.
+}
 \description{
 Statistical functions for \code{VariantExperiment} objects.
+}
+\examples{
+gds <- SeqArray::seqExampleFileName("gds")
+ve <- makeSummarizedExperimentFromGDS(gds)
+ve
+
+## sample missing rate
+mr.samp <- seqMissing(ve, per.variant = FALSE)
+head(mr.samp)
+
+## hwe
+hwe <- hwe(ve)
+head(hwe)
+
+## titv ratio by sample / overall
+titv <- titv(ve, by.sample=TRUE)
+head(titv)
+titv(ve, by.sample=FALSE)
+
+## countSingletons
+countSingletons(ve)
 }

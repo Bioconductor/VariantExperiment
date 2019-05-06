@@ -5,7 +5,7 @@ author:
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 - name: Martin Morgan
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
-date: "last edit: 07/06/2018"
+date: "last edit: 05/06/2019"
 output:
     BiocStyle::html_document:
         toc: true
@@ -33,12 +33,17 @@ data. The `SummarizedExperiment` metaphor also gets the benefit of
 common manipulations within _Bioconductor_ ecosystem that are more
 user-friendly.
 
+First, we load the package into R session.
+```{r Load, message=FALSE}
+library(VariantExperiment)
+```
+
 # Coercion methods
 
-To take advantage of the functions and methods that are defined on 
-`SummarizedExperiment`, on which the `VariantExperiment` extends, we
+To take advantage of the functions and methods that are defined on
+`SummarizedExperiment`, from which the `VariantExperiment` extends, we
 have defined coercion methods from `VCF` and `GDS` to
-`VariantExperiment`. 
+`VariantExperiment`.
 
 ## From `VCF` to `VariantExperiment`
 
@@ -49,25 +54,34 @@ achieve the best storage efficiency, the assay data are saved in
 `DelayedDataFrame` format (with no option of ordinary `DataFrame`),
 which could be retrieved by `rowData()` for feature related
 annotations and `colData()` for sample related annotations (Only when
-`sample.info` argument is specified).
+`sample.info` argument is specified). 
 
 ```{r makeSummarizedExperimentFromVCF}
 vcf <- SeqArray::seqExampleFileName("vcf")
 ve <- makeSummarizedExperimentFromVCF(vcf)
 ve
 ```
-assay data in `GDSArray` format:
+
+Internally, the `VCF` file was converted into a on-disk `GDS` file,
+which could be retrieved by:
+```{r retrieve GDS}
+gdsfile(ve)
+```
+
+assay data is in `GDSArray` format:
 ```{r makeSummarizedExperimentFromVCF2}
 assay(ve, 1)
 ```
-feature-related annotation in `DelayedDataFrame` format:
+
+feature-related annotation is in `DelayedDataFrame` format:
 ```{r makeSummarizedExperimentFromVCF3}
 rowData(ve)
 ``` 
 
 User could also have the opportunity to save the sample related
-annotation info directly into the `VariantExperiment` object, which
-could be retrieved by `colData()`.
+annotation info directly into the `VariantExperiment` object, by
+providing the file path to the `sample.info` argument, and then
+retrieve by `colData()`.
 
 ```{r sampleInfo}
 sampleInfo <- system.file("extdata", "Example_sampleInfo.txt",
@@ -99,9 +113,9 @@ For the above example, only 1000 variants are read into the
 
 ## From `GDS` to `VariantExperiment`
 
-The coercion function of `makeSummarizedExperimentFromGDS` could
-coerce `GDS` files into `VariantExperiment` objects directly, with the
-assay data saved as `GDSArray`, and the `rowData()/colData()` in
+The coercion function of `makeSummarizedExperimentFromGDS` coerces
+`GDS` files into `VariantExperiment` objects directly, with the assay
+data saved as `GDSArray`, and the `rowData()/colData()` in
 `DelayedDataFrame` by default (with the option of ordinary `DataFrame`
 object).
 
@@ -126,7 +140,7 @@ showAvailable(gds)
 Note that the `infoColumns` from gds file will be saved as columns
 inside the `rowData()`, with the prefix of
 "info_". `rowDataOnDisk/colDataOnDisk` could be set as `FALSE` to
-saveall annotation data in ordinary `DataFrame` format.
+save all annotation data in ordinary `DataFrame` format.
 
 ```{r makeSummarizedExperimentFromGDSArgs}
 ve3 <- makeSummarizedExperimentFromGDS(gds,
@@ -144,8 +158,9 @@ Many statistical functions and methods are defined on
 `VariantExperiment` objects, most of which has their generic defined
 in _Bioconductor_ package of `SeqArray` and `SeqVarTools`. These
 functions could be called directly on `VariantExperiment` object as
-input, with other arguments to specify based on user's need. More details
-please refer to the vignettes of [SeqArray][] and [SeqVarTools][].  
+input, with additional arguments to specify based on user's need. More
+details please refer to the vignettes of [SeqArray][] and
+[SeqVarTools][].
 
 [SeqArray]: https://bioconductor.org/packages/SeqArray
 [SeqVarTools]: https://bioconductor.org/packages/SeqVarTools
@@ -187,21 +202,25 @@ titv(ve, by.sample=FALSE)
 countSingletons(ve)
 ```
 
-As we have noted in the introduction vignette, after the subsetting by
+As we have noted in the other vignette, after the subsetting by
 `[`, `$` or `Ranged-based operations`, we need to save the new
 `VariantExperiment` object to synchronize the gds file (on-disk)
 associated with the subset of data (in-memory representation) before
 any statistical analysis. Otherwise, an error will be returned.
 
 # Future work
-In the future version of `VariantExperiment` package, we plan to
-implement more sample-related statistical functions, like mendelian
-error, etc. Also we plan to connect `VariantExperiment` with
-_Bioconductor_ package `VariantAnnotation` to implement the variant
-filtering and annotation functions based on `VariantExperiment`
-format. After that, we'll develop a pipeline for using
-`VariantExperiment` object as the basic data structure for
+As a feature addition, we want to add the option of `VCFArray` in
+saving the `assay` data in the step of
+`makeSummarizedExperimentFromVCF`. We also seek to implement the
+[SQLDataFrame][] in representation of the annotation data. We also
+plan to connect _Bioconductor_ package [VariantAnnotation][] to
+implement the variant filtering and annotation functions based on
+`VariantExperiment` format, and with that, to develop a pipeline for
+using `VariantExperiment` object as the basic data structure for
 DNA-sequencing data analysis.
+
+[SQLDataFrame]: https://github.com/Bioconductor/SQLDataFrame
+[VariantAnnotation]: http://bioconductor.org/packages/VariantAnnotation
 
 # Session Info
 ```{r sessionInfo}

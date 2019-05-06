@@ -40,6 +40,11 @@ DelayedArray object. The default is TRUE.}
 \item{verbose}{whether to print the process messages. The default
 is FALSE.}
 }
+\value{
+An \code{VariantExperiment} object with the new
+    \code{gdsfile()} \code{ve.gds} as specified in \code{dir}
+    argument.
+}
 \description{
 saveVariantExperiment Save all the assays in GDS format, including
 in-memory assays. Delayed assays with delayed operations on them
@@ -51,4 +56,16 @@ If the input \code{SummarizedExperiment} object has
     argument \code{fileFomat}. Otherwise, it takes values of
     \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP
     array data.
+}
+\examples{
+gds <- SeqArray::seqExampleFileName("gds")
+ve <- makeSummarizedExperimentFromGDS(gds)
+gdsfile(ve)
+ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+ve1
+gdsfile(ve1)
+aa <- tempfile()
+obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+obj
+gdsfile(obj)
 }

@@ -1,8 +1,5 @@
-12/19/2018, pre-submission todo: 
+5/6/2019, pre-submission todo: 
 - fix "FIXME" tags in testthat.
-- bump version.
-- check dependencies.
-- check DelayedDataFrame problem. 
 
 07/02/2018
 

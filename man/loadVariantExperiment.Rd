@@ -12,7 +12,18 @@ loadVariantExperiment(dir = tempdir())
 and the newly generated SummarizedExperiment object with array
 data in GDSArray format.}
 }
+\value{
+An \code{VariantExperiment} object.
+}
 \description{
 loadVariantExperiment to load the GDS back-end SummarizedExperiment
 object into R console.
+}
+\examples{
+gds <- SeqArray::seqExampleFileName("gds")
+ve <- makeSummarizedExperimentFromGDS(gds)
+ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+aa <- tempfile()
+saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+loadVariantExperiment(dir = aa)
 }

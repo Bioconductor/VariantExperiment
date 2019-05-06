@@ -35,13 +35,17 @@ test_that("makeSummarizedExperimentFromVCF works", {
     expect_equivalent(ve, ve6)
     ## FIXME: where is the reference info saved in VE? gds attributes? 
     
-    ve7 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), start=101, count=1000) 
+    ve7 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+                                           start=101, count=1000) 
     expect_equal(dim(ve7), c(1000L, 90L))
     expect_equal(rownames(ve7), as.character(seq(101, length.out=1000)))
 
 
-    sample.info <- system.file("extdata", "Example_sampleInfo.txt", package="VariantExperiment")
-    ve8 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), sample.info = sample.info)
+    sample.info <- system.file("extdata", "Example_sampleInfo.txt",
+                               package="VariantExperiment")
+    ve8 <- suppressWarnings(
+        makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
+                                        sample.info = sample.info))
     expect_equal(dim(colData(ve8)), c(90L, 1L))
     expect_equal(colnames(colData(ve8)), "family")
     ## FIXME: Warning message:

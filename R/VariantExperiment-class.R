@@ -31,6 +31,8 @@ setClass(
 #' @details check "?RangedSummarizedExperiment" for more details.
 #' @importFrom GenomicRanges GRangesList
 #' @export VariantExperiment
+#' @examples
+#' 
 
 VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
 {

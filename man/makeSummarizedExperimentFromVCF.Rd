@@ -62,6 +62,9 @@ to the argument ‘cl’ in ‘seqParallel’, see
 \item{verbose}{whether to print the process messages. The default
 is FALSE.}
 }
+\value{
+An \code{VariantExperiment} object.
+}
 \description{
 \code{makeSummarizedExperimentFromVCF} is the function
     to convert a vcf file into \code{VariantExperiment} object. The

@@ -45,3 +45,6 @@ VariantExperiment class and slot getters and setters.
 
 check "?RangedSummarizedExperiment" for more details.
 }
+\examples{
+
+}

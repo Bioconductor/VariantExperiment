@@ -61,7 +61,7 @@
     ## "description" not required for "SNP_ARRAY" gds file.
     add.gdsn(gfile, "sample.id", colnames(ve), compress=compress, closezip=TRUE)
     add.gdsn(gfile, "snp.id", as.integer(rownames(ve)), compress=compress,
-             closezip=TRUE, replace=T)
+             closezip=TRUE, replace=TRUE)
     if ("ID" %in% names(rowData(ve)))
         add.gdsn(gfile, "snp.rs.id", as.character(rowData(ve)$ID),
                  compress=compress, closezip=TRUE)
@@ -131,10 +131,10 @@
         value <- aperm(value)  ## permute because adding rows in chunks.
         if (start == 1){
             datanode <- add.gdsn(dirnode, tail(datapath, 1),
-                                 val = value, compress = compress, check=T)
+                                 val = value, compress = compress, check=TRUE)
         } else {
             datanode <- index.gdsn(gfile, name)
-            append.gdsn(datanode, val=value, check=T) ##?? FIXME?
+            append.gdsn(datanode, val=value, check=TRUE) ##?? FIXME?
         }
     }
     ## permute back if permute == FALSE
@@ -304,12 +304,26 @@
 #'     DelayedArray object. The default is TRUE.
 #' @param verbose whether to print the process messages. The default
 #'     is FALSE.
+#' @return An \code{VariantExperiment} object with the new
+#'     \code{gdsfile()} \code{ve.gds} as specified in \code{dir}
+#'     argument.
 #' @export
 #' @details If the input \code{SummarizedExperiment} object has
 #'     GDSArray-based assay data, there is no need to specify the
 #'     argument \code{fileFomat}. Otherwise, it takes values of
 #'     \code{SEQ_ARRAY} for sequencing data or \code{SNP_ARRAY} SNP
 #'     array data.
+#' @examples
+#' gds <- SeqArray::seqExampleFileName("gds")
+#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' gdsfile(ve)
+#' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+#' ve1
+#' gdsfile(ve1)
+#' aa <- tempfile()
+#' obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+#' obj
+#' gdsfile(obj)
 
 saveVariantExperiment <-
     function(ve, dir=tempdir(), replace=FALSE, fileFormat=NULL,
@@ -350,7 +364,8 @@ saveVariantExperiment <-
     rds_path <- file.path(dir, "ve.rds")
     ## ve@assays <- .shorten_gds_paths(ve@assays)
     saveRDS(ve, file=rds_path)
-    invisible(ve)
+    ## invisible(ve)
+    return(loadVariantExperiment(dir = dir))
 }
 
 .THE_EXPECTED_STUFF <- c(
@@ -367,7 +382,16 @@ saveVariantExperiment <-
 #' @param dir The directory to save the gds format of the array data,
 #'     and the newly generated SummarizedExperiment object with array
 #'     data in GDSArray format.
+#' @return An \code{VariantExperiment} object.
 #' @export
+#' @examples
+#' gds <- SeqArray::seqExampleFileName("gds")
+#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+#' aa <- tempfile()
+#' `saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+#' loadVariantExperiment(dir = aa)
+
 loadVariantExperiment <- function(dir=tempdir())
 {
     if (!isSingleString(dir))

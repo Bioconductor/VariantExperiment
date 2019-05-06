@@ -40,7 +40,7 @@
         ## and use DNAStringSetList class for "allele2"
         a1 <- Biostrings::DNAStringSet(unlist(a)[c(TRUE, FALSE)])
         a2 <- Biostrings::DNAStringSet(unlist(a)[c(FALSE, TRUE)]) 
-        resDF <- setNames(DataFrame(a1, a2), paste0("ALLELE", 1:2))
+        resDF <- setNames(DataFrame(a1, a2), paste0("ALLELE", seq_len(2)))
     }
     resDF  ## returns a DataFrame with names.
 }
@@ -345,6 +345,7 @@ showAvailable <- function(file,
 #'     DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as
 #'     DelayedArray object. The default is TRUE.
+#' @return An \code{VariantExperiment} object.
 #' @importFrom tools file_path_as_absolute
 ## #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom stats setNames

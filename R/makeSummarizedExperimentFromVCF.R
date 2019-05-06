@@ -45,6 +45,7 @@
 #'     "FALSE".
 #' @param verbose whether to print the process messages. The default
 #'     is FALSE.
+#' @return An \code{VariantExperiment} object.
 #' @importFrom utils read.table
 #' @export
 #' @examples
@@ -85,8 +86,8 @@ makeSummarizedExperimentFromVCF <- function(vcf.fn,
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
     if (!isSingleString(out.dir))
         stop(wmsg("'dir' must be a single string specifying the path ",
-                  "to the directory where to save the ", "VariantExperiment",
-                  " object (the directory will be created)"))
+                  "to the directory where to save the \"VariantExperiment\" ",
+                  "object (the directory will be created)"))
     
     ## stopifnot(is.character(out.dir), length(out.dir)==1L)
 

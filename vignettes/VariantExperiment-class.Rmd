@@ -5,7 +5,7 @@ author:
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 - name: Martin Morgan
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
-date: "last edit: 07/06/2018"
+date: "last edit: 05/06/2019"
 output:
     BiocStyle::html_document:
         toc: true
@@ -28,40 +28,49 @@ As the sequencing data (DNA-seq, RNA-seq, single cell RNA-seq...) gets
 increasingly larger-profile, the memory space in R has been an
 obstable for fast and efficient data processing, because most
 available _R_ or _Bioconductor_ packages are developed based on
-in-memory data manipulation. We have developed [VariantExperiment][] ,
-a _Bioconductor_ package for saving the `VCF/GDS` format data into
-`RangedSummarizedExperiment` object. The high-throughput genetic/genomic
-data are saved in [GDSArray][] objects, an extension of
-[DelayedArray][] with GDS back-end. The annotation data for
-features/samples are saved in [DelayedDataFrame][] format with
-mono-dimensional [GDSArray][] in each column.  The on-disk
-representation of both assay data and annotation data achieves on-disk
-reading and processing and saves memory space significantly. The
-interface of `RangedSummarizedExperiment` data format enables easy and
-common manipulations for high-throughput genetic/genomic data with
-common [SummarizedExperiment][] metaphor in _R_ and _Bioconductor_.
+in-memory data manipulation. [SingleCellExperiment][] has achieved
+efficient on-disk saving/reading of the large-scale count data as
+[HDF5Array][] objects. However, there was still no such light-weight
+containers available for high-throughput DNA-seq / genotyping data.
+
+We have developed [VariantExperiment][], a _Bioconductor_ package for
+saving the `VCF/GDS` format data into `RangedSummarizedExperiment`
+object. The high-throughput genetic/genomic data are saved in
+[GDSArray][] objects, a direct extension of [DelayedArray][] with GDS
+back-end. In addition to the light-weight `Assay` data, We have also
+realized the on-disk saving of annotation data for both
+features/samples (corresponding to `rowData/colData`) by implementing
+the [DelayedDataFrame][] data structure.  The on-disk representation
+of both assay data and annotation data realizes on-disk reading and
+processing and saves _R_ memory space significantly. The interface of
+`RangedSummarizedExperiment` data format enables easy and common
+manipulations for high-throughput genetic/genomic data with common
+[SummarizedExperiment][] metaphor in _R_ and _Bioconductor_.
 
 [VariantExperiment]: https://bioconductor.org/packages/VariantExperiment 
-[GDSArray]: https://bioconductor.org/packages/GDSArray
-[DelayedArray]: https://bioconductor.org/packages/DelayedArray
 [SummarizedExperiment]: https://bioconductor.org/packages/SummarizedExperiment
+[SingleCellExperiment]: https://bioconductor.org/packages/SingleCellExperiment
+[DelayedArray]: https://bioconductor.org/packages/DelayedArray
+[HDF5Array]: https://bioconductor.org/packages/HDF5Array
+[GDSArray]: https://bioconductor.org/packages/GDSArray
+[DelayedDataFrame]: http://bioconductor.org/packages/DelayedDataFrame
 
 # Installation
 
 Download the package from Bioconductor: 
 
 ```{r getPackage, eval=FALSE}
-source("https://bioconductor.org/biocLite.R")
-biocLite("VariantExperiment")
+if (!requireNamespace("BiocManager", quietly = TRUE))
+    install.packages("BiocManager")
+BiocManager::install("pkgName")
 ```
-The development version is also available to download through github: 
+Or install the development version of the package from Github.
+```{r, eval = FALSE}
+BiocManager::install(“Bioconductor/VariantExperiment”) 
+``` 
 
-```{r getDevel, eval=FALSE}
-devtools::install_github("Bioconductor/VariantExperiment")
-```
-Load the package into R session before using:
-
-```{r Load, message=FALSE, warning=FALSE}
+2. Load the package into R session.
+```{r Load, message=FALSE}
 library(VariantExperiment)
 ```
 
@@ -69,9 +78,9 @@ library(VariantExperiment)
 
 ## GDSArray
 
-[GDSArray][] is a _Bioconductor_ package that represents GDS files as
+[GDSArray][] is a _Bioconductor_ package that represents `GDS` files as
 objects derived from the [DelayedArray][] package and `DelayedArray`
-class. It converts GDS nodes into a `DelayedArray`-derived data
+class. It converts `GDS` nodes into a `DelayedArray`-derived data
 structure. The rich common methods and data operations defined on
 `GDSArray` makes it more _R_-user-friendly than working with the GDS
 file directly. The array data from GDS files are always returned with
@@ -89,7 +98,7 @@ file <- SeqArray::seqExampleFileName("gds")
 GDSArray(file, "genotype/data")
 GDSArray(file, "sample.id")
 ```
-More details about GDS or GDSArray format can be found in the
+More details about `GDS` or `GDSArray` format can be found in the
 vignettes of the [gdsfmt][], [SNPRelate][], [SeqArray][], [GDSArray][]
 and [DelayedArray][] packages.
 
@@ -100,19 +109,15 @@ and [DelayedArray][] packages.
 ## DelayedDataFrame
 
 [DelayedDataFrame][] is a _Bioconductor_ package that implements
-delayed operations on DataFrame objects using standard DataFrame
+delayed operations on `DataFrame` objects using standard `DataFrame`
 metaphor. Each column of data inside `DelayedDataFrame` is represented
-as 1-dimensional `GDSArray` with on-disk GDS file. The slot of
-`lazyIndex` saves the mapping indexes of `GDSArray` data in each
-column for easy manipulations. Methods like `show`, `validity check`,
-`[`, `[[` subsetting, `rbind`, `cbind` are implemented for
-DelayedDataFrame to be operated around lazyIndex. The listData slot in
-`DelayedDataFrame` stays untouched until a realization call like
-`DataFrame()` constructor or `as.list()`
-incurred. [DelayedDataFrame][] package is still under developent on
-Github.
-
-[DelayedDataFrame]: https://github.com/Bioconductor/DelayedDataFrame
+as 1-dimensional `GDSArray` with on-disk GDS file. Methods like
+`show`,`validity check`, `[`, `[[` subsetting, `rbind`, `cbind` are implemented for
+`DelayedDataFrame`.  The `DelayedDataFrame` stays lazy until an
+explicit realization call like `DataFrame()` constructor or
+`as.list()` incurred. More details about [DelayedDataFrame][] data
+structure could be found in the vignette of [DelayedDataFrame][]
+package.
 
 # `VariantExperiment` class
 
@@ -121,8 +126,8 @@ Github.
 `RangedSummarizedExperiment`. The difference would be that the assay
 data are saved as `GDSArray`, and the annotation data are saved by
 default as `DelayedDataFrame` (with option to save as ordinary
-`DataFrame`), both of which are representing the data on-disk with GDS
-back-end. There are coercion methods defined for VCF and GDS files into
+`DataFrame`), both of which are representing the data on-disk with `GDS`
+back-end. There are coercion methods defined for `VCF` and `GDS` files into
 `VariantExperiment` objects (Check the method vignette for more details). 
 Here we take an example for illustration.  
 
@@ -182,7 +187,7 @@ ve[1:10, 1:5]
 ```
 
 ## `$` subsetting
-The `$` subsetting Could be operated directly on `colData()` columns,
+The `$` subsetting could be operated directly on `colData()` columns,
 for easy sample extraction.  Note that the `colData/rowData` are in the
 `DelayedDataFrame` format, with each column saved as `GDSArray`. So
 when doing subsetting, we need to use `as.logical()` to convert the
@@ -215,11 +220,11 @@ ve1
 # Save / load `VariantExperiment` object
 
 Note that after the subsetting by `[`, `$` or `Ranged-based
-operations`, and we are set with the data for downstream analysis, we
-need to save the new `VariantExperiment` object to synchronize the gds
-file (on-disk) associated with the subset of data (in-memory
-representation) before any statistical analysis. Otherwise, an error
-will be returned.
+operations`, and you feel satisfied with the data for downstream
+analysis, you need to save that `VariantExperiment` object to
+synchronize the gds file (on-disk) associated with the subset of data
+(in-memory representation) before any statistical analysis. Otherwise,
+an error will be returned.
 
 For example, after we subset the `ve` by `GRanges("22:1-48958933")`,
 and we want to calculate the hwe based on the 23 variants, an error

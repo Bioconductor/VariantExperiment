@@ -284,8 +284,9 @@
 #' gds <- SeqArray::seqExampleFileName("gds")
 #' showAvailable(gds)
 #'
-#' 
+#' @importFrom IRanges CharacterList
 #' @export
+#' 
 showAvailable <- function(file,
                           args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
     ## check if character.

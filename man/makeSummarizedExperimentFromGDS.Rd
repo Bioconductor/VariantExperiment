@@ -56,7 +56,6 @@ showAvailable(gds)
 gds <- SeqArray::seqExampleFileName("gds")
 showAvailable(gds)
 
-
 file <- SNPRelate::snpgdsExampleFileName()
 se <- makeSummarizedExperimentFromGDS(file)
 rowData(se)

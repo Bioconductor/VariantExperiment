@@ -294,7 +294,7 @@ showAvailable <- function(file,
                   "the gds file where the dataset is located."))
     args <- match.arg(args, several.ok=TRUE)
     ff <- GDSArray:::.get_gdsdata_fileFormat(file)
-    res <- list()
+    res <- CharacterList()
     if("name" %in% args){
         if(ff == "SNP_ARRAY"){
             assaynodes <- "genotype"

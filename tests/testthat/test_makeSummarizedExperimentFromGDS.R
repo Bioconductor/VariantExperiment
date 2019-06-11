@@ -56,7 +56,7 @@ test_that("sample related nodes on disk reading works", {
 
 test_that("showing available arguments works", {
    file <- SeqArray::seqExampleFileName("gds")
-   expect_equal(class(showAvailable(file)), "list")
+   expect_true(is(showAvailable(file), "CharacterList"))
    file1 <- SNPRelate::snpgdsExampleFileName()
    expect_null(showAvailable(file1)$infoColumns)
 })

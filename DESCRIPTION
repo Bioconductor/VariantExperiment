@@ -22,7 +22,6 @@ Depends:
     S4Vectors (>= 0.21.24),
     SummarizedExperiment (>= 1.13.0),
     GenomicRanges,
-    GDSArray (>= 1.3.0),
     DelayedDataFrame (>= 1.0.0)
 License: GPL-3
 Encoding: UTF-8
@@ -37,7 +36,10 @@ Imports:
     SNPRelate,
     SeqArray,
     SeqVarTools,
-    DelayedArray,
+    DelayedArray (>= 0.11.0),
+    GDSArray (>= 1.3.0),
+    VCFArray (>= 1.1.3),
+    VariantAnnotation (>= 1.31.0),
     Biostrings, 
     IRanges
 RoxygenNote: 6.1.1

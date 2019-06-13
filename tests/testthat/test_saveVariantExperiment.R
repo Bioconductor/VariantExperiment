@@ -1,7 +1,7 @@
 test_that("initiate seq gds file works", {
     .initiate_seqgds <- VariantExperiment:::.initiate_seqgds
     file <- SeqArray::seqExampleFileName("gds")
-    se <- makeSummarizedExperimentFromGDS(file)
+    se <- makeVariantExperimentFromGDS(file)
     gds_path <- tempfile(fileext=".gds")
     .initiate_seqgds(se, gds_path, compress="LZMA_RA")
     f <- gdsfmt::openfn.gds(gds_path)
@@ -14,7 +14,7 @@ test_that("initiate seq gds file works", {
 test_that("initiate snp gds file works", {
     .initiate_snpgds <- VariantExperiment:::.initiate_snpgds
     file <- SNPRelate::snpgdsExampleFileName()
-    se <- makeSummarizedExperimentFromGDS(file)
+    se <- makeVariantExperimentFromGDS(file)
     ## FIXME: warning
     ##   1: In methods:::.selectDotsMethod(classes, .MTable, .AllMTable) :
     ## multiple direct matches: "DelayedDataFrame", "DataFrame"; using the first of these
@@ -33,7 +33,7 @@ test_that("write GDSSE works", {
     .write_ve_as_gds <- VariantExperiment:::.write_ve_as_gds
     .write_ve_as_newve <- VariantExperiment:::.write_ve_as_newve
     file <- SeqArray::seqExampleFileName("gds")
-    se <- makeSummarizedExperimentFromGDS(file, rowDataOnDisk=FALSE, colDataOnDisk=FALSE)
+    se <- makeVariantExperimentFromGDS(file, rowDataOnDisk=FALSE, colDataOnDisk=FALSE)
     gds_path <- tempfile(fileext=".gds")
     .initiate_seqgds(se, gds_path, compress="LZMA_RA")
     suppressWarnings(

@@ -1,6 +1,6 @@
-test_that("makeSummarizedExperimentFromVCF works", {
+test_that("makeVariantExperimentFromVCF works", {
     vcf <- SeqArray::seqExampleFileName("vcf")
-    ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile())
+    ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile())
     ## general
     expect_equal(dim(ve), c(1348L, 90L))
     expect_equal(dim(rowData(ve)), c(1348L, 14L))
@@ -21,22 +21,22 @@ test_that("makeSummarizedExperimentFromVCF works", {
     expect_equal(colnames(colData(ve)), character(0))
 
     ## arguments
-    ve1 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), info.import=c("OR", "GP")) 
+    ve1 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(), info.import=c("OR", "GP")) 
     expect_equal(colnames(rowData(ve1)),
                  c("ID", "ALT", "REF", "QUAL", "FILTER", "info_OR", "info_GP")) 
 
-    ve2 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import="xx")
+    ve2 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import="xx")
     expect_equivalent(ve, ve2)
-    ve3 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import=NULL)
+    ve3 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import=NULL)
     expect_equivalent(ve, ve3)
-    ve4 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import="DP")
+    ve4 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(), fmt.import="DP")
     expect_equivalent(ve, ve4)
-    ve6 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(), reference="hg19")
+    ve6 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(), reference="hg19")
     expect_equivalent(ve, ve6)
     ## FIXME: where is the reference info saved in VE? gds attributes? 
     
-    ve7 <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-                                           start=101, count=1000) 
+    ve7 <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+                                        start=101, count=1000) 
     expect_equal(dim(ve7), c(1000L, 90L))
     expect_equal(rownames(ve7), as.character(seq(101, length.out=1000)))
 
@@ -44,8 +44,8 @@ test_that("makeSummarizedExperimentFromVCF works", {
     sample.info <- system.file("extdata", "Example_sampleInfo.txt",
                                package="VariantExperiment")
     ve8 <- suppressWarnings(
-        makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-                                        sample.info = sample.info))
+        makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+                                     sample.info = sample.info))
     expect_equal(dim(colData(ve8)), c(90L, 1L))
     expect_equal(colnames(colData(ve8)), "family")
     ## FIXME: Warning message:

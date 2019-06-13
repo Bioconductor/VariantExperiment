@@ -47,7 +47,7 @@ have defined coercion methods from `VCF` and `GDS` to
 
 ## From `VCF` to `VariantExperiment`
 
-The coercion function of `makeSummarizedExperimentFromVCF` could
+The coercion function of `makeVariantExperimentFromVCF` could
 convert the `VCF` file directly into `VariantExperiment` object. To
 achieve the best storage efficiency, the assay data are saved in
 `GDSArray` format, and the annotation data are saved in
@@ -56,9 +56,9 @@ which could be retrieved by `rowData()` for feature related
 annotations and `colData()` for sample related annotations (Only when
 `sample.info` argument is specified). 
 
-```{r makeSummarizedExperimentFromVCF}
+```{r makeVariantExperimentFromVCF}
 vcf <- SeqArray::seqExampleFileName("vcf")
-ve <- makeSummarizedExperimentFromVCF(vcf)
+ve <- makeVariantExperimentFromVCF(vcf)
 ve
 ```
 
@@ -69,12 +69,12 @@ gdsfile(ve)
 ```
 
 assay data is in `GDSArray` format:
-```{r makeSummarizedExperimentFromVCF2}
+```{r makeVariantExperimentFromVCF2}
 assay(ve, 1)
 ```
 
 feature-related annotation is in `DelayedDataFrame` format:
-```{r makeSummarizedExperimentFromVCF3}
+```{r makeVariantExperimentFromVCF3}
 rowData(ve)
 ``` 
 
@@ -86,51 +86,51 @@ retrieve by `colData()`.
 ```{r sampleInfo}
 sampleInfo <- system.file("extdata", "Example_sampleInfo.txt",
                           package="VariantExperiment")
-ve <- makeSummarizedExperimentFromVCF(vcf, sample.info = sampleInfo)
+ve <- makeVariantExperimentFromVCF(vcf, sample.info = sampleInfo)
 colData(ve)
 ```
 
 Arguments could be specified to take only certain info columns or format
 columns from the vcf file. 
 
-```{r makeSummarizedExperimentFromVCFArgs}
-ve1 <- makeSummarizedExperimentFromVCF(vcf, info.import=c("OR", "GP"))
+```{r makeVariantExperimentFromVCFArgs}
+ve1 <- makeVariantExperimentFromVCF(vcf, info.import=c("OR", "GP"))
 rowData(ve1)
 ```
 In the above example, only 2 info entries ("OR" and "GP") are read
-into the `VariantExperiment` object.  
+into the `VariantExperiment` object.
 
 The `start` and `count` arguments could be used to specify the start
 position and number of variants to read into `Variantexperiment`
 object.
 
-```{r makeSummarizedExperimentFromVCFArgs_startCount}
-ve2 <- makeSummarizedExperimentFromVCF(vcf, start=101, count=1000)
+```{r makeVariantExperimentFromVCFArgs_startCount}
+ve2 <- makeVariantExperimentFromVCF(vcf, start=101, count=1000)
 ve2
 ```
 For the above example, only 1000 variants are read into the
-`VariantExperiment` object, starting from the position of 101.       
+`VariantExperiment` object, starting from the position of 101. 
 
 ## From `GDS` to `VariantExperiment`
 
-The coercion function of `makeSummarizedExperimentFromGDS` coerces
+The coercion function of `makeVariantExperimentFromGDS` coerces
 `GDS` files into `VariantExperiment` objects directly, with the assay
 data saved as `GDSArray`, and the `rowData()/colData()` in
 `DelayedDataFrame` by default (with the option of ordinary `DataFrame`
 object).
 
-```{r makeSummarizedExperimentFromGDS}
+```{r makeVariantExperimentFromGDS}
 gds <- SeqArray::seqExampleFileName("gds")
-ve <- makeSummarizedExperimentFromGDS(gds)
+ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```
-```{r makeSummarizedExperimentFromGDS2}
+```{r makeVariantExperimentFromGDS2}
 rowData(ve)
 colData(ve)
 ```
 Arguments could be specified to take only certain annotation columns
 for features and samples. All available data entries for
-`makeSummarizedExperimentFromGDS` arguments could be retrieved by the
+`makeVariantExperimentFromGDS` arguments could be retrieved by the
 `showAvailable()` function with the gds file name as input.
 
 ```{r showAvailable}
@@ -142,12 +142,12 @@ inside the `rowData()`, with the prefix of
 "info_". `rowDataOnDisk/colDataOnDisk` could be set as `FALSE` to
 save all annotation data in ordinary `DataFrame` format.
 
-```{r makeSummarizedExperimentFromGDSArgs}
-ve3 <- makeSummarizedExperimentFromGDS(gds,
-                                       rowDataColumns = c("ID", "ALT", "REF"),
-                                       infoColumns = c("AC", "AN", "DP"),
-                                       rowDataOnDisk = TRUE,
-                                       colDataOnDisk = FALSE)
+```{r makeVariantExperimentFromGDSArgs}
+ve3 <- makeVariantExperimentFromGDS(gds,
+                                    rowDataColumns = c("ID", "ALT", "REF"),
+                                    infoColumns = c("AC", "AN", "DP"),
+                                    rowDataOnDisk = TRUE,
+                                    colDataOnDisk = FALSE)
 rowData(ve3)  ## DelayedDataFrame object 
 colData(ve3)  ## DataFrame object
 ```
@@ -211,7 +211,7 @@ any statistical analysis. Otherwise, an error will be returned.
 # Future work
 As a feature addition, we want to add the option of `VCFArray` in
 saving the `assay` data in the step of
-`makeSummarizedExperimentFromVCF`. We also seek to implement the
+`makeVariantExperimentFromVCF`. We also seek to implement the
 [SQLDataFrame][] in representation of the annotation data. We also
 plan to connect _Bioconductor_ package [VariantAnnotation][] to
 implement the variant filtering and annotation functions based on

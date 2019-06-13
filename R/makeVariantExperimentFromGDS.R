@@ -269,12 +269,12 @@
 #' ShowAvailable
 #' 
 #' The function to show the available entries for the arguments within
-#' \code{makeSummarizedExperimentFromGDS}
+#' \code{makeVariantExperimentFromGDS}
 #' @name showAvailable
-#' @rdname makeSummarizedExperimentFromGDS
+#' @rdname makeVariantExperimentFromGDS
 #' @param file the path to the gds.class file.
 #' @param args the arguments in
-#'     \code{makeSummarizedExperimentFromGDS}.
+#'     \code{makeVariantExperimentFromGDS}.
 #' @examples
 #' ## snp gds file
 #' gds <- SNPRelate::snpgdsExampleFileName()
@@ -329,7 +329,7 @@ showAvailable <- function(file,
     res
 }
 
-#' makeSummarizedExperimentFromGDS
+#' makeVariantExperimentFromGDS
 #' 
 #' Conversion of gds file into SummarizedExperiment.
 #' @param name the components of the gds file that will be represented
@@ -352,17 +352,17 @@ showAvailable <- function(file,
 #' @importFrom stats setNames
 #' @examples
 #' file <- SNPRelate::snpgdsExampleFileName()
-#' se <- makeSummarizedExperimentFromGDS(file)
+#' se <- makeVariantExperimentFromGDS(file)
 #' rowData(se)
 #' colData(se)
 #' metadata(se)
 #' ## Only read specific columns for feature annotation.
 #' showAvailable(file)
-#' se1 <- makeSummarizedExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
+#' se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
 #' SummarizedExperiment::rowRanges(se1)
 
 #' file <- SeqArray::seqExampleFileName(type="gds")
-#' se <- makeSummarizedExperimentFromGDS(file)
+#' se <- makeVariantExperimentFromGDS(file)
 #' ## all assay data
 #' names(assays(se))
 #' showAvailable(file)
@@ -372,7 +372,7 @@ showAvailable <- function(file,
 #' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 #' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
 #' infocols <- showAvailable(file, "infoColumns")$infoColumns
-#' se1 <- makeSummarizedExperimentFromGDS(
+#' se1 <- makeVariantExperimentFromGDS(
 #' file,
 #' name = names[2],
 #' rowDataColumns = rowdatacols[1:3],
@@ -388,12 +388,12 @@ showAvailable <- function(file,
 
 #' @export
 #' 
-makeSummarizedExperimentFromGDS <- function(file, name=NULL,
-                   rowDataColumns = NULL,
-                   colDataColumns = NULL,
-                   infoColumns = NULL,
-                   rowDataOnDisk = TRUE,
-                   colDataOnDisk = TRUE)
+makeVariantExperimentFromGDS <- function(file, name=NULL,
+                                         rowDataColumns = NULL,
+                                         colDataColumns = NULL,
+                                         infoColumns = NULL,
+                                         rowDataOnDisk = TRUE,
+                                         colDataOnDisk = TRUE)
 {
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",

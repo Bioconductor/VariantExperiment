@@ -1,8 +1,8 @@
 #' The function to convert VCF files directly into VariantExperiment
 #' object.
-#' @name makeSummarizedExperimentFromVCF
-#' @rdname makeSummarizedExperimentFromVCF
-#' @description \code{makeSummarizedExperimentFromVCF} is the function
+#' @name makeVariantExperimentFromVCF
+#' @rdname makeVariantExperimentFromVCF
+#' @description \code{makeVariantExperimentFromVCF} is the function
 #'     to convert a vcf file into \code{VariantExperiment} object. The
 #'     genotype data will be written as \code{GDSArray} format, which
 #'     is saved in the \code{assays} slot. The annotation info for
@@ -52,36 +52,36 @@
 #' ## the vcf file
 #' vcf <- SeqArray::seqExampleFileName("vcf")
 #' ## conversion
-#' ve <- makeSummarizedExperimentFromVCF(vcf)
+#' ve <- makeVariantExperimentFromVCF(vcf)
 #' ve
 #' ## the filepath to the gds file.
 #' gdsfile(ve)
 #' 
 #' ## only read in specific info columns
-#' ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-#'                                       info.import=c("OR", "GP"))
+#' ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                    info.import=c("OR", "GP"))
 #' ve
 #' ## convert without the INFO and FORMAT fields
-#' ve <- makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-#'                                       info.import=character(0),
-#'                                       fmt.import=character(0))
+#' ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                    info.import=character(0),
+#'                                    fmt.import=character(0))
 #' ve
 #' ## now the assay data does not include the
 #' #"annotation/format/DP/data", and the rowData(ve) does not include
 #' #any info columns.
  
-makeSummarizedExperimentFromVCF <- function(vcf.fn,
-                                            out.dir = tempfile(),
-                                            replace = FALSE,
-                                            header = NULL,
-                                            info.import = NULL,
-                                            fmt.import = NULL,
-                                            sample.info = NULL,
-                                            ignore.chr.prefix = "chr",
-                                            reference = NULL,
-                                            start = 1L, count = -1L,
-                                            parallel = FALSE,
-                                            verbose = FALSE)
+makeVariantExperimentFromVCF <- function(vcf.fn,
+                                         out.dir = tempfile(),
+                                         replace = FALSE,
+                                         header = NULL,
+                                         info.import = NULL,
+                                         fmt.import = NULL,
+                                         sample.info = NULL,
+                                         ignore.chr.prefix = "chr",
+                                         reference = NULL,
+                                         start = 1L, count = -1L,
+                                         parallel = FALSE,
+                                         verbose = FALSE)
 {
     stopifnot(is.character(vcf.fn), length(vcf.fn)==1L)
     if (!isSingleString(out.dir))
@@ -130,9 +130,8 @@ makeSummarizedExperimentFromVCF <- function(vcf.fn,
     }
 
     ## run GDS to VE
-    makeSummarizedExperimentFromGDS(
-        file=out.gds.fn, name=NULL,
-        infoColumns = info.import,  ## ??
-        rowDataOnDisk = TRUE,
-        colDataOnDisk = TRUE)
+    makeVariantExperimentFromGDS(file=out.gds.fn, name=NULL,
+                                 infoColumns = info.import,
+                                 rowDataOnDisk = TRUE,
+                                 colDataOnDisk = TRUE)
 }

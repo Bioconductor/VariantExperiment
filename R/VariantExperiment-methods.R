@@ -52,7 +52,7 @@
 #' @export
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' ve <- makeVariantExperimentFromGDS(gds)
 #' ve
 #' 
 #' ## sample missing rate

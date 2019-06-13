@@ -131,9 +131,9 @@ back-end. There are coercion methods defined for `VCF` and `GDS` files into
 `VariantExperiment` objects (Check the method vignette for more details). 
 Here we take an example for illustration.  
 
-```{r makeSummarizedExperimentFromGDS}
+```{r makeVariantExperimentFromGDS}
 gds <- SeqArray::seqExampleFileName("gds")
-ve <- makeSummarizedExperimentFromGDS(gds)
+ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```
 
@@ -142,7 +142,7 @@ ve
 assay data are in `GDSArray` format, and could be retrieve by the
 `assays()/assay()` function.
 
-```{r makeSummarizedExperimentFromGDS2}
+```{r makeVariantExperimentFromGDS2}
 assays(ve)
 assay(ve, 1)
 ```

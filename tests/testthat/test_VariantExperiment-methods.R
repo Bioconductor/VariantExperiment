@@ -3,8 +3,8 @@ test_that("Allele related functions work", {
     sample.info <- system.file("extdata", "Example_sampleInfo.txt",
                                package="VariantExperiment")
     ve <- suppressWarnings(
-        makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-                                        sample.info = sample.info))
+        makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+                                     sample.info = sample.info))
         
         ## seqAlleleFreq
         freqAll <- seqAlleleFreq(ve, ref.allele=NULL)
@@ -55,8 +55,8 @@ test_that("other statistical functions work", {
     sample.info <- system.file("extdata", "Example_sampleInfo.txt",
                                package="VariantExperiment")
     ve <- suppressWarnings(
-        makeSummarizedExperimentFromVCF(vcf, out.dir = tempfile(),
-                                        sample.info = sample.info))
+        makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+                                     sample.info = sample.info))
 
         ## hwe
         h <- hwe(ve)

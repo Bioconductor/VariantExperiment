@@ -315,7 +315,7 @@
 #'     array data.
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' ve <- makeVariantExperimentFromGDS(gds)
 #' gdsfile(ve)
 #' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 #' ve1
@@ -386,7 +386,7 @@ saveVariantExperiment <-
 #' @export
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeSummarizedExperimentFromGDS(gds)
+#' ve <- makeVariantExperimentFromGDS(gds)
 #' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 #' aa <- tempfile()
 #' saveVariantExperiment(ve1, dir=aa, replace=TRUE)

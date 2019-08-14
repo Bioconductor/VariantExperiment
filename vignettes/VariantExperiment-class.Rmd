@@ -5,7 +5,7 @@ author:
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 - name: Martin Morgan
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
-date: "last edit: 05/06/2019"
+date: "last edit: 08/14/2019"
 output:
     BiocStyle::html_document:
         toc: true
@@ -21,6 +21,15 @@ vignette: |
 options(showHeadLines=3)
 options(showTailLines=3)
 ```
+
+# User instruction
+
+This package includes 2 vignettes. This One is about the class
+definitions, basic methods and operations of `VariantExperiment` that
+are defined or directly inherited from `SummarizedExperiment`. For
+users who want to apply `VariantExperiment` directly to their analysis
+high-throughput genotyping or DNA-seq data sets, please refer to the
+other vignette.
 
 # Introduction 
 
@@ -57,12 +66,12 @@ manipulations for high-throughput genetic/genomic data with common
 
 # Installation
 
-Download the package from Bioconductor: 
+1. Download the package from Bioconductor: 
 
 ```{r getPackage, eval=FALSE}
 if (!requireNamespace("BiocManager", quietly = TRUE))
     install.packages("BiocManager")
-BiocManager::install("pkgName")
+BiocManager::install("VariantExperiment")
 ```
 Or install the development version of the package from Github.
 ```{r, eval = FALSE}

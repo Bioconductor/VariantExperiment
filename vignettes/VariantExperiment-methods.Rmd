@@ -160,6 +160,20 @@ rowData(ve3)  ## DelayedDataFrame object
 colData(ve3)  ## DataFrame object
 ```
 
+# Lazy data operations
+
+`VariantExperiment` supports basic subsetting operations using `[`,
+`[[`, `$`, and ranged-based subsetting operations using
+`subsetByOverlap`. 
+
+**NOTE** that after a set of lazy operations, you need to call
+`saveVariantExperiment` function to synchronize the on-disk file
+associated with the in-memory representation by providing a file
+path. Statistical functions could only work on synchronized
+`VariantExperiment` object, or error will return.
+
+Refer to the "VariantExperiment-class" vignette for more details.
+
 # Statistical functions
 
 Many statistical functions and methods are defined on

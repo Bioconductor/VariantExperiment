@@ -225,7 +225,6 @@ interval.
 ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 ve1
 ```
-
 # Save / load `VariantExperiment` object
 
 Note that after the subsetting by `[`, `$` or `Ranged-based
@@ -249,28 +248,35 @@ hwe(ve1)
 
 ## save `VariantExperiment` object
 
-Use the function `saveVariantExperiment` to synchronize the
-on-disk and in-memory representation.
+Use the function `saveVariantExperiment` to synchronize the on-disk
+and in-memory representation. This function writes the processed data
+as `ve.gds`, and save the _R_ object (which lazily represent the
+backend data set) as `ve.rds` under the specified directory. It
+finally returns a new `VariantExperiment` object into current R
+session generated from the newly saved data.
 
 ```{r saveVE}
 a <- tempfile()
-saveVariantExperiment(ve1, dir=a, replace=TRUE)
+ve2 <- saveVariantExperiment(ve1, dir=a, replace=TRUE)
 ```
 
 ## load `VariantExperiment` object
 
-reload the synchronized `VariantExperiment` object. The gds file path
-to the new `VariantExperiment` object will be the `se.gds` in the
-specified directory `r a`.
+You can alternatively use `loadVariantExperiment` to load the
+synchronized data into R session, by providing only the file
+directory. It reads the `VariantExperiment` object saved as `ve.rds`, as lazy
+representation of the backend `ve.gds` file under the specific
+directory.
 
 ```{r loadVE}
-ve1 <- loadVariantExperiment(dir=a)
-gdsfile(ve1)
+ve3 <- loadVariantExperiment(dir=a)
+gdsfile(ve3)
+all.equal(ve2, ve3)
 ```
 
 Now we are all set for any downstream analysis as needed. 
 ```{r newVEstats}
-head(hwe(ve1))
+head(hwe(ve2))
 ```
 
 # Session Info

@@ -4,8 +4,8 @@
                 seqSummary(file, verbose=FALSE)$num.sample)
     sedim <- dim(gdsfile) ## variants * samples
     if(!identical(sedim, gdsdim))
-        stop(paste("use 'saveVariantExperiment()'",
-                   " to synchronize on-disk and in-memory representations"))
+        stop("use 'saveVariantExperiment()'",
+             " to synchronize on-disk and in-memory representations")
     gdsfile
 }
         
@@ -18,11 +18,7 @@
 }
 
 .permDim <- function(object, ve) {
-    if (identical(rev(dim(object)), dim(ve))) {
-        return(TRUE)
-    } else {
-        return(FALSE)
-    }
+    identical(rev(dim(object)), dim(ve))
 }
 
 .seqAlleleFreq <- function(gdsfile, ref.allele=0L, .progress=FALSE,

@@ -272,8 +272,7 @@
                 infoColumns <- sub("info_", "", infoColumns)
                 infocols <- .info_seqgds(gds_path, infoColumns,
                                          rowDataOnDisk)
-                mcols(rowRange) <- DataFrame(mcols(rowRange),
-                                             infocols)
+                mcols(rowRange) <- cbind(mcols(rowRange), infocols)
             }
             rowRanges(ve) <- rowRange
         }
@@ -406,7 +405,7 @@ loadVariantExperiment <- function(dir=tempdir())
         .stop_if_bad_dir(dir)
     for (i in seq_along(assays(ans))) {
         a <- assay(ans, i, withDimnames=FALSE)
-        if (!is(a, "DelayedArray"))
+        if (!is(a, "GDSArray"))
             .stop_if_bad_dir(dir)
     }
     ans

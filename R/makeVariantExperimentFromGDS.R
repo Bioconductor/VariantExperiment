@@ -420,7 +420,7 @@ makeVariantExperimentFromGDS <- function(file, name=NULL,
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
-        mcols(rowRange) <- DelayedDataFrame(mcols(rowRange), infocols)
+        mcols(rowRange) <- cbind(mcols(rowRange), infocols)
     }
     se <- VariantExperiment(
         assays = assays,

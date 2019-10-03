@@ -103,9 +103,9 @@ The `GDSArray()` constructor takes 2 arguments: the file path and the
 GDS node name inside the GDS file. 
 
 ```{r, GDSArray}
-file <- SeqArray::seqExampleFileName("gds")
-GDSArray(file, "genotype/data")
-GDSArray(file, "sample.id")
+gds <- SeqArray::seqExampleFileName("gds")
+GDSArray(gds, "genotype/data")
+GDSArray(gds, "sample.id")
 ```
 More details about `GDS` or `GDSArray` format can be found in the
 vignettes of the [gdsfmt][], [SNPRelate][], [SeqArray][], [GDSArray][]
@@ -141,7 +141,6 @@ back-end. There are coercion methods defined for `VCF` and `GDS` files into
 Here we take an example for illustration.  
 
 ```{r makeVariantExperimentFromGDS}
-gds <- SeqArray::seqExampleFileName("gds")
 ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```

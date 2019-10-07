@@ -405,7 +405,7 @@ loadVariantExperiment <- function(dir=tempdir())
         .stop_if_bad_dir(dir)
     for (i in seq_along(assays(ans))) {
         a <- assay(ans, i, withDimnames=FALSE)
-        if (!is(a, "GDSArray"))
+        if (!is(a, "DelayedArray"))
             .stop_if_bad_dir(dir)
     }
     ans

@@ -9,12 +9,7 @@ test_that("makeVariantExperimentFromVCF works", {
     expect_s4_class(colData(ve), "DelayedDataFrame")
     expect_equal(rownames(rowData(ve)), rownames(ve))
     expect_equal(rownames(colData(ve)), colnames(ve))
-    expect_s4_class(assay(ve,1), "DelayedArray") ## "assay,SummarizedExperiment"
-                                                 ## reassign
-                                                 ## dimnames[1:2] and
-                                                 ## thus demotes
-                                                 ## GDSArray as
-                                                 ## DelayedArray.
+    expect_s4_class(assay(ve,1), "GDSArray")
     
     ## contents
     expect_equal(names(assays(ve)),

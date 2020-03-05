@@ -7,8 +7,12 @@
 \alias{gdsfile,VariantExperiment-method}
 \title{VariantExperiment-class}
 \usage{
-VariantExperiment(assays, rowRanges = GRangesList(),
-  colData = DelayedDataFrame(), metadata = list())
+VariantExperiment(
+  assays,
+  rowRanges = GRangesList(),
+  colData = DelayedDataFrame(),
+  metadata = list()
+)
 
 \S4method{gdsfile}{VariantExperiment}(object)
 }

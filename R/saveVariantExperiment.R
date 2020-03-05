@@ -345,7 +345,7 @@ saveVariantExperiment <-
     gds_path <- file.path(dir, "ve.gds")
     
     if (is(assay(ve, 1), "DelayedArray"))
-        fileFormat <- GDSArray:::.get_gdsdata_fileFormat(gdsfile(ve))
+        fileFormat <- GDSArray:::.get_gds_fileFormat(gdsfile(ve))
     
     ## initiate gds file.
     if (fileFormat == "SEQ_ARRAY") .initiate_seqgds(ve, gds_path, compress)

@@ -6,9 +6,17 @@
 in-memory assays. Delayed assays with delayed operations on them
 are realized while they are written to disk.}
 \usage{
-saveVariantExperiment(ve, dir = tempdir(), replace = FALSE,
-  fileFormat = NULL, compress = "LZMA_RA", chunk_size = 10000,
-  rowDataOnDisk = TRUE, colDataOnDisk = TRUE, verbose = FALSE)
+saveVariantExperiment(
+  ve,
+  dir = tempdir(),
+  replace = FALSE,
+  fileFormat = NULL,
+  compress = "LZMA_RA",
+  chunk_size = 10000,
+  rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{ve}{A SummarizedExperiment object, with the array data being

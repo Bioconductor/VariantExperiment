@@ -294,13 +294,13 @@ showAvailable <- function(file,
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
     args <- match.arg(args, several.ok=TRUE)
-    ff <- GDSArray:::.get_gdsdata_fileFormat(file)
+    ff <- GDSArray:::.get_gds_fileFormat(file)
     res <- CharacterList()
     if("name" %in% args){
         if(ff == "SNP_ARRAY"){
             assaynodes <- "genotype"
         }else if(ff == "SEQ_ARRAY"){
-            assaynodes <- GDSArray:::.get_gdsdata_non1D_array(file)
+            assaynodes <- GDSArray:::.get_gdsnode_non1D_array(file)
         }
         res$name <- assaynodes
     }
@@ -407,7 +407,7 @@ makeVariantExperimentFromGDS <- function(file, name=NULL,
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
-    ff <- GDSArray:::.get_gdsdata_fileFormat(file)
+    ff <- GDSArray:::.get_gds_fileFormat(file)
     if(is.null(name)){
         if(ff == "SNP_ARRAY"){
             name <- "genotype"

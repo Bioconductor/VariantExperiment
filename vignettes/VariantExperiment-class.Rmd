@@ -104,7 +104,7 @@ GDS node name inside the GDS file.
 
 ```{r, GDSArray}
 file <- SeqArray::seqExampleFileName("gds")
-GDSArray(file, "genotype/data")
+#> GDSArray(file, "genotype")  #> deactivate temporarily 3/5/20
 GDSArray(file, "sample.id")
 ```
 More details about `GDS` or `GDSArray` format can be found in the

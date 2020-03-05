@@ -5,11 +5,21 @@
 \title{The function to convert VCF files directly into VariantExperiment
 object.}
 \usage{
-makeVariantExperimentFromVCF(vcf.fn, out.dir = tempfile(),
-  replace = FALSE, header = NULL, info.import = NULL,
-  fmt.import = NULL, sample.info = NULL, ignore.chr.prefix = "chr",
-  reference = NULL, start = 1L, count = -1L, parallel = FALSE,
-  verbose = FALSE)
+makeVariantExperimentFromVCF(
+  vcf.fn,
+  out.dir = tempfile(),
+  replace = FALSE,
+  header = NULL,
+  info.import = NULL,
+  fmt.import = NULL,
+  sample.info = NULL,
+  ignore.chr.prefix = "chr",
+  reference = NULL,
+  start = 1L,
+  count = -1L,
+  parallel = FALSE,
+  verbose = FALSE
+)
 }
 \arguments{
 \item{vcf.fn}{the file name(s) of (compressed) VCF format; or a

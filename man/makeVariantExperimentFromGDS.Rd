@@ -5,12 +5,20 @@
 \alias{makeVariantExperimentFromGDS}
 \title{ShowAvailable}
 \usage{
-showAvailable(file, args = c("name", "rowDataColumns", "colDataColumns",
-  "infoColumns"))
+showAvailable(
+  file,
+  args = c("name", "rowDataColumns", "colDataColumns", "infoColumns")
+)
 
-makeVariantExperimentFromGDS(file, name = NULL, rowDataColumns = NULL,
-  colDataColumns = NULL, infoColumns = NULL, rowDataOnDisk = TRUE,
-  colDataOnDisk = TRUE)
+makeVariantExperimentFromGDS(
+  file,
+  name = NULL,
+  rowDataColumns = NULL,
+  colDataColumns = NULL,
+  infoColumns = NULL,
+  rowDataOnDisk = TRUE,
+  colDataOnDisk = TRUE
+)
 }
 \arguments{
 \item{file}{the path to the gds.class file.}

@@ -272,8 +272,7 @@
                 infoColumns <- sub("info_", "", infoColumns)
                 infocols <- .info_seqgds(gds_path, infoColumns,
                                          rowDataOnDisk)
-                mcols(rowRange) <- DataFrame(mcols(rowRange),
-                                             infocols)
+                mcols(rowRange) <- cbind(mcols(rowRange), infocols)
             }
             rowRanges(ve) <- rowRange
         }

@@ -141,7 +141,6 @@ back-end. There are coercion methods defined for `VCF` and `GDS` files into
 Here we take an example for illustration.  
 
 ```{r makeVariantExperimentFromGDS}
-gds <- SeqArray::seqExampleFileName("gds")
 ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```

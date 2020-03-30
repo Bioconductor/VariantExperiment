@@ -314,15 +314,15 @@
 #'     array data.
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeVariantExperimentFromGDS(gds)
-#' gdsfile(ve)
-#' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
-#' ve1
-#' gdsfile(ve1)
+#' ## ve <- makeVariantExperimentFromGDS(gds)
+#' ## gdsfile(ve)
+#' ## ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+#' ## ve1
+#' ## gdsfile(ve1)
 #' aa <- tempfile()
-#' obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
-#' obj
-#' gdsfile(obj)
+#' ## obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+#' ## obj
+#' ## gdsfile(obj)
 
 saveVariantExperiment <-
     function(ve, dir=tempdir(), replace=FALSE, fileFormat=NULL,
@@ -385,11 +385,11 @@ saveVariantExperiment <-
 #' @export
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeVariantExperimentFromGDS(gds)
-#' ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+#' ## ve <- makeVariantExperimentFromGDS(gds)
+#' ## ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 #' aa <- tempfile()
-#' saveVariantExperiment(ve1, dir=aa, replace=TRUE)
-#' loadVariantExperiment(dir = aa)
+#' ## saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+#' ## loadVariantExperiment(dir = aa)
 
 loadVariantExperiment <- function(dir=tempdir())
 {

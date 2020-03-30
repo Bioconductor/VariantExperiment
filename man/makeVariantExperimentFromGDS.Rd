@@ -65,36 +65,36 @@ gds <- SeqArray::seqExampleFileName("gds")
 showAvailable(gds)
 
 file <- SNPRelate::snpgdsExampleFileName()
-se <- makeVariantExperimentFromGDS(file)
-rowData(se)
-colData(se)
-metadata(se)
+## se <- makeVariantExperimentFromGDS(file)
+## rowData(se)
+## colData(se)
+## metadata(se)
 ## Only read specific columns for feature annotation.
 showAvailable(file)
-se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
-SummarizedExperiment::rowRanges(se1)
+## se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
+## SummarizedExperiment::rowRanges(se1)
 file <- SeqArray::seqExampleFileName(type="gds")
-se <- makeVariantExperimentFromGDS(file)
+## se <- makeVariantExperimentFromGDS(file)
 ## all assay data
-names(assays(se))
-showAvailable(file)
+## names(assays(se))
+## showAvailable(file)
 
 ## only read specific columns for feature / sample annotation. 
 names <- showAvailable(file, "name")$name
 rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
 coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
 infocols <- showAvailable(file, "infoColumns")$infoColumns
-se1 <- makeVariantExperimentFromGDS(
-file,
-name = names[2],
-rowDataColumns = rowdatacols[1:3],
-colDataColumns = coldatacols[1],
-infoColumns = infocols[c(1,3,5,7)],
-rowDataOnDisk = FALSE,
-colDataOnDisk = FALSE)
-assay(se1)
+## se1 <- makeVariantExperimentFromGDS(
+## file,
+## name = names[2],
+## rowDataColumns = rowdatacols[1:3],
+## colDataColumns = coldatacols[1],
+## infoColumns = infocols[c(1,3,5,7)],
+## rowDataOnDisk = FALSE,
+## colDataOnDisk = FALSE)
+## assay(se1)
 
 ## the rowData(se1) and colData(se1) are now in DataFrame format 
-rowData(se1)
-colData(se1)
+## rowData(se1)
+## colData(se1)
 }

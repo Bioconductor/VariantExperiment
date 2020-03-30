@@ -48,24 +48,24 @@
 #' @export
 #' @examples
 #' gds <- SeqArray::seqExampleFileName("gds")
-#' ve <- makeVariantExperimentFromGDS(gds)
-#' ve
+#' ## ve <- makeVariantExperimentFromGDS(gds)
+#' ## ve
 #' 
 #' ## sample missing rate
-#' mr.samp <- seqMissing(ve, per.variant = FALSE)
-#' head(mr.samp)
+#' ## mr.samp <- seqMissing(ve, per.variant = FALSE)
+#' ## ead(mr.samp)
 #'
 #' ## hwe
-#' hwe <- hwe(ve)
-#' head(hwe)
+#' ## hwe <- hwe(ve)
+#' ## head(hwe)
 #'
 #' ## titv ratio by sample / overall
-#' titv <- titv(ve, by.sample=TRUE)
-#' head(titv)
-#' titv(ve, by.sample=FALSE)
+#' ## titv <- titv(ve, by.sample=TRUE)
+#' ## head(titv)
+#' ## titv(ve, by.sample=FALSE)
 #'
 #' ## countSingletons
-#' countSingletons(ve)
+#' ## countSingletons(ve)
 
 setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 

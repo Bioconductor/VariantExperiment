@@ -21,9 +21,9 @@ object into R console.
 }
 \examples{
 gds <- SeqArray::seqExampleFileName("gds")
-ve <- makeVariantExperimentFromGDS(gds)
-ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+## ve <- makeVariantExperimentFromGDS(gds)
+## ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 aa <- tempfile()
-saveVariantExperiment(ve1, dir=aa, replace=TRUE)
-loadVariantExperiment(dir = aa)
+## saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+## loadVariantExperiment(dir = aa)
 }

@@ -87,20 +87,20 @@ An \code{VariantExperiment} object.
 ## the vcf file
 vcf <- SeqArray::seqExampleFileName("vcf")
 ## conversion
-ve <- makeVariantExperimentFromVCF(vcf)
-ve
+## ve <- makeVariantExperimentFromVCF(vcf)
+## ve
 ## the filepath to the gds file.
-gdsfile(ve)
+## gdsfile(ve)
 
 ## only read in specific info columns
-ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
-                                   info.import=c("OR", "GP"))
-ve
+## ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+##                                    info.import=c("OR", "GP"))
+## ve
 ## convert without the INFO and FORMAT fields
-ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
-                                   info.import=character(0),
-                                   fmt.import=character(0))
-ve
+## ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+##                                    info.import=character(0),
+##                                    fmt.import=character(0))
+## ve
 ## now the assay data does not include the
 #"annotation/format/DP/data", and the rowData(ve) does not include
 #any info columns.

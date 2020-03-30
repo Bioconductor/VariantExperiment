@@ -140,7 +140,7 @@ back-end. There are coercion methods defined for `VCF` and `GDS` files into
 `VariantExperiment` objects (Check the method vignette for more details). 
 Here we take an example for illustration.  
 
-```{r makeVariantExperimentFromGDS}
+```{r makeVariantExperimentFromGDS, eval=FALSE}
 ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```
@@ -150,7 +150,7 @@ ve
 assay data are in `GDSArray` format, and could be retrieve by the
 `assays()/assay()` function.
 
-```{r makeVariantExperimentFromGDS2}
+```{r makeVariantExperimentFromGDS2, eval=FALSE}
 assays(ve)
 assay(ve, 1)
 ```
@@ -160,7 +160,7 @@ The `rowData()` of the `VariantExperiment` is saved in
 retrieve the feature-related annotation file, with/without a
 GenomicRange format.
 
-```{r rrrd}
+```{r rrrd, eval=FALSE}
 rowRanges(ve)
 rowData(ve)
 ```
@@ -168,19 +168,19 @@ rowData(ve)
 sample-related annotation is in `DelayedDataFrame` format, and could
 be retrieved by `colData()`.
 
-```{r colData}
+```{r colData, eval=FALSE}
 colData(ve)
 ``` 
 
 The `gdsfile()` will retrieve the gds file path associated with the
 `VariantExperiment` object.
-```{r gdsfile}
+```{r gdsfile, eval=FALSE}
 gdsfile(ve)
 ```
 
 Some other getter function like `metadata()` will return any metadata
 that we have saved inside the `VariantExperiment` object.
-```{r metaData}
+```{r metaData, eval=FALSE}
 metadata(ve)
 ``` 
 
@@ -190,7 +190,7 @@ The `VariantExperiment` object supports subsetting methods with `[`,
 `$` and `subsetByOverlap` etc. as in `SummarizedExperiment`.
 
 ## two-dimensional subsetting
-```{r, 2d}
+```{r, 2d, eval=FALSE}
 ve[1:10, 1:5]
 ```
 
@@ -201,14 +201,14 @@ for easy sample extraction.  Note that the `colData/rowData` are in the
 when doing subsetting, we need to use `as.logical()` to convert the
 1-dimensional `GDSArray` into ordinary vector.
 
-```{r colDataExtraction}
+```{r colDataExtraction, eval=FALSE}
 colData(ve)
 ve[, as.logical(ve$family == "1328")]
 ```
 
 subsetting by `rowData()` columns.
 
-```{r rowDataExtraction}
+```{r rowDataExtraction, eval=FALSE}
 rowData(ve)
 ve[as.logical(rowData(ve)$REF == "T"),]
 ```
@@ -220,7 +220,7 @@ methods and associated functions.  This includes `subsetByOverlaps()`,
 which makes it easy to subset a `VariantExperiment` object by an
 interval.
 
-```{r overlap}
+```{r overlap, eval=FALSE}
 ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 ve1
 ```
@@ -254,7 +254,7 @@ backend data set) as `ve.rds` under the specified directory. It
 finally returns a new `VariantExperiment` object into current R
 session generated from the newly saved data.
 
-```{r saveVE}
+```{r saveVE, eval=FALSE}
 a <- tempfile()
 ve2 <- saveVariantExperiment(ve1, dir=a, replace=TRUE)
 ```
@@ -267,14 +267,14 @@ directory. It reads the `VariantExperiment` object saved as `ve.rds`, as lazy
 representation of the backend `ve.gds` file under the specific
 directory.
 
-```{r loadVE}
+```{r loadVE, eval=FALSE}
 ve3 <- loadVariantExperiment(dir=a)
 gdsfile(ve3)
 all.equal(ve2, ve3)
 ```
 
 Now we are all set for any downstream analysis as needed. 
-```{r newVEstats}
+```{r newVEstats, eval=FALSE}
 head(hwe(ve2))
 ```
 

@@ -27,22 +27,27 @@
 \S4method{seqAlleleFreq}{VariantExperiment}(
   gdsfile,
   ref.allele = 0L,
+  minor = FALSE,
   .progress = FALSE,
-  parallel = seqGetParallel()
+  parallel = seqGetParallel(),
+  verbose = FALSE
 )
 
 \S4method{seqAlleleCount}{VariantExperiment}(
   gdsfile,
   ref.allele = 0L,
+  minor = FALSE,
   .progress = FALSE,
-  parallel = seqGetParallel()
+  parallel = seqGetParallel(),
+  verbose = FALSE
 )
 
 \S4method{seqMissing}{VariantExperiment}(
   gdsfile,
   per.variant = TRUE,
   .progress = FALSE,
-  parallel = seqGetParallel()
+  parallel = seqGetParallel(),
+  verbose = FALSE
 )
 
 \S4method{seqNumAllele}{VariantExperiment}(gdsfile)
@@ -88,12 +93,16 @@ synchronized gds file.}
 character vector; see \code{?SeqArray::seqAlleleFreq} for more
 details.}
 
+\item{minor}{if ‘TRUE’, return minor allele frequency/count}
+
 \item{.progress}{Logical, show process information if \code{TRUE}.}
 
 \item{parallel}{A logical value to indicate serial processing
 (\code{FALSE}) or multicore processing (\code{TRUE}). Takes
 numeric value or other value; see \code{?SeqArray::seqParallel}
 for more details.}
+
+\item{verbose}{if ‘TRUE’, show progress information}
 
 \item{per.variant}{A logical value to indicate whether to calculate
 missing rate for variant (\code{TRUE}), or samples

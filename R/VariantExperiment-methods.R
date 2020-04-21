@@ -21,10 +21,12 @@
     identical(rev(dim(object)), dim(ve))
 }
 
-.seqAlleleFreq <- function(gdsfile, ref.allele=0L, .progress=FALSE,
-                               parallel = seqGetParallel()){
+.seqAlleleFreq <- function(gdsfile, ref.allele=0L, minor=FALSE, .progress=FALSE,
+                           parallel=seqGetParallel(), verbose=FALSE
+                           ){
     alleleFreq <- .doCompatibleFunction(
-        gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
+        gdsfile, ref.allele=ref.allele, minor = minor, .progress=.progress,
+        parallel=parallel, verbose = verbose,
         FUN=SeqArray::seqAlleleFreq
     )
     alleleFreq
@@ -39,11 +41,13 @@
 #' @param ref.allele a single numeric value, a numeric vector or a
 #'     character vector; see \code{?SeqArray::seqAlleleFreq} for more
 #'     details.
+#' @param minor if ‘TRUE’, return minor allele frequency/count
 #' @param .progress Logical, show process information if \code{TRUE}.
 #' @param parallel A logical value to indicate serial processing
 #'     (\code{FALSE}) or multicore processing (\code{TRUE}). Takes
 #'     numeric value or other value; see \code{?SeqArray::seqParallel}
 #'     for more details.
+#' @param verbose if ‘TRUE’, show progress information
 #' @return Statistical results in \code{vector} or \code{data.frame} format. 
 #' @export
 #' @examples
@@ -69,9 +73,11 @@
 
 setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)        
 
-.seqAlleleCount <- function(gdsfile, ref.allele=0L, .progress=FALSE, parallel = seqGetParallel()){
+.seqAlleleCount <- function(gdsfile, ref.allele=0L, minor=FALSE, .progress=FALSE,
+                            parallel = seqGetParallel(), verbose=FALSE){
     alleleCount <- .doCompatibleFunction(
-        gdsfile, ref.allele=ref.allele, .progress=.progress, parallel=parallel,
+        gdsfile, ref.allele=ref.allele, minor=minor, .progress=.progress,
+        parallel=parallel, verbose=verbose,
         FUN=SeqArray::seqAlleleCount
     )
     alleleCount
@@ -82,12 +88,13 @@ setMethod("seqAlleleFreq", "VariantExperiment", .seqAlleleFreq)
 setMethod("seqAlleleCount", "VariantExperiment", .seqAlleleCount)        
 
 .seqMissing <- function(gdsfile, per.variant=TRUE, .progress=FALSE,
-                        parallel = seqGetParallel())
+                        parallel = seqGetParallel(), verbose=FALSE)
 {
     seqMissing <- .doCompatibleFunction(gdsfile,
                                         per.variant=per.variant,
-                                        .progress =.progress,
+                                        .progress=.progress,
                                         parallel=parallel,
+                                        verbose=verbose,
                                         FUN=SeqArray::seqMissing )
     seqMissing
 }

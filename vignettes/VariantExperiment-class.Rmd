@@ -1,6 +1,6 @@
 ---
 title: "VariantExperiment: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Backend"
-author: 
+valauthor: 
 - name: Qian Liu
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 - name: Martin Morgan
@@ -104,7 +104,7 @@ GDS node name inside the GDS file.
 
 ```{r, GDSArray}
 file <- SeqArray::seqExampleFileName("gds")
-#> GDSArray(file, "genotype")  #> deactivate temporarily 3/5/20
+GDSArray(file, "genotype")
 GDSArray(file, "sample.id")
 ```
 More details about `GDS` or `GDSArray` format can be found in the
@@ -140,8 +140,8 @@ back-end. There are coercion methods defined for `VCF` and `GDS` files into
 `VariantExperiment` objects (Check the method vignette for more details). 
 Here we take an example for illustration.  
 
-```{r makeVariantExperimentFromGDS, eval=FALSE}
-ve <- makeVariantExperimentFromGDS(gds)
+```{r makeVariantExperimentFromGDS}
+ve <- makeVariantExperimentFromGDS(file)
 ve
 ```
 
@@ -150,7 +150,7 @@ ve
 assay data are in `GDSArray` format, and could be retrieve by the
 `assays()/assay()` function.
 
-```{r makeVariantExperimentFromGDS2, eval=FALSE}
+```{r makeVariantExperimentFromGDS2}
 assays(ve)
 assay(ve, 1)
 ```
@@ -160,7 +160,7 @@ The `rowData()` of the `VariantExperiment` is saved in
 retrieve the feature-related annotation file, with/without a
 GenomicRange format.
 
-```{r rrrd, eval=FALSE}
+```{r rrrd}
 rowRanges(ve)
 rowData(ve)
 ```
@@ -168,19 +168,19 @@ rowData(ve)
 sample-related annotation is in `DelayedDataFrame` format, and could
 be retrieved by `colData()`.
 
-```{r colData, eval=FALSE}
+```{r colData}
 colData(ve)
 ``` 
 
 The `gdsfile()` will retrieve the gds file path associated with the
 `VariantExperiment` object.
-```{r gdsfile, eval=FALSE}
+```{r gdsfile}
 gdsfile(ve)
 ```
 
 Some other getter function like `metadata()` will return any metadata
 that we have saved inside the `VariantExperiment` object.
-```{r metaData, eval=FALSE}
+```{r metaData}
 metadata(ve)
 ``` 
 
@@ -190,7 +190,7 @@ The `VariantExperiment` object supports subsetting methods with `[`,
 `$` and `subsetByOverlap` etc. as in `SummarizedExperiment`.
 
 ## two-dimensional subsetting
-```{r, 2d, eval=FALSE}
+```{r, 2d}
 ve[1:10, 1:5]
 ```
 
@@ -201,14 +201,14 @@ for easy sample extraction.  Note that the `colData/rowData` are in the
 when doing subsetting, we need to use `as.logical()` to convert the
 1-dimensional `GDSArray` into ordinary vector.
 
-```{r colDataExtraction, eval=FALSE}
+```{r colDataExtraction}
 colData(ve)
 ve[, as.logical(ve$family == "1328")]
 ```
 
 subsetting by `rowData()` columns.
 
-```{r rowDataExtraction, eval=FALSE}
+```{r rowDataExtraction}
 rowData(ve)
 ve[as.logical(rowData(ve)$REF == "T"),]
 ```
@@ -220,7 +220,7 @@ methods and associated functions.  This includes `subsetByOverlaps()`,
 which makes it easy to subset a `VariantExperiment` object by an
 interval.
 
-```{r overlap, eval=FALSE}
+```{r overlap}
 ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 ve1
 ```

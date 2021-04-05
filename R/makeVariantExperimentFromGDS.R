@@ -58,7 +58,8 @@
 }
 
 #' @importFrom methods new
-.varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
+
+.varnodes <- function(gdsfile, fileFormat, name){
     f <- openfn.gds(gdsfile)
     on.exit(closefn.gds(f))
     if(fileFormat == "SNP_ARRAY"){
@@ -71,22 +72,23 @@
         if(name %in% varnodes) node <- paste0("annotation/", name)
         if(name %in% c("alt", "ref")) node <- "allele"
     }
-    seed <- new("GDSArraySeed",
-                file=gdsfile,
-                name=node,
-                dim=objdesp.gdsn(index.gdsn(f, node))$dim,
-                dimnames=list(varid),  ## for snp/variant nodes only.
-                permute=FALSE,
-                first_val="ANY")
-    GDSArray(seed)  ## return a DelayedArray/GDSArray object without names.
+    node
+}
+.varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
+    node <- .varnodes(gdsfile, fileFormat, name)
+    GDSArray(gdsfile, node)
 }
 
 #' @importMethodsFrom SeqArray info
 #' @import DelayedDataFrame
-.info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
+.infonodes <- function(seqArrayFile){
     f <- seqOpen(seqArrayFile)
     on.exit(seqClose(f))
-    infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
+    ls.gdsn(index.gdsn(f, "annotation/info"))
+}
+
+.info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
+    infonodes <- .infonodes(seqArrayFile)
     if (is.null(infoColumns)) {
         infoColumns <- infonodes
     } else {
@@ -104,17 +106,11 @@
     }
     infonodes <- paste0("annotation/info/", infoColumns)
     if(rowDataOnDisk){
-        res <- lapply(infonodes, function(x)
-            GDSArray(
-                file=new("GDSArraySeed",
-                         file=seqArrayFile,
-                         name=x,
-                         dim=objdesp.gdsn(index.gdsn(f, x))$dim,
-                         dimnames=list(seqGetData(f, "variant.id")),
-                         permute=FALSE,
-                         first_val="ANY")))
+        res <- lapply(infonodes, function(x) GDSArray(seqArrayFile, x))
         res1 <- DelayedDataFrame(lapply(res, I))
     }else{
+        f <- seqOpen(seqArrayFile)
+        on.exit(seqClose(f))
         res1 <- SeqArray::info(f, info=infoColumns)
     }
     setNames(res1, paste0("info_", infoColumns))
@@ -186,28 +182,25 @@
     rr
 }
 
-.sampnode_gdsdata_ondisk <- function(file, fileFormat, name)
-{
+.sampnodes <- function(file, fileFormat){
     pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
            ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
     f <- openfn.gds(file)
     on.exit(closefn.gds(f))
-    sampnodes <- ls.gdsn(index.gdsn(f, pre))
+    ls.gdsn(index.gdsn(f, pre))
+    
+}
+.sampnode_gdsdata_ondisk <- function(file, fileFormat, name)
+{
+    pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
+           ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
+    sampnodes <- .sampnodes(file, fileFormat)
     if(name %in% sampnodes){
         node <- paste0(pre, "/", name)
     }else{
         node <- name
     }
-    seed <- new(
-        "GDSArraySeed",
-        file=file,
-        name=node,
-        dim=objdesp.gdsn(index.gdsn(f, node))$dim,
-        dimnames=list(read.gdsn(index.gdsn(f, "sample.id"))),
-        ## for sample-related nodes only.
-        permute=FALSE,
-        first_val="ANY")
-    GDSArray(seed)  ## returns Delayed/GDSArray, not DF.
+    GDSArray(file, node)  ## returns Delayed/GDSArray, not DF.
 }
 
 ###

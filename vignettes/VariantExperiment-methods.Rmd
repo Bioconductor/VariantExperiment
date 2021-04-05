@@ -64,7 +64,7 @@ which could be retrieved by `rowData()` for feature related
 annotations and `colData()` for sample related annotations (Only when
 `sample.info` argument is specified). 
 
-```{r makeVariantExperimentFromVCF, eval=FALSE}
+```{r makeVariantExperimentFromVCF}
 vcf <- SeqArray::seqExampleFileName("vcf")
 ve <- makeVariantExperimentFromVCF(vcf)
 ve
@@ -72,17 +72,17 @@ ve
 
 Internally, the `VCF` file was converted into a on-disk `GDS` file,
 which could be retrieved by:
-```{r retrieve GDS, eval=FALSE}
+```{r retrieve GDS}
 gdsfile(ve)
 ```
 
 assay data is in `GDSArray` format:
-```{r makeVariantExperimentFromVCF2, eval=FALSE}
+```{r makeVariantExperimentFromVCF2}
 assay(ve, 1)
 ```
 
 feature-related annotation is in `DelayedDataFrame` format:
-```{r makeVariantExperimentFromVCF3, eval=FALSE}
+```{r makeVariantExperimentFromVCF3}
 rowData(ve)
 ``` 
 
@@ -91,7 +91,7 @@ annotation info directly into the `VariantExperiment` object, by
 providing the file path to the `sample.info` argument, and then
 retrieve by `colData()`.
 
-```{r sampleInfo, eval=FALSE}
+```{r sampleInfo}
 sampleInfo <- system.file("extdata", "Example_sampleInfo.txt",
                           package="VariantExperiment")
 ve <- makeVariantExperimentFromVCF(vcf, sample.info = sampleInfo)
@@ -101,7 +101,7 @@ colData(ve)
 Arguments could be specified to take only certain info columns or format
 columns from the vcf file. 
 
-```{r makeVariantExperimentFromVCFArgs, eval=FALSE}
+```{r makeVariantExperimentFromVCFArgs}
 ve1 <- makeVariantExperimentFromVCF(vcf, info.import=c("OR", "GP"))
 rowData(ve1)
 ```
@@ -112,7 +112,7 @@ The `start` and `count` arguments could be used to specify the start
 position and number of variants to read into `Variantexperiment`
 object.
 
-```{r makeVariantExperimentFromVCFArgs_startCount, eval=FALSE}
+```{r makeVariantExperimentFromVCFArgs_startCount}
 ve2 <- makeVariantExperimentFromVCF(vcf, start=101, count=1000)
 ve2
 ```
@@ -127,12 +127,12 @@ data saved as `GDSArray`, and the `rowData()/colData()` in
 `DelayedDataFrame` by default (with the option of ordinary `DataFrame`
 object).
 
-```{r makeVariantExperimentFromGDS, eval=FALSE}
+```{r makeVariantExperimentFromGDS}
 gds <- SeqArray::seqExampleFileName("gds")
 ve <- makeVariantExperimentFromGDS(gds)
 ve
 ```
-```{r makeVariantExperimentFromGDS2, eval=FALSE}
+```{r makeVariantExperimentFromGDS2}
 rowData(ve)
 colData(ve)
 ```
@@ -141,7 +141,7 @@ for features and samples. All available data entries for
 `makeVariantExperimentFromGDS` arguments could be retrieved by the
 `showAvailable()` function with the gds file name as input.
 
-```{r showAvailable, eval=FALSE}
+```{r showAvailable}
 showAvailable(gds)
 ```
 
@@ -150,7 +150,7 @@ inside the `rowData()`, with the prefix of
 "info_". `rowDataOnDisk/colDataOnDisk` could be set as `FALSE` to
 save all annotation data in ordinary `DataFrame` format.
 
-```{r makeVariantExperimentFromGDSArgs, eval=FALSE}
+```{r makeVariantExperimentFromGDSArgs}
 ve3 <- makeVariantExperimentFromGDS(gds,
                                     rowDataColumns = c("ID", "ALT", "REF"),
                                     infoColumns = c("AC", "AN", "DP"),
@@ -209,7 +209,7 @@ isSNV                 | Flag a single nucleotide variant
 isVariant             | Locate which samples are variant for each site
 
 Here are some examples in calculating the sample missing rate, hwe, titv ratio and the count of singletons for each sample. 
-```{r stats, eval=FALSE}
+```{r stats}
 ## sample missing rate
 mr.samp <- seqMissing(ve, per.variant = FALSE)
 head(mr.samp)

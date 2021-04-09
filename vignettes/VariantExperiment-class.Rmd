@@ -254,7 +254,7 @@ backend data set) as `ve.rds` under the specified directory. It
 finally returns a new `VariantExperiment` object into current R
 session generated from the newly saved data.
 
-```{r saveVE, eval=FALSE}
+```{r saveVE}
 a <- tempfile()
 ve2 <- saveVariantExperiment(ve1, dir=a, replace=TRUE)
 ```
@@ -267,14 +267,14 @@ directory. It reads the `VariantExperiment` object saved as `ve.rds`, as lazy
 representation of the backend `ve.gds` file under the specific
 directory.
 
-```{r loadVE, eval=FALSE}
+```{r loadVE}
 ve3 <- loadVariantExperiment(dir=a)
 gdsfile(ve3)
 all.equal(ve2, ve3)
 ```
 
 Now we are all set for any downstream analysis as needed. 
-```{r newVEstats, eval=FALSE}
+```{r newVEstats}
 head(hwe(ve2))
 ```
 

@@ -26,6 +26,8 @@
     put.attr.gdsn(gfile$root, "FileFormat", "SEQ_ARRAY")
     put.attr.gdsn(gfile$root, "FileVersion", "v1.0")
     dscp <- addfolder.gdsn(gfile, "description", replace=TRUE)
+    ## read and add the $reference (4/5/21)
+    add.gdsn(dscp, "reference", SeqArray::seqSummary(gdsfile(ve), verbose = FALSE)$reference)
     put.attr.gdsn(dscp, "source.format",
                   "GDSArray-based SummarizedExperiment")
     add.gdsn(gfile, "sample.id", colnames(ve), compress=compress,
@@ -39,7 +41,7 @@
              ranges(SummarizedExperiment::rowRanges(ve))@start,
              compress=compress, closezip=TRUE) ## ??
     if (all(c("REF", "ALT") %in% names(rowData(ve)))){
-          ref <- rowData(ve)$REF
+        ref <- rowData(ve)$REF
         alt <- rowData(ve)$ALT
         if (is(ref, "List"))  ## "DNAStringSet" in-memory way
             ref <- unlist(lapply(ref, function(x) paste(x, collapse=",")))
@@ -86,7 +88,7 @@
     gfile <- openfn.gds(gds_path, readonly=FALSE)
     on.exit(closefn.gds(gfile))
 
-    if (is(data, "GDSArray")){
+    if (is(data, "DelayedArray")){
         name <- seed(data)@name
         perm <- seed(data)@permute
     } else {
@@ -105,11 +107,14 @@
             data <- unlist(lapply(data, function(x) paste(x, collapse=",")))
         data <- as.array(data)
     }
+    if (name == "annotation/format/DP") name <- paste0(name, "/data")
     datapath <- strsplit(name, "/")[[1]]  ## gds node path.
-    directories <- head(datapath, -1)
+    directories <- datapath
+    if (length(datapath) > 1)
+        directories <- head(datapath, -1)
     dirnode <- index.gdsn(gfile, "")
     for (directory in directories) {
-        if (!directory %in% ls.gdsn(index.gdsn(dirnode, ""))) {
+        if (!directory %in% ls.gdsn(dirnode)) {
             dirnode <- addfolder.gdsn(dirnode, name=directory,
                                       type="directory")
         } else {
@@ -129,8 +134,10 @@
             value <- unname(as.array(data[ridx,,, drop=FALSE]))
         }
         value <- aperm(value)  ## permute because adding rows in chunks.
+        name <- tail(datapath, 1)
+        if (name == "genotype") name <- "data"
         if (start == 1){
-            datanode <- add.gdsn(dirnode, tail(datapath, 1),
+            datanode <- add.gdsn(dirnode, name,
                                  val = value, compress = compress, check=TRUE)
         } else {
             datanode <- index.gdsn(gfile, name)
@@ -138,16 +145,10 @@
         }
     }
     ## permute back if permute == FALSE
-    datanode <- index.gdsn(gfile, name)
+    datanode <- index.gdsn(dirnode, name)
     if (!perm){
         readmode.gdsn(datanode)
         permdim.gdsn(datanode, rev(seq_along(dim(data))))
-    }
-    ## add attribute for "snp_array" genotype node. 
-    if (name == "genotype"){
-        ord <- ifelse(perm, "sample.order", "snp.order")
-        ## genotype should be a matrix. 
-        put.attr.gdsn(datanode, ord)
     }
     ## add attribute for "seq_array" genotype folder node.
     if (length(directories) == 1L & all(directories == "genotype")){
@@ -158,7 +159,13 @@
                      storage="uint8", compress=compress,
                      visible=FALSE)
         ## n <- .AddVar(storage.option, varGeno, "@data", storage="uint8", visible=FALSE)
+    } else if (name == "genotype"){ 
+        ## add attribute for "snp_array" genotype node. 
+        ord <- ifelse(perm, "sample.order", "snp.order")
+        ## genotype should be a matrix. 
+        put.attr.gdsn(datanode, ord)
     }
+ 
 }
 
 ###
@@ -228,10 +235,11 @@
     ##     if (is(assays(ve)[[i]], "DelayedArray")){
     ##         gdsfile(seed(assays(ve)[[i]])) <- gds_path
     ##     }else {
-        assays(ve)[[i]] <- GDSArray(gds_path, name=names(assays(ve))[i])
+        assays(ve, withDimnames = FALSE)[[i]] <-
+            GDSArray(gds_path, name=names(assays(ve))[i])
     ##     }
     }
-    names(assays(ve)) <- names(assays(ve))
+    ## names(assays(ve)) <- names(assays(ve))
 
     ## save GDSArray-based colData if previous in-memory. If colData
     ## already GDSArray, only change the "file" slot to be the newly
@@ -347,6 +355,7 @@ saveVariantExperiment <-
         fileFormat <- GDSArray:::.get_gds_fileFormat(gdsfile(ve))
     
     ## initiate gds file.
+
     if (fileFormat == "SEQ_ARRAY") .initiate_seqgds(ve, gds_path, compress)
     if (fileFormat == "SNP_ARRAY") .initiate_snpgds(ve, gds_path, compress)
     gds_path <- tools::file_path_as_absolute(gds_path)

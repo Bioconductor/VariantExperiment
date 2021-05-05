@@ -86,6 +86,11 @@
     on.exit(seqClose(f))
     ls.gdsn(index.gdsn(f, "annotation/info"))
 }
+.infonodes_val <- function(seqArrayFile, name) {
+    f <- seqOpen(seqArrayFile)
+    on.exit(seqClose(f))
+    SeqArray::info(f, info = name)
+}
 
 .info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
     infonodes <- .infonodes(seqArrayFile)
@@ -105,13 +110,19 @@
             infoColumns <- infonodes
     }
     infonodes <- paste0("annotation/info/", infoColumns)
+    ans_dim <- .get_gdsnode_desp(seqArrayFile, "variant.id", "dim")
     if(rowDataOnDisk){
         res <- lapply(infonodes, function(x) GDSArray(seqArrayFile, x))
+        ## for "SEQ_ARRAY", dimensions don't have restrictions, so check and adjust. 
+        dim_short <- lengths(res) != ans_dim
+        if (any(dim_short)) {
+            node <- infoColumns[dim_short]
+            node_val <- .infonodes_val(seqArrayFile, node)[,1]
+            res[[which(dim_short)]] <- DelayedArray(array(unlist(node_val)))
+        }
         res1 <- DelayedDataFrame(lapply(res, I))
     }else{
-        f <- seqOpen(seqArrayFile)
-        on.exit(seqClose(f))
-        res1 <- SeqArray::info(f, info=infoColumns)
+        res1 <- .infonodes_val(seqArrayFile, infoColumns)
     }
     setNames(res1, paste0("info_", infoColumns))
     ## return a DataFrame with names.
@@ -259,6 +270,15 @@
         }
     }
 }
+
+.get_gds_fileFormat <- function(file)
+{
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    ff <- get.attr.gdsn(f$root)$FileFormat
+    ff
+}
+
 #' ShowAvailable
 #' 
 #' The function to show the available entries for the arguments within
@@ -287,37 +307,70 @@ showAvailable <- function(file,
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
     args <- match.arg(args, several.ok=TRUE)
-    ff <- GDSArray:::.get_gds_fileFormat(file)
+    ff <- .get_gds_fileFormat(file)
+    switch(ff, "SEQ_ARRAY" = .showAvailable_seqarray(file, args),
+           "SNP_ARRAY" = .showAvailable_snparray(file, args))
+}
+
+.get_gdsnode_desp <- function(file, node, desp)
+{
+    f <- openfn.gds(file)
+    on.exit(closefn.gds(f))
+    objdesp <- objdesp.gdsn(index.gdsn(f, node))
+    desp <- match.arg(desp, names(objdesp))
+    objdesp[[desp]]
+}
+
+## http://bioconductor.org/packages/release/bioc/vignettes/SeqArray/inst/doc/SeqArrayTutorial.html
+## SeqArray requires 6 variables: sample.id, variant.id, position,
+## chromosome, allele, genotype(folder).
+.showAvailable_seqarray <- function(file,
+                                    args = c("name",
+                                             "rowDataColumns",
+                                             "colDataColumns",
+                                             "infoColumns")) {
     res <- CharacterList()
-    if("name" %in% args){
-        if(ff == "SNP_ARRAY"){
-            assaynodes <- "genotype"
-        }else if(ff == "SEQ_ARRAY"){
-            assaynodes <- GDSArray:::.get_gdsnode_non1D_array(file)
-        }
-        res$name <- assaynodes
+    if ("name" %in% args) {
+        names <- gdsnodes(file)
+        isarray <- vapply(names,
+                          function(x) .get_gdsnode_desp(file, x, "is.array"),
+                          logical(1))
+        dims <- lapply(names, function(x) .get_gdsnode_desp(file, x, "dim"))
+        res$name <- names[isarray & lengths(dims) > 1 & 
+              ! vapply(dims, function(x) any(x == 0L), logical(1)) &
+              !grepl("~", names)]
     }
-    if("rowDataColumns" %in% args){
-        if(ff == "SNP_ARRAY"){
-            rdnodes <- c("ID", "ALLELE")
-        }else if(ff == "SEQ_ARRAY"){
-            rdnodes <- c("ID", "ALT", "REF", "QUAL", "FILTER")
-        }
-        res$rowDataColumns <- rdnodes
+    if ("rowDataColumns" %in% args) {
+        res$rowDataColumns <- c("ID", "ALT", "REF", "QUAL", "FILTER")
     }
-    if (any(c("colDataColumns", "infoColumns") %in% args)) {
+        if (any(c("colDataColumns", "infoColumns") %in% args)) {
         f <- openfn.gds(file)
         on.exit(closefn.gds(f))
     }
-    if ("colDataColumns" %in% args) {
-        fdnode <- ifelse(ff == "SNP_ARRAY", "sample.annot",
-                  ifelse(ff == "SEQ_ARRAY", "sample.annotation", NA))
-        cdnodes <- ls.gdsn(index.gdsn(f, fdnode))
-        res$colDataColumns <- cdnodes
+    if ("colDataColumns" %in% args)
+        res$colDataColumns <- ls.gdsn(index.gdsn(f, "sample.annotation"))
+    if("infoColumns" %in% args)
+        res$infoColumns <- ls.gdsn(index.gdsn(f, "annotation/info"))
+    res
+}
+
+## http://bioconductor.org/packages/release/bioc/vignettes/SNPRelate/inst/doc/SNPRelate.html
+## SNPRelate requires 5 variables: sample.id, snp.id, snp.position, snp.chromosome, genotype
+## 2 optional variables: snp.rs.id, snp.allele (when merging gentypes from diff platforms)
+.showAvailable_snparray <- function(file,
+                          args = c("name",
+                                   "rowDataColumns",
+                                   "colDataColumns")) {
+    res <- CharacterList()
+    if("name" %in% args)
+        res$name <- "genotype"
+    if("rowDataColumns" %in% args) {
+        res$rowDataColumns <- c("ID", "ALLELE")
     }
-    if("infoColumns" %in% args && ff == "SEQ_ARRAY"){
-        infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
-        res$infoColumns <- infonodes
+    if ("colDataColumns" %in% args) {
+        f <- openfn.gds(file)
+        on.exit(closefn.gds(f))
+        res$colDataColumns <- ls.gdsn(index.gdsn(f, "sample.annot"))
     }
     res
 }
@@ -388,6 +441,7 @@ makeVariantExperimentFromGDS <- function(file, name=NULL,
                                          rowDataOnDisk = TRUE,
                                          colDataOnDisk = TRUE)
 {
+    ## checkings
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
@@ -400,21 +454,39 @@ makeVariantExperimentFromGDS <- function(file, name=NULL,
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
-    ff <- GDSArray:::.get_gds_fileFormat(file)
-    if(is.null(name)){
-        if(ff == "SNP_ARRAY"){
-            name <- "genotype"
-        }else if(ff == "SEQ_ARRAY"){
-            name <- showAvailable(file, "name")$name
-        }
+    ff <- .get_gds_fileFormat(file)
+    allnames <- showAvailable(file)$name
+    if (is.null(name)) {
+        name <- allnames
+    } else {
+        name <- match.arg(name, names)
     }
-    assays <- setNames(lapply(name, function(x) GDSArray(file, x)), name)
+
+    ## colData 
     colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
+
+    ## rowRange with info data if available for seqVarGDSClass
     rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
     if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
         infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- cbind(mcols(rowRange), infocols)
     }
+
+    ## assay data
+    ## Make sure all assays are in correct dimensions (feature*sample*else) 
+    assays <- setNames(lapply(name, function(x) GDSArray(file, x)), name)
+    ans_nrow <- length(rowRange)
+    ans_ncol <- nrow(colData)
+    permFun <- function(x, dim1, dim2) {
+        pos <- match(c(dim1, dim2), dim(x))
+        if (length(dim(x)) > 2) {
+            aperm(x, perm = c(pos, setdiff(seq_along(dim(x)), pos)))
+        } else {
+            aperm(x, perm = pos)
+        }
+    }
+    assays <- lapply(assays, permFun, dim1 = ans_nrow, dim2 = ans_ncol)
+    
     se <- VariantExperiment(
         assays = assays,
         colData = colData,

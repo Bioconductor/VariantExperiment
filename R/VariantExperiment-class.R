@@ -1,7 +1,11 @@
-#' VariantExperiment class and slot getters and setters. 
+#' VariantExperiment class and slot getters and setters.
 #' @title VariantExperiment-class
 #' @rdname VariantExperiment-class
-#' @description VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
+#' @description VariantExperiment could represent big genomic data in
+#'     RangedSummarizedExperiment object, with on-disk GDS back-end
+#'     data. The assays are represented by \code{DelayedArray}
+#'     objects; \code{rowData} and \code{colData} could be represented
+#'     by \code{DelayedDataFrame} or \code{DataFrame} objects.
 #' @import SummarizedExperiment
 #' @export
 
@@ -33,7 +37,9 @@ setClass(
 #' @export VariantExperiment
 #' 
 
-VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDataFrame(), metadata=list())
+VariantExperiment <- function(assays, rowRanges=GRangesList(),
+                              colData=DelayedDataFrame(),
+                              metadata=list())
 {
     if (missing(assays))
         assays <- SimpleList()
@@ -74,9 +80,9 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
 #' @importFrom methods is
 .validate_VariantExperiment <- function(x)
 {
-    ## DelayedDataFrame
-    if(!all(is(rowData(x), "DelayedDataFrame"), is(colData(x), "DelayedDataFrame")))
-        return(wmsg("'rowData(x)' and 'colData(x)' must be DelayedDataFrame object"))
+    ## ## DelayedDataFrame
+    ## if(!all(is(rowData(x), "DelayedDataFrame"), is(colData(x), "DelayedDataFrame")))
+    ##     return(wmsg("'rowData(x)' and 'colData(x)' must be DelayedDataFrame object"))
 
     ## GDSArray for assay data.
     if(!all(vapply(assays(x), is, logical(1), "GDSArray")))
@@ -88,20 +94,27 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(), colData=DelayedDa
     TRUE
 }
 
+
+## Here only check @assay slot for 'DelayedArray' (can be any extensions)
 #' @import S4Vectors 
-## setValidity2("VariantExperiment", .validate_VariantExperiment)
+setValidity2("VariantExperiment", .validate_VariantExperiment)
 
 ###--------------------
 ### getter and setter
 ###--------------------
-#' @export gdsfile
-#' @rdname VariantExperiment-class
-#' @param object a \code{VariantExperiment} object.
-setMethod("gdsfile", "VariantExperiment", function(object)
-    ## vapply(assays(object), gdsfile, character(1)))
-    gdsfile(assays(object)[[1]])   ## here we assume all assay data are
-                          ## correlated with the same gds file.
-)
+
+### disable the "gdsfile" getter for now (5/5/2021), so that VE is not
+### restricted to come from one single gds file?
+## #' @export gdsfile
+## #' @rdname VariantExperiment-class
+## #' @param object a \code{VariantExperiment} object.
+
+## setMethod("gdsfile", "VariantExperiment", function(object)
+##     ## vapply(assays(object), gdsfile, character(1)))
+##     gdsfile(assays(object)[[1]])   ## here we assume all assay data are
+##                           ## correlated with the same gds file.
+## )
+
 ### disable the "gdsfile" setter for now. Use
 ### "saveVariantExperiment" to save to a new file path.
 ## #' @export "gdsfile<-"

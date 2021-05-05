@@ -103,8 +103,8 @@ The `GDSArray()` constructor takes 2 arguments: the file path and the
 GDS node name inside the GDS file. 
 
 ```{r, GDSArray}
-file <- SeqArray::seqExampleFileName("gds")
-GDSArray(file, "genotype")
+file <- GDSArray::gdsExampleFileName("seqgds")
+GDSArray(file, "genotype/data")
 GDSArray(file, "sample.id")
 ```
 More details about `GDS` or `GDSArray` format can be found in the
@@ -131,13 +131,15 @@ package.
 # `VariantExperiment` class
 
 ## `VariantExperiment` class
+
 `VariantExperiment` class is defined to extend
 `RangedSummarizedExperiment`. The difference would be that the assay
 data are saved as `GDSArray`, and the annotation data are saved by
 default as `DelayedDataFrame` (with option to save as ordinary
-`DataFrame`), both of which are representing the data on-disk with `GDS`
-back-end. There are coercion methods defined for `VCF` and `GDS` files into
-`VariantExperiment` objects (Check the method vignette for more details). 
+`DataFrame`), both of which are representing the data on-disk with
+`GDS` back-end. There are coercion methods defined for `VCF` and `GDS`
+files into `VariantExperiment` objects (Check the method vignette for
+more details).
 Here we take an example for illustration.  
 
 ```{r makeVariantExperimentFromGDS}

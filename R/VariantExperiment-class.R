@@ -84,9 +84,9 @@ VariantExperiment <- function(assays, rowRanges=GRangesList(),
     ## if(!all(is(rowData(x), "DelayedDataFrame"), is(colData(x), "DelayedDataFrame")))
     ##     return(wmsg("'rowData(x)' and 'colData(x)' must be DelayedDataFrame object"))
 
-    ## GDSArray for assay data.
-    if(!all(vapply(assays(x), is, logical(1), "GDSArray")))
-        return(wmsg("'assays(x)' must be GDSArray object"))
+    ## GDSArray/DelayedArray for assay data.
+    if(!all(vapply(assays(x), is, logical(1), "DelayedArray")))
+        return(wmsg("'assays(x)' must be DelayedArray object"))
     
     ## ## gdsfile correlated with assay data
     ## if(is.character(gdsfile(x)))

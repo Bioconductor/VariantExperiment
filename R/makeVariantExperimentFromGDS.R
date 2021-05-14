@@ -4,8 +4,8 @@
 ## 3. chromosome, position (needed in rowRanges, currently are matched using "chrom" and "pos")
 ## 4. stop position? (reflen=1L used in .granges_generalgds)
 
-.granges_generalgds <- function(gdsfile, len.ftr, reflen = 1L, ...){
-    ftnodes <- .get_gds_annonodes(gdsfile, len.ftr)
+.granges_generalgds <- function(gdsfile, feature.num, reflen = 1L, ...){
+    ftnodes <- .get_gds_annonodes(gdsfile, feature.num)
     f <- openfn.gds(gdsfile)
     on.exit(closefn.gds(f))
     ## Here trying to match for "chromosome" and "position" related
@@ -30,10 +30,10 @@
 }
 
 .rowRanges_generalgds <- function(gdsfile, ftnode, rowDataColumns, rowDataOnDisk) {
-    len.ftr <- .get_gdsnode_desp(gdsfile, ftnode, "dim")
-    if (length(len.ft) > 1 | any(len.ft == 0L))
+    feature.num <- .get_gdsnode_desp(gdsfile, ftnode, "dim")
+    if (length(feature.num) > 1 | any(feature.num == 0L))
         stop("Wrong feature node name is provided!")
-    rr <- .granges_generalgds(gdsfile, len.ftr)
+    rr <- .granges_generalgds(gdsfile, feature.num)
     rowDataColumns <- .rowDataColumns_check(gdsfile, rowDataColumns)
     ## if no available rowDataColumns are selected, i.e.,
     ## rowDataColumns = character(0), return an empty (Delayed)DataFrame
@@ -62,7 +62,7 @@
 }
 
 .colData_generalgds <- function(gdsfile, smpnode, colDataColumns, colDataOnDisk) {
-    colDataColumns <- .colDataColumns_check(gdsfile, colDataColumns)
+    colDataColumns <- .colDataColumns_check(gdsfile, colDataColumns, smpnode)
 
     ## if no available colDataColumns are selected, i.e.,
     ## colDataColumns = character(0), return an empty
@@ -117,6 +117,8 @@ makeVariantExperimentFromGDS <- function(file, ftnode, smpnode,
                                                colDataOnDisk))
     }  
 
+    ## ELSE: FOR GENERAL GDS FILES
+    
     ## checkings
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
@@ -130,8 +132,11 @@ makeVariantExperimentFromGDS <- function(file, ftnode, smpnode,
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
 
+    ## ans_nrow <- .get_gdsnode_desp(file, ftnode, "dim")
+    ## ans_ncol <- .get_gdsnode_desp(file, smpnode, "dim")
+    
     ## assays
-    all_assays <- showAvailable(file)$assayNames
+    all_assays <- showAvailable(file, ftnode = ftnode, smpnode = smpnode)$assayNames
     if (is.null(assayNames)) {
         assayNames <- all_assays
     } else {
@@ -151,8 +156,8 @@ makeVariantExperimentFromGDS <- function(file, ftnode, smpnode,
 
     ## assay data adjust dimensions into: feature*sample*else 
     assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
-    ans_nrow <- length(rowRange) ## can also be len.ft
-    ans_ncol <- nrow(colData)  ## can also be len.smp
+    ans_nrow <- length(rowRange) 
+    ans_ncol <- nrow(colData) 
     permFun <- function(x, dim1, dim2) {
         pos <- match(c(dim1, dim2), dim(x))
         if (length(dim(x)) > 2) {

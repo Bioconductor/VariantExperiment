@@ -1,9 +1,9 @@
 ## In "makeVariantExperimentFromSNPGDS()", we have customized the "ID"
 ## (from "snp.rs.id" node if available, "ALLELE1" and "ALLELE2" (from
 ## "snp.allele" node if available) columns as part of the
-## mcols(rowRanges(ve)). "snp.id" was used as default sample id, and
-## "sample.id" was used as default feature id. These 2 nodes are
-## required by "SNPGDSFileClass" in SNPRelate.
+## mcols(rowRanges(ve)). "snp.id" was used as default feature id, and
+## "sample.id" was used as default sample id. These 2 nodes are
+## required by "SNPGDSFileClass" in SNPRelate. 
 
 #' @import GDSArray
 #' @importFrom GenomicRanges GRanges ranges seqnames 
@@ -160,12 +160,12 @@
 ## colData for samples
 ###
 
-.colDataColumns_check <- function(gdsfile, colDataColumns) {
+.colDataColumns_check <- function(gdsfile, colDataColumns, smpnode) {
+    allcols <- showAvailable(gdsfile, args = "colDataColumns", smpnode = smpnode)[[1]]
     if (is.null(colDataColumns)) {
-        colDataColumns <- showAvailable(gdsfile)$colDataColumns
+        colDataColumns <- allcols
     } else {
-        idx.within <- colDataColumns %in%
-            showAvailable(gdsfile)$colDataColumns
+        idx.within <- colDataColumns %in% allcols
         if(any(!idx.within)) {
             misrdcs <- paste(colDataColumns[!idx.within], collapse = ", ")
             warning(.colDataColumns_check_msg(misrdcs))

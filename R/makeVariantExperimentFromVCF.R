@@ -130,8 +130,9 @@ makeVariantExperimentFromVCF <- function(vcf.fn,
     }
 
     ## run GDS to VE
-    makeVariantExperimentFromGDS(file=out.gds.fn, name=NULL,
-                                 infoColumns = info.import,
+    makeVariantExperimentFromGDS(file=out.gds.fn,
+                                 assayNames = NULL,
                                  rowDataOnDisk = TRUE,
-                                 colDataOnDisk = TRUE)
+                                 colDataOnDisk = TRUE, 
+                                 infoColumns = info.import)
 }

@@ -68,9 +68,10 @@
 #' @importFrom IRanges CharacterList
 #' @export
 #' 
-showAvailable <- function(file, feature.num, sample.num, 
+showAvailable <- function(file,  
                           args=c("assayNames", "rowDataColumns",
-                                 "colDataColumns", "infoColumns"))
+                                 "colDataColumns", "infoColumns"),
+                          ftnode, smpnode)
 { 
     ## check if character.
     if (!isSingleString(file))
@@ -85,25 +86,28 @@ showAvailable <- function(file, feature.num, sample.num,
     } else if (!is.null(ff) && ff == "SNP_ARRAY") {
         res <- .showAvailable_snparray(file, args)
     } else {
-        res <- .showAvailable_general(file, feature.num, sample.num, args)
+        res <- .showAvailable_general(file, args, ftnode, smpnode)
     }
     res
 }
 
-.showAvailable_general <- function(file, feature.num, sample.num,
+.showAvailable_general <- function(file,
                                    args = c("assayNames",
                                             "rowDataColumns",
                                             "colDataColumns",
-                                            "mcols"))
+                                            "mcols"),
+                                   ftnode, smpnode)
 {
     res <- CharacterList()
     if("assayNames" %in% args) {
         res$assayNames <- .get_gds_arraynodes(file)
     }
     if("rowDataColumns" %in% args) {
+        feature.num <- .get_gdsnode_desp(file, ftnode, "dim")
         res$rowDataColumns <- .get_gds_annonodes(file, len.anno = feature.num)
     }
     if ("colDataColumns" %in% args) {
+        sample.num <- .get_gdsnode_desp(file, smpnode, "dim")
         res$colDataColumns <- .get_gds_annonodes(file, len.anno = sample.num)
     }
     res

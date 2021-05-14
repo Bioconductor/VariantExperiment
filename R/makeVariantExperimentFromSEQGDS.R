@@ -1,8 +1,11 @@
-## In "makeVariantExperimentFromSEQGDS()", we have customized the info
-## columns as part of the mcols(rowRanges(ve)). "variant.id" was used
-## as default sample id, and "sample.id" was used as default feature
-## id. These 2 nodes are required by "SeqVarGDSClass" in SeqArray. 
-
+## In "maAkeVariantExperimentFromSEQGDS()", we have customized: 1) the
+## "ID", "ALT", "REF", "QUAL", "FILTER" columns (from "annotation/id",
+## "allele", "annotation/qual", "annotaiton/filter") nodes; 2) the
+## info columns (from "annotation/info/*" nodes) as part of the
+## mcols(rowRanges(ve)) with column names with "info_" prefix.
+## "variant.id" was used as default feature id, and "sample.id" was
+## used as default sample id. These 2 nodes are required by
+## "SeqVarGDSClass" in SeqArdray.
 
 #' @rawNamespace import(SeqArray, except = c(colData, rowRanges))
 
@@ -132,7 +135,7 @@
         }
     }else{ ## rowDataOnDisk = FALSE...
         resDF <- DataFrame(lapply(rowDataColumns, function(x)
-            .varnode_seqgds_inmem(file, x)))
+            .varnode_seqgds_inmem(seqgdsfile, x)))
     }
     mcols(rr) <- resDF
     rr
@@ -165,7 +168,7 @@
     ## if no available colDataColumns are selected, i.e.,
     ## colDataColumns = character(0), return an empty (Delayed)DataFrame    
     if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
-        .empty_colData_DF(seqgdsfile, colDataOnDisk)
+        .empty_colData_DF(seqgdsfile, "sample.id", colDataOnDisk)
     } else {
         ## if there are valid rowDataColumns
         if (colDataOnDisk) {

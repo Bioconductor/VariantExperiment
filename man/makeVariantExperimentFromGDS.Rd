@@ -6,13 +6,15 @@
 \usage{
 showAvailable(
   file,
-  feature.num,
-  sample.num,
-  args = c("assayNames", "rowDataColumns", "colDataColumns", "infoColumns")
+  args = c("assayNames", "rowDataColumns", "colDataColumns", "infoColumns"),
+  ftnode,
+  smpnode
 )
 }
 \arguments{
 \item{file}{the path to the gds.class file.}
+
+\item{args}{the arguments in \code{makeVariantExperimentFromGDS}.}
 
 \item{feature.num}{the number of features for the gds file. Must be
 provided if the file format is not \code{SNP_ARRAY} or
@@ -21,8 +23,6 @@ provided if the file format is not \code{SNP_ARRAY} or
 \item{sample.num}{the number of features for the gds file. Must be
 provided if the file format is not \code{SNP_ARRAY} or
 \code{SEQ_ARRAY}.}
-
-\item{args}{the arguments in \code{makeVariantExperimentFromGDS}.}
 }
 \description{
 The function to show the available entries for the arguments within

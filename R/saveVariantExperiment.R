@@ -89,9 +89,12 @@
     on.exit(closefn.gds(gfile))
 
     if (is(data, "DelayedArray")){
-        name <- seed(data)@name
-        perm <- seed(data)@permute
+        name <- seed(data)@varname
+        ## perm <- seed(data)@permute
+        ## FIXME: disable the "perm" here, so always save the new gds that is
+        ## consistent with VE dimensions: feature*samples*else.
     } else {
+        ## reserve the customization from SEQ_ARRAY and SNP_ARRAY. 
         if (length(data) == nrow) {
             if (name %in% c("ID", "QUAL", "FILTER")) name <- tolower(name)
             name <- paste0("annotation/", sub("_", "/", name))
@@ -101,13 +104,15 @@
                           "sample.annot")
             name <- paste(pre, name, sep="/")
         }
-        perm <- TRUE  ## for im-memory assay data, write to gds as reverse dimension.
+
+        perm <- TRUE  ## for in-memory assay data, write to gds as reverse dimension.
         ## convert XList into array with dim.
         if (is(data, "List"))
             data <- unlist(lapply(data, function(x) paste(x, collapse=",")))
         data <- as.array(data)
     }
-    if (name == "annotation/format/DP") name <- paste0(name, "/data")
+    ## if (name == "annotation/format/DP") name <- paste0(name, "/data") ## 
+
     datapath <- strsplit(name, "/")[[1]]  ## gds node path.
     directories <- datapath
     if (length(datapath) > 1)
@@ -118,7 +123,7 @@
             dirnode <- addfolder.gdsn(dirnode, name=directory,
                                       type="directory")
         } else {
-            dirnode <- index.gdsn(dirnode, directory)
+            dirnode <- index.gdsn(dirnode, directory)  ## annotation/format/DP/data, annotation/id
         }
     }
     ## if a matrix / array, do this in 'chunks', e.g., of 10,000 rows
@@ -133,9 +138,9 @@
         }else if (length(dim(data)) == 3){
             value <- unname(as.array(data[ridx,,, drop=FALSE]))
         }
-        value <- aperm(value)  ## permute because adding rows in chunks.
+        ## value <- aperm(value)  ## permute because adding rows in chunks.
         name <- tail(datapath, 1)
-        if (name == "genotype") name <- "data"
+        ## if (name == "genotype") name <- "data"
         if (start == 1){
             datanode <- add.gdsn(dirnode, name,
                                  val = value, compress = compress, check=TRUE)
@@ -144,12 +149,14 @@
             append.gdsn(datanode, val=value, check=TRUE) ##?? FIXME?
         }
     }
-    ## permute back if permute == FALSE
-    datanode <- index.gdsn(dirnode, name)
-    if (!perm){
-        readmode.gdsn(datanode)
-        permdim.gdsn(datanode, rev(seq_along(dim(data))))
-    }
+
+    ## ## permute back if permute == FALSE
+    ## datanode <- index.gdsn(dirnode, name)
+    ## if (!perm){
+    ##     readmode.gdsn(datanode)
+    ##     permdim.gdsn(datanode, rev(seq_along(dim(data))))
+    ## }
+    
     ## add attribute for "seq_array" genotype folder node.
     if (length(directories) == 1L & all(directories == "genotype")){
         put.attr.gdsn(dirnode, "VariableName", "GT")
@@ -161,9 +168,9 @@
         ## n <- .AddVar(storage.option, varGeno, "@data", storage="uint8", visible=FALSE)
     } else if (name == "genotype"){ 
         ## add attribute for "snp_array" genotype node. 
-        ord <- ifelse(perm, "sample.order", "snp.order")
+        ## ord <- ifelse(perm, "sample.order", "snp.order")
         ## genotype should be a matrix. 
-        put.attr.gdsn(datanode, ord)
+        put.attr.gdsn(datanode, "snp.order") ## always in "snp.order" when saving from VE.
     }
  
 }

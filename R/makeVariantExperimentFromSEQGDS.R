@@ -87,6 +87,7 @@
     infonodes <- paste0("annotation/info/", infoColumns)
 
     ## for "SEQ_ARRAY", dimensions don't have restrictions, so check and adjust.
+    ## FIXME: seed(DelayedArray) will be changed. 
     ans_dim <- .get_gdsnode_desp(seqgdsfile, "variant.id", "dim")
     if(rowDataOnDisk){
         res <- lapply(infonodes, function(x) GDSArray(seqgdsfile, x))
@@ -94,6 +95,7 @@
         if (any(dim_short)) {
             node <- infoColumns[dim_short]
             node_val <- .infonodes_val(seqgdsfile, node)[,1]
+            ## can we do .infonodes_val (SeqArray::info(f, name)) directly in extract_array?
             res[[which(dim_short)]] <- DelayedArray(array(unlist(node_val)))
         }
         res1 <- DelayedDataFrame(lapply(res, I))

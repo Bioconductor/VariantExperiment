@@ -103,34 +103,40 @@ setValidity2("VariantExperiment", .validate_VariantExperiment)
 ### getter and setter
 ###--------------------
 
-### disable the "gdsfile" getter for now (5/5/2021), so that VE is not
-### restricted to come from one single gds file?
-## #' @export gdsfile
-## #' @rdname VariantExperiment-class
-## #' @param object a \code{VariantExperiment} object.
+## Still keep the `gdsfile()` function here, so that
+## save/loadVariantExperiment() function works.
 
-## setMethod("gdsfile", "VariantExperiment", function(object)
-##     ## vapply(assays(object), gdsfile, character(1)))
-##     gdsfile(assays(object)[[1]])   ## here we assume all assay data are
-##                           ## correlated with the same gds file.
-## )
+## `gdsfile()` function assumes that the VE comes from a single gds
+## file or vcf file that was internally represented by a single gds
+## file.
 
-### disable the "gdsfile" setter for now. Use
-### "saveVariantExperiment" to save to a new file path.
-## #' @export "gdsfile<-"
-## #' @param value the new gds file path for VariantExperiment object.
-## #' @rdname VariantExperiment-class
-## setReplaceMethod("gdsfile", "VariantExperiment", function(object, value) {
-##     new_filepath <- tools::file_path_as_absolute(value)
-##     assays(object) <- lapply(assays(object), function(assay)
-##         BiocGenerics:::replaceSlots(seed(assay), file=value, check=FALSE))
-##     if (is(colData(object), "DelayedDataFrame")) {
-##         colData(object) <- DelayedDataFrame(lapply(colData(object), function(cols)
-##             BiocGenerics:::replaceSlots(seed(cols), file=value, check=FALSE)))
-##     }
-##     if (is(rowData(object), "DelayedDataFrame")) {
-##         rowData(object) <- DelayedDataFrame(lapply(rowData(object), function(cols)
-##             BiocGenerics:::replaceSlots(seed(cols), file=value, check=FALSE)))
-##     }
-##     object
-## })
+#' @export gdsfile
+#' @rdname VariantExperiment-class
+#' @param object a \code{VariantExperiment} object.
+
+setMethod("gdsfile", "VariantExperiment", function(object)
+    ## vapply(assays(object), gdsfile, character(1)))
+    gdsfile(assays(object)[[1]])   ## here we assume all assay data are
+                          ## correlated with the same gds file.
+)
+
+## ?? disable the "gdsfile" setter for now. Use
+## "saveVariantExperiment" to save to a new file path.
+
+#' @export "gdsfile<-"
+#' @param value the new gds file path for VariantExperiment object.
+#' @rdname VariantExperiment-class
+setReplaceMethod("gdsfile", "VariantExperiment", function(object, value) {
+    new_filepath <- tools::file_path_as_absolute(value)
+    assays(object) <- lapply(assays(object), function(assay)
+        BiocGenerics:::replaceSlots(seed(assay), file=value, check=FALSE))
+    if (is(colData(object), "DelayedDataFrame")) {
+        colData(object) <- DelayedDataFrame(lapply(colData(object), function(cols)
+            BiocGenerics:::replaceSlots(seed(cols), file=value, check=FALSE)))
+    }
+    if (is(rowData(object), "DelayedDataFrame")) {
+        rowData(object) <- DelayedDataFrame(lapply(rowData(object), function(cols)
+            BiocGenerics:::replaceSlots(seed(cols), file=value, check=FALSE)))
+    }
+    object
+})

@@ -1,11 +1,11 @@
 ---
-title: "VariantExperiment: A RangedSummarizedExperiment Container for VCF/GDS Data with GDS Backend"
+title: "VariantExperiment: A RangedSummarizedExperiment Container for Large-Scale Variant Data with GDS Backend"
 valauthor: 
 - name: Qian Liu
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
 - name: Martin Morgan
   affiliation: Roswell Park Comprehensive Cancer Center, Buffalo, NY
-date: "last edit: 08/14/2019"
+date: "last edit: 05/17/2021"
 output:
     BiocStyle::html_document:
         toc: true
@@ -33,17 +33,19 @@ other vignette.
 
 # Introduction 
 
-As the sequencing data (DNA-seq, RNA-seq, single cell RNA-seq...) gets
-increasingly larger-profile, the memory space in R has been an
-obstable for fast and efficient data processing, because most
-available _R_ or _Bioconductor_ packages are developed based on
+With the rapid development of the biotechnologies, the sequencing
+(e.g., DNA, bulk/single-cell RNA, etc.) and other types of biological
+data are getting increasingly larger-profile. The memory space in R
+has been an obstable for fast and efficient data processing, because
+most available _R_ or _Bioconductor_ packages are developed based on
 in-memory data manipulation. [SingleCellExperiment][] has achieved
 efficient on-disk saving/reading of the large-scale count data as
 [HDF5Array][] objects. However, there was still no such light-weight
-containers available for high-throughput DNA-seq / genotyping data.
+containers available for high-throughput variant data (e.g., DNA-seq,
+genotyping, etc.).
 
 We have developed [VariantExperiment][], a _Bioconductor_ package for
-saving the `VCF/GDS` format data into `RangedSummarizedExperiment`
+saving the variant type of data into `RangedSummarizedExperiment`
 object. The high-throughput genetic/genomic data are saved in
 [GDSArray][] objects, a direct extension of [DelayedArray][] with GDS
 back-end. In addition to the light-weight `Assay` data, We have also
@@ -92,18 +94,22 @@ objects derived from the [DelayedArray][] package and `DelayedArray`
 class. It converts `GDS` nodes into a `DelayedArray`-derived data
 structure. The rich common methods and data operations defined on
 `GDSArray` makes it more _R_-user-friendly than working with the GDS
-file directly. The array data from GDS files are always returned with
-the first dimension being features (genes/variants/snps) and the
-second dimension being `samples`. This feature is consistent with the
-assay data saved in `SummarizedExperiment`, and makes the `GDSArray`
-package more interoperable with other established _Bioconductor_ data
-infrastructure.   
+file directly. 
+
+<!-- The array data from GDS files are always returned with -->
+<!-- the first dimension being features (genes/variants/snps) and the -->
+<!-- second dimension being `samples`. This feature is consistent with the -->
+<!-- assay data saved in `SummarizedExperiment`, and makes the `GDSArray` -->
+<!-- package more interoperable with other established _Bioconductor_ data -->
+<!-- infrastructure.    -->
 
 The `GDSArray()` constructor takes 2 arguments: the file path and the
-GDS node name inside the GDS file. 
+GDS node name (which can be retrieved with the `gdsnode()` function)
+inside the GDS file.
 
 ```{r, GDSArray}
 file <- GDSArray::gdsExampleFileName("seqgds")
+gdsnodes(file)
 GDSArray(file, "genotype/data")
 GDSArray(file, "sample.id")
 ```
@@ -121,9 +127,9 @@ and [DelayedArray][] packages.
 delayed operations on `DataFrame` objects using standard `DataFrame`
 metaphor. Each column of data inside `DelayedDataFrame` is represented
 as 1-dimensional `GDSArray` with on-disk GDS file. Methods like
-`show`,`validity check`, `[`, `[[` subsetting, `rbind`, `cbind` are implemented for
-`DelayedDataFrame`.  The `DelayedDataFrame` stays lazy until an
-explicit realization call like `DataFrame()` constructor or
+`show`,`validity check`, `[`, `[[` subsetting, `rbind`, `cbind` are
+implemented for `DelayedDataFrame`.  The `DelayedDataFrame` stays lazy
+until an explicit realization call like `DataFrame()` constructor or
 `as.list()` incurred. More details about [DelayedDataFrame][] data
 structure could be found in the vignette of [DelayedDataFrame][]
 package.
@@ -137,27 +143,51 @@ package.
 data are saved as `GDSArray`, and the annotation data are saved by
 default as `DelayedDataFrame` (with option to save as ordinary
 `DataFrame`), both of which are representing the data on-disk with
-`GDS` back-end. There are coercion methods defined for `VCF` and `GDS`
-files into `VariantExperiment` objects (Check the method vignette for
-more details).
-Here we take an example for illustration.  
+`GDS` back-end. Conversion methods into `VariantExperiment` object are
+defined directly for `VCF` and `GDS` files. (Check the method vignette
+for more details). Here we show one simple example to convert a
+DNA-sequencing data in GDS format into `VariantExperiment` and some
+class-related operations.
 
 ```{r makeVariantExperimentFromGDS}
 ve <- makeVariantExperimentFromGDS(file)
 ve
 ```
 
+In this example, the sequencing file in GDS format was converted into
+a `VariantExperiment` object, with all available assay data saved into
+the `assay` slot, all available feature annotation nodes into
+`rowRanges/rowData` slot, and all available sample annotation nodes
+into `colData` slot. The available values for each arguments in
+`makeVariantExperimentFromGDS()` function can be retrieved using the
+`showAvailable()` function.
+
+```{r showAvailable}
+args(makeVariantExperimentFromGDS)
+showAvailable(file)
+```
+
 ## slot accessors
 
-assay data are in `GDSArray` format, and could be retrieve by the
-`assays()/assay()` function.
+Assay data are in `GDSArray` format, and could be retrieve by the
+`assays()/assay()` function. **NOTE** that when converted into a
+`VariantExperiment` object, the assay data will be checked and
+permuted, so that the first 2 dimensions always match to features
+(variants/snps) and samples respectively, no matter how are the
+dimensions are with the original GDSArray that can be constructed.
 
 ```{r makeVariantExperimentFromGDS2}
 assays(ve)
 assay(ve, 1)
+GDSArray(file, "genotype/data")
 ```
 
-The `rowData()` of the `VariantExperiment` is saved in
+In this example, the original `GDSArray` object from genotype data was
+`2 x 90 x 1348`. But it was permuted to `1348 x 90 x 2` when
+constructed into the `VariantExperiment` object.
+
+
+The `rowData()` of the `VariantExperiment` is by default saved in
 `DelayedDataFrame` format. We can use `rowRanges()` / `rowData()` to
 retrieve the feature-related annotation file, with/without a
 GenomicRange format.
@@ -167,18 +197,18 @@ rowRanges(ve)
 rowData(ve)
 ```
 
-sample-related annotation is in `DelayedDataFrame` format, and could
-be retrieved by `colData()`.
+sample-related annotation is by default in `DelayedDataFrame` format,
+and could be retrieved by `colData()`.
 
 ```{r colData}
 colData(ve)
 ``` 
 
-The `gdsfile()` will retrieve the gds file path associated with the
-`VariantExperiment` object.
-```{r gdsfile}
-gdsfile(ve)
-```
+<!-- The `gdsfile()` will retrieve the gds file path associated with the -->
+<!-- `VariantExperiment` object. -->
+<!-- ```{r gdsfile} -->
+<!-- gdsfile(ve) -->
+<!-- ``` -->
 
 Some other getter function like `metadata()` will return any metadata
 that we have saved inside the `VariantExperiment` object.
@@ -197,11 +227,12 @@ ve[1:10, 1:5]
 ```
 
 ## `$` subsetting
-The `$` subsetting could be operated directly on `colData()` columns,
-for easy sample extraction.  Note that the `colData/rowData` are in the
-`DelayedDataFrame` format, with each column saved as `GDSArray`. So
-when doing subsetting, we need to use `as.logical()` to convert the
-1-dimensional `GDSArray` into ordinary vector.
+
+The `$` subsetting can be operated directly on `colData()` columns,
+for easy sample extraction. **NOTE** that the `colData/rowData` are
+(by default) in the `DelayedDataFrame` format, with each column saved
+as `GDSArray`. So when doing subsetting, we need to use `as.logical()`
+to convert the 1-dimensional `GDSArray` into ordinary vector.
 
 ```{r colDataExtraction}
 colData(ve)
@@ -218,7 +249,7 @@ ve[as.logical(rowData(ve)$REF == "T"),]
 ## Range-based operations
 
 `VariantExperiment` objects support all of the `findOverlaps()`
-methods and associated functions.  This includes `subsetByOverlaps()`,
+methods and associated functions. This includes `subsetByOverlaps()`,
 which makes it easy to subset a `VariantExperiment` object by an
 interval.
 
@@ -226,6 +257,10 @@ interval.
 ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
 ve1
 ```
+
+In this example, only 23 out of 1348 variants were retained with the
+`GRanges` subsetting.
+
 # Save / load `VariantExperiment` object
 
 Note that after the subsetting by `[`, `$` or `Ranged-based

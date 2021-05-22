@@ -82,9 +82,9 @@ showAvailable <- function(file,
     ## if (is.null(ff))
     ##     stop("The gds file does not have the 'FileFormat' attribution!")
     if (!is.null(ff) && ff == "SEQ_ARRAY") {
-        res <- .showAvailable_seqarray(file, args)
+        res <- .showAvailable_seqarray(file, args, ftnode = "variant.id", smpnode = "sample.id")
     } else if (!is.null(ff) && ff == "SNP_ARRAY") {
-        res <- .showAvailable_snparray(file, args)
+        res <- .showAvailable_snparray(file, args, ftnode = "snp.id", smpnode = "sample.id")
     } else {
         res <- .showAvailable_general(file, args, ftnode, smpnode)
     }

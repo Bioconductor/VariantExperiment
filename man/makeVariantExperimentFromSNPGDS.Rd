@@ -46,6 +46,6 @@ colData(se)
 metadata(se)
 ## Only read specific columns for feature annotation.
 showAvailable(file)
-se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
+se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("snp.allele"))
 rowRanges(se1)
 }

@@ -4,6 +4,8 @@
 \name{VariantExperiment-class}
 \alias{VariantExperiment-class}
 \alias{VariantExperiment}
+\alias{gdsfile,VariantExperiment-method}
+\alias{gdsfile<-,VariantExperiment-method}
 \title{VariantExperiment-class}
 \usage{
 VariantExperiment(
@@ -12,6 +14,10 @@ VariantExperiment(
   colData = DelayedDataFrame(),
   metadata = list()
 )
+
+\S4method{gdsfile}{VariantExperiment}(object)
+
+\S4method{gdsfile}{VariantExperiment}(object) <- value
 }
 \arguments{
 \item{assays}{A ‘list’ or ‘SimpleList’ of matrix-like elements, or
@@ -32,6 +38,10 @@ VariantExperiment.}
 
 \item{metadata}{An optional ‘list’ of arbitrary content describing
 the overall experiment.}
+
+\item{object}{a \code{VariantExperiment} object.}
+
+\item{value}{the new gds file path for VariantExperiment object.}
 }
 \value{
 a \code{VariantExperiment} object.

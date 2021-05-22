@@ -16,42 +16,25 @@
 }
 
 ## return a DataFrame
-.varnode_seqgds_inmem <- function(seqgdsfile, name){
+.varnode_seqgds_inmem <- function(seqgdsfile, node){
     f <- seqOpen(seqgdsfile)
     on.exit(seqClose(f))
-    if(name %in% "id") res <- seqGetData(f, paste0("annotation/", name))
-    if(name %in% "ref") res <- ref(f)
-    if(name %in% "alt") res <- alt(f)
-    if(name %in% "qual") res <- qual(f)
-    if(name %in% "filter") res <- filt(f)
-    resDF <- setNames(DataFrame(res), toupper(name))
+    res <- switch(node,
+                  'annotation/id' = list(seqGetData(f, "annotation/id")),
+                  'annotation/qual' = list(qual(f)),
+                  'annotation/filter' = list(filt(f)),
+                  allele = list(ref(f), alt(f)))
+    if (node == "allele")
+        node <- c("REF", "ALT")
+    res <- setNames(res, node)
+    resDF <- DataFrame(res)
     resDF  ## returns a DataFrame with names. 
 }
 
 #' @importFrom methods new
-
-.varnode_seqgds <- function(seqgdsfile, name){
-    f <- openfn.gds(seqgdsfile)
-    on.exit(closefn.gds(f))
-    varid <- read.gdsn(index.gdsn(f, "variant.id"))
-    varnodes <- ls.gdsn(index.gdsn(f, "annotation"))
-    if(name %in% varnodes) node <- paste0("annotation/", name)
-    if(name %in% c("alt", "ref")) node <- "allele"
-    node
-}
-
-.varnode_seqgds_ondisk <- function(seqgdsfile, name){
-    node <- .varnode_seqgds(seqgdsfile, name)
-    GDSArray(seqgdsfile, node)
-}
-
 #' @importMethodsFrom SeqArray info
 #' @import DelayedDataFrame
-.infonodes <- function(seqgdsfile){
-    f <- seqOpen(seqgdsfile)
-    on.exit(seqClose(f))
-    ls.gdsn(index.gdsn(f, "annotation/info"))
-}
+
 .infonodes_val <- function(seqgdsfile, name) {
     f <- seqOpen(seqgdsfile)
     on.exit(seqClose(f))
@@ -59,11 +42,11 @@
 }
 
 .infoColumns_check <- function(seqgdsfile, infoColumns) {
-    infonodes <- .infonodes(seqgdsfile)
+    infonodes <- showAvailable(seqgdsfile, "infoColumns")[[1]]
     if (is.null(infoColumns)) {
         infoColumns <- infonodes
     } else {
-        idx <- toupper(infoColumns) %in% infonodes
+        idx <- infoColumns %in% infonodes
         if(any(!idx)){
             misics <- paste(infoColumns[!idx], collapse = ", ")
             warning(.infoColumns_check_msg(misics))
@@ -86,25 +69,21 @@
     infoColumns <- .infoColumns_check(seqgdsfile, infoColumns)
     infonodes <- paste0("annotation/info/", infoColumns)
 
-    ## for "SEQ_ARRAY", dimensions don't have restrictions, so check and adjust.
-    ## FIXME: seed(DelayedArray) will be changed. 
     ans_dim <- .get_gdsnode_desp(seqgdsfile, "variant.id", "dim")
     if(rowDataOnDisk){
         res <- lapply(infonodes, function(x) GDSArray(seqgdsfile, x))
-        dim_short <- lengths(res) != ans_dim
-        if (any(dim_short)) {
-            node <- infoColumns[dim_short]
-            node_val <- .infonodes_val(seqgdsfile, node)[,1]
-            ## can we do .infonodes_val (SeqArray::info(f, name)) directly in extract_array?
-            res[[which(dim_short)]] <- DelayedArray(array(unlist(node_val)))
-        }
-        res1 <- DelayedDataFrame(lapply(res, I))
+        ## only keep nodes that are same length as "variant.id"!!  for
+        ## SeqArray::seqExampleFileName("gds"), the
+        ## "annotation/info/AA" doesn't match (1328 vs 1348).
+        idx.keep <- lengths(res) == ans_dim
+        res <- res[idx.keep] 
+        infoColumns <- infoColumns[idx.keep]
+            res1 <- DelayedDataFrame(lapply(res, I))
     }else{
         res1 <- .infonodes_val(seqgdsfile, infoColumns)
     }
-    setNames(res1, paste0("info_", infoColumns))
-
-    }
+    setNames(res1, paste0("info.", infoColumns))    
+}
 
 #' @importFrom Biostrings DNAStringSet
 #' @import SNPRelate
@@ -125,15 +104,14 @@
     ## if there are valid rowDataColumns
     if(rowDataOnDisk){
         res <- setNames(
-            lapply(rowDataColumns, function(x)
-                .varnode_seqgds_ondisk(seqgdsfile, name=x)),
-            toupper(rowDataColumns))
+            lapply(rowDataColumns, function(x) GDSArray(seqgdsfile, x)), 
+            rowDataColumns)
         resDF <- DelayedDataFrame(lapply(res, I))
-        if("REF" %in% names(resDF)){ ## for seqgds
-            resDF$REF <- sub(",.*", "", resDF$REF)
-        }
-        if("ALT" %in% names(resDF)){ ## for seqgds
-            resDF$ALT <- sub("[TCGA]*,", "", resDF$ALT)
+        if("allele" %in% rowDataColumns){ ## for seqgds
+            resDF$REF <- sub(",.*", "", resDF$allele)
+            resDF$ALT <- sub("[TCGA]*,", "", resDF$allele)
+            resDF$allele <- NULL
+            ## resDF <- resDF[, c("REF", "ALT", names(resDF)[!names(resDF) %in% c("REF", "ALT", "allele")])]
         }
     }else{ ## rowDataOnDisk = FALSE...
         resDF <- DataFrame(lapply(rowDataColumns, function(x)
@@ -200,22 +178,31 @@
                                     args = c("assayNames",
                                              "rowDataColumns",
                                              "colDataColumns",
-                                             "infoColumns")) {
+                                             "infoColumns"),
+                                    ftnode = "variant.id",
+                                    smpnode = "sample.id") {
     res <- CharacterList()
+    allnodes <- gdsnodes(file)
     if ("assayNames" %in% args) {
         res$assayNames <- .get_gds_arraynodes(file)
     }
     if ("rowDataColumns" %in% args) {
-        res$rowDataColumns <- c("ID", "ALT", "REF", "QUAL", "FILTER")
+        ## "allele" is a required node in "SEQ_ARRAY";
+        ## "annotation/id", "annotation/qual", "annotation/filter"are
+        ## optional nodes in "SEQ_ARRAY".
+        rowcols <- c("allele",
+                     allnodes[allnodes %in% paste("annotation", c("id", "qual", "filter"), sep="/")])
+        rowlens <- vapply(rowcols, function(x) .get_gdsnode_desp(file, x, "dim"), integer(1))
+        rowcols <- rowcols[rowlens == .get_gdsnode_desp(file, ftnode, "dim")]
+        res$rowDataColumns <- rowcols
+        ## res$rowDataColumns <- c("ID", "ALT", "REF", "QUAL", "FILTER")
     }
-        if (any(c("colDataColumns", "infoColumns") %in% args)) {
-        f <- openfn.gds(file)
-        on.exit(closefn.gds(f))
+    if ("colDataColumns" %in% args) {
+        res$colDataColumns <- .showAvailable_check(file, "colDataColumns", ftnode, smpnode)
     }
-    if ("colDataColumns" %in% args)
-        res$colDataColumns <- ls.gdsn(index.gdsn(f, "sample.annotation"))
-    if("infoColumns" %in% args)
-        res$infoColumns <- ls.gdsn(index.gdsn(f, "annotation/info"))
+    if("infoColumns" %in% args) {
+        res$infoColumns <- .showAvailable_check(file, "infoColumns", ftnode, smpnode)
+    }
     res
 }
 
@@ -271,20 +258,20 @@ makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
         stop("`colDataOnDisk` must be logical.")
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
-
+    
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
     ## ff <- .get_gds_fileFormat(file)
-
+    
     allnames <- showAvailable(file)$assayNames
     if (is.null(assayNames)) {
         assayNames <- allnames
     } else {
         assayNames <- match.arg(assayNames, assayNames)
     }
-
+    
     ## colData 
     colData <- .colData_seqgds(file, colDataColumns, colDataOnDisk)
-
+    
     ## rowRange with info data if available for seqVarGDSClass
     rowRange <- .rowRanges_seqgds(file, rowDataColumns, rowDataOnDisk)
     ## if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
@@ -292,7 +279,7 @@ makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
         infocols <- .infoColumns_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- cbind(mcols(rowRange), infocols)
     }
-
+    
     ## assay data
     ## Make sure all assays are in correct dimensions (feature*sample*else) 
     assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
@@ -313,6 +300,3 @@ makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
         colData = colData,
         rowRanges = rowRange)
 }
-
-
-## todo: makeVariantExperimentFromSEQGDS(), makeVariantExperimentFromSNPGDS()

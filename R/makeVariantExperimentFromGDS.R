@@ -66,8 +66,7 @@
 
     ## if no available colDataColumns are selected, i.e.,
     ## colDataColumns = character(0), return an empty
-    ## (Delayed)DataFrame with "sample.id" as rownames.
-    ## FIXME: here assuming "sample.id" exists!!! 
+    ## (Delayed)DataFrame with sample id as rownames.
 
     if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
         .empty_colData_DF(gdsfile, smpnode, colDataOnDisk)

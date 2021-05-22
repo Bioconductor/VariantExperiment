@@ -77,7 +77,7 @@ BiocManager::install("VariantExperiment")
 ```
 Or install the development version of the package from Github.
 ```{r, eval = FALSE}
-BiocManager::install(“Bioconductor/VariantExperiment”) 
+BiocManager::install("Bioconductor/VariantExperiment") 
 ``` 
 
 2. Load the package into R session.
@@ -108,6 +108,7 @@ GDS node name (which can be retrieved with the `gdsnode()` function)
 inside the GDS file.
 
 ```{r, GDSArray}
+library(GDSArray)
 file <- GDSArray::gdsExampleFileName("seqgds")
 gdsnodes(file)
 GDSArray(file, "genotype/data")
@@ -179,7 +180,7 @@ dimensions are with the original GDSArray that can be constructed.
 ```{r makeVariantExperimentFromGDS2}
 assays(ve)
 assay(ve, 1)
-GDSArray(file, "genotype/data")
+GDSArray(file, "genotype/data")  ## original GDSArray from GDS file before permutation
 ```
 
 In this example, the original `GDSArray` object from genotype data was
@@ -293,7 +294,7 @@ session generated from the newly saved data.
 
 ```{r saveVE}
 a <- tempfile()
-ve2 <- saveVariantExperiment(ve1, dir=a, replace=TRUE)
+ve2 <- saveVariantExperiment(ve1, dir=a, replace=TRUE, chunk_size = 20)  ## FIXME with different chunks. 
 ```
 
 ## load `VariantExperiment` object

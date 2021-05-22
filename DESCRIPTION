@@ -45,5 +45,5 @@ Imports:
     Biostrings, 
     IRanges
 RoxygenNote: 7.1.1
-Suggests: testthat, knitr
+Suggests: testthat, knitr, rmarkdown, markdown
 VignetteBuilder: knitr

@@ -259,38 +259,9 @@
     res
 }
 
-#' makeVariantExperimentFromGDS
-#' 
-#' Conversion of snp gds file into SummarizedExperiment.
-#' @param assayNames the gds node name that will be read into the
-#'     \code{assays} slot and be represented as \code{DelayedArray}
-#'     object.
-#' @param rowDataColumns which columns of \code{rowData} to
-#'     import. The default is NULL to read in all variant annotation
-#'     info.
-#' @param colDataColumns which columns of \code{colData} to
-#'     import. The default is NULL to read in all sample related
-#'     annotation info.
-#' @param rowDataOnDisk whether to save the \code{rowData} as
-#'     DelayedArray object. The default is TRUE.
-#' @param colDataOnDisk whether to save the \code{colData} as
-#'     DelayedArray object. The default is TRUE.
-#' @return An \code{VariantExperiment} object.
-#' @importFrom tools file_path_as_absolute
-## #' @importFrom SummarizedExperiment SummarizedExperiment
-#' @importFrom stats setNames
+#' @rdname makeVariantExperimentFromGDS
 #' @export
-#' @examples
-#' file <- SNPRelate::snpgdsExampleFileName()
-#' se <- makeVariantExperimentFromGDS(file)
-#' rowData(se)
-#' colData(se)
-#' metadata(se)
-#' ## Only read specific columns for feature annotation.
-#' showAvailable(file)
-#' se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("snp.allele"))
-#' rowRanges(se1)
-
+#' 
 makeVariantExperimentFromSNPGDS <- function(file, assayNames=NULL,
                                          rowDataColumns = NULL,
                                          colDataColumns = NULL,
@@ -327,15 +298,7 @@ makeVariantExperimentFromSNPGDS <- function(file, assayNames=NULL,
     assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
     ans_nrow <- length(rowRange)
     ans_ncol <- nrow(colData)
-    permFun <- function(x, dim1, dim2) {
-        pos <- match(c(dim1, dim2), dim(x))
-        if (length(dim(x)) > 2) {
-            aperm(x, perm = c(pos, setdiff(seq_along(dim(x)), pos)))
-        } else {
-            aperm(x, perm = pos)
-        }
-    }
-    assays <- lapply(assays, permFun, dim1 = ans_nrow, dim2 = ans_ncol)
+    assays <- lapply(assays, .permdim, dim1 = ans_nrow, dim2 = ans_ncol)
     
     se <- VariantExperiment(
         assays = assays,

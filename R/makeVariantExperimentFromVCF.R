@@ -52,20 +52,20 @@
 #' ## the vcf file
 #' vcf <- SeqArray::seqExampleFileName("vcf")
 #' ## conversion
-#' ## ve <- makeVariantExperimentFromVCF(vcf)
-#' ## ve
+#' ve <- makeVariantExperimentFromVCF(vcf)
+#' ve
 #' ## the filepath to the gds file.
-#' ## gdsfile(ve)
+#' gdsfile(ve)
 #' 
 #' ## only read in specific info columns
-#' ## ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
-#' ##                                    info.import=c("OR", "GP"))
-#' ## ve
+#' ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                    info.import=c("OR", "GP"))
+#' ve
 #' ## convert without the INFO and FORMAT fields
-#' ## ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
-#' ##                                    info.import=character(0),
-#' ##                                    fmt.import=character(0))
-#' ## ve
+#' ve <- makeVariantExperimentFromVCF(vcf, out.dir = tempfile(),
+#'                                    info.import=character(0),
+#'                                    fmt.import=character(0))
+#' ve
 #' ## now the assay data does not include the
 #' #"annotation/format/DP/data", and the rowData(ve) does not include
 #' #any info columns.
@@ -90,7 +90,7 @@ makeVariantExperimentFromVCF <- function(vcf.fn,
                   "object (the directory will be created)"))
     
     ## stopifnot(is.character(out.dir), length(out.dir)==1L)
-
+    
     ## run VCF to GDS
     .create_dir(out.dir, replace)
     out.gds.fn <- file.path(out.dir, "se.gds")
@@ -103,32 +103,15 @@ makeVariantExperimentFromVCF <- function(vcf.fn,
                optimize=TRUE, raise.error=TRUE, digest = TRUE,
                parallel = parallel,
                verbose=verbose)
-
+    
     ## add sample info into gds file.
     if (!is.null(sample.info)) {
         sample.info <- read.table(file = sample.info, header = TRUE,
                                   blank.lines.skip = TRUE,
                                   stringsAsFactors = FALSE)
-        gfile <- openfn.gds(out.gds.fn, readonly=FALSE)
-        sample.id <- read.gdsn(index.gdsn(gfile, "sample.id"))
-        idx <- match(sample.id, rownames(sample.info))
-        if (any(is.na(idx)))
-            warning(paste0(sum(is.na(idx)), " out of ",
-                           length(sample.id), " samples ",
-                           "does not have sample info available. ",
-                           "(", paste(head(sample.id[is.na(idx)]), collapse=", "),
-                           ifelse(sum(is.na(idx)) > 6, "...", ""), ")"))
-        sample.info <- sample.info[idx, , drop=FALSE]
-        sampAnnot <- index.gdsn(gfile, "sample.annotation")
-        for (i in seq_along(sample.info)) {
-            SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
-                               node = sampAnnot, varname = names(sample.info)[i],
-                               val = sample.info[,i],
-                               closezip = TRUE)
-        }
-        closefn.gds(gfile)
+        .addsmpanno(out.gds.fn, value = sample.info)
     }
-
+    
     ## run GDS to VE
     makeVariantExperimentFromGDS(file=out.gds.fn,
                                  assayNames = NULL,
@@ -136,3 +119,26 @@ makeVariantExperimentFromVCF <- function(vcf.fn,
                                  colDataOnDisk = TRUE, 
                                  infoColumns = info.import)
 }
+
+.addsmpanno <- function(gdsfile, value) {
+    gfile <- openfn.gds(gdsfile, readonly=FALSE)
+    on.exit(closefn.gds(gfile))
+    sample.id <- read.gdsn(index.gdsn(gfile, "sample.id"))
+    idx <- match(sample.id, rownames(value))
+    if (any(is.na(idx)))
+        warning(paste0(sum(is.na(idx)), " out of ",
+                       length(sample.id), " samples ",
+                       "does not have sample info available. ",
+                       "(", paste(head(sample.id[is.na(idx)]), collapse=", "),
+                       ifelse(sum(is.na(idx)) > 6, "...", ""), ")"))
+    value <- value[idx, , drop=FALSE]
+    sampAnnot <- index.gdsn(gfile, "sample.annotation")
+    for (i in seq_along(value)) {
+        SeqArray:::.AddVar(storage.option = SeqArray::seqStorageOption("LZMA_RA"),
+                           node = sampAnnot, varname = names(value)[i],
+                           val = value[,i],
+                           closezip = TRUE)
+        ## FIXME: returns warning: Missing characters are converted to "".
+    }
+}
+    

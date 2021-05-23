@@ -1,7 +1,9 @@
-## In "maAkeVariantExperimentFromSEQGDS()", we have customized: 1) the
-## "ID", "ALT", "REF", "QUAL", "FILTER" columns (from "annotation/id",
-## "allele", "annotation/qual", "annotaiton/filter") nodes; 2) the
-## info columns (from "annotation/info/*" nodes) as part of the
+## In "maAkeVariantExperimentFromSEQGDS()", we have customized:
+
+## 1) the "ID", "ALT", "REF", "QUAL", "FILTER" columns (from
+## "annotation/id", "allele", "annotation/qual", "annotaiton/filter")
+## nodes;
+## 2) the info columns (from "annotation/info/*" nodes) as part of the
 ## mcols(rowRanges(ve)) with column names with "info_" prefix.
 ## "variant.id" was used as default feature id, and "sample.id" was
 ## used as default sample id. These 2 nodes are required by
@@ -88,6 +90,7 @@
 #' @importFrom Biostrings DNAStringSet
 #' @import SNPRelate
 #' @importMethodsFrom DelayedArray sub
+#' @importFrom S4Vectors mcols<- 
 .rowRanges_seqgds <- function(seqgdsfile, rowDataColumns, rowDataOnDisk){
     rr <- .granges_seqgds(seqgdsfile)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
@@ -206,38 +209,8 @@
     res
 }
 
-#' makeVariantExperimentFromGDS
-#' 
-#' Conversion of seq gds file into SummarizedExperiment.
-#' @inheritParams makeVariantExperimentFromSNPGDS 
-#' @param infoColumns which columns of \code{infoColumns} to
-#' @return An \code{VariantExperiment} object.
+#' @rdname makeVariantExperimentFromGDS
 #' @export
-#' @examples
-#' file <- SeqArray::seqExampleFileName(type="gds")
-#' se <- makeVariantExperimentFromGDS(file)
-#' ## all assay data
-#' names(assays(se))
-#' showAvailable(file)
-#'
-#' ## only read specific columns for feature / sample annotation. 
-#' assayNamess <- showAvailable(file)$assayNames
-#' rowdatacols <- showAvailable(file)$rowDataColumns
-#' coldatacols <- showAvailable(file)$colDataColumns
-#' infocols <- showAvailable(file)$infoColumns
-#' se1 <- makeVariantExperimentFromGDS(
-#' file,
-#' assayNames = assayNamess[2],
-#' rowDataColumns = rowdatacols[1:3],
-#' colDataColumns = coldatacols[1],
-#' infoColumns = infocols[c(1,3,5,7)],
-#' rowDataOnDisk = FALSE,
-#' colDataOnDisk = FALSE)
-#' assay(se1)
-#' 
-#' ## the rowData(se1) and colData(se1) are now in DataFrame format 
-#' rowData(se1)
-#' colData(se1)
 
 makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
                                             rowDataColumns = NULL,
@@ -252,48 +225,34 @@ makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
                   "the gds file where the dataset is located."))
     file <- tools::file_path_as_absolute(file)
     stopifnot(is.character(assayNames) | is.null(assayNames))
-    ## if (!isSingleStringOrNA(assayNames))
-    ##     stop("'assayNames' must be a single string or NA")
     if(!isTRUEorFALSE(colDataOnDisk))
         stop("`colDataOnDisk` must be logical.")
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
     
-    ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
-    ## ff <- .get_gds_fileFormat(file)
-    
-    allnames <- showAvailable(file)$assayNames
+    ## assay data
+    allnames <- showAvailable(file, "assayNames")[[1]]
     if (is.null(assayNames)) {
         assayNames <- allnames
     } else {
         assayNames <- match.arg(assayNames, assayNames)
     }
+    assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
     
     ## colData 
     colData <- .colData_seqgds(file, colDataColumns, colDataOnDisk)
     
     ## rowRange with info data if available for seqVarGDSClass
     rowRange <- .rowRanges_seqgds(file, rowDataColumns, rowDataOnDisk)
-    ## if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
     if ((is.null(infoColumns) || length(infoColumns) > 0)) {
         infocols <- .infoColumns_seqgds(file, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- cbind(mcols(rowRange), infocols)
     }
-    
-    ## assay data
+
     ## Make sure all assays are in correct dimensions (feature*sample*else) 
-    assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
     ans_nrow <- length(rowRange)
     ans_ncol <- nrow(colData)
-    permFun <- function(x, dim1, dim2) {
-        pos <- match(c(dim1, dim2), dim(x))
-        if (length(dim(x)) > 2) {
-            aperm(x, perm = c(pos, setdiff(seq_along(dim(x)), pos)))
-        } else {
-            aperm(x, perm = pos)
-        }
-    }
-    assays <- lapply(assays, permFun, dim1 = ans_nrow, dim2 = ans_ncol)
+    assays <- lapply(assays, .permdim, dim1 = ans_nrow, dim2 = ans_ncol)
     
     se <- VariantExperiment(
         assays = assays,

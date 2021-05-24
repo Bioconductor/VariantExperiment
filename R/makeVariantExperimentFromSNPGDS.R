@@ -47,12 +47,12 @@
 
 ## #' @importFrom methods new
 
-.rowDataColumns_check <- function(gdsfile, rowDataColumns) {
+.rowDataColumns_check <- function(gdsfile, ftnode, rowDataColumns) {
     if (is.null(rowDataColumns)) {
-        rowDataColumns <- showAvailable(gdsfile)$rowDataColumns
+        rowDataColumns <- showAvailable(gdsfile, args = "rowDataColumns", ftnode = ftnode)[[1]]
     } else {
         idx.within <- rowDataColumns %in%
-            showAvailable(gdsfile)$rowDataColumns
+            showAvailable(gdsfile, args = "rowDataColumns", ftnode = ftnode)[[1]]
         if(any(!idx.within)) {
             misrdcs <- paste(rowDataColumns[!idx.within], collapse = ", ")
             warning(.rowDataColumns_check_msg(misrdcs))
@@ -88,17 +88,17 @@
 #' @importMethodsFrom DelayedArray sub
 
 ## .rowRanges_gdsdata
-.rowRanges_snpgds <- function(snpgdsfile, rowDataColumns, rowDataOnDisk){
+.rowRanges_snpgds <- function(snpgdsfile, ftnode = "snp.id", rowDataColumns, rowDataOnDisk){
     
     rr <- .granges_snpgds(snpgdsfile)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
-    rowDataColumns <- .rowDataColumns_check(snpgdsfile, rowDataColumns)
+    rowDataColumns <- .rowDataColumns_check(snpgdsfile, ftnode, rowDataColumns)
 
     ## if no available rowDataColumns are selected, i.e.,
     ## rowDataColumns = character(0), return an empty (Delayed)DataFrame
     ## for mcols()
     if (is.character(rowDataColumns) && length(rowDataColumns) == 0) {
-        resDF <- .empty_rowData_DF(snpgdsfile, "snp.id", rowDataOnDisk)
+        resDF <- .empty_rowData_DF(snpgdsfile, ftnode, rowDataOnDisk)
         mcols(rr) <- resDF
         return(rr)
     }
@@ -179,8 +179,8 @@
     }
 }
 
-.colData_snpgds <- function(snpgdsfile, colDataColumns, colDataOnDisk) {
-    colDataColumns <- .colDataColumns_check(snpgdsfile, colDataColumns)
+.colData_snpgds <- function(snpgdsfile, smpnode, colDataColumns, colDataOnDisk) {
+    colDataColumns <- .colDataColumns_check(snpgdsfile, colDataColumns, "sample.id")
 
     ## if no available colDataColumns are selected, i.e.,
     ## colDataColumns = character(0), return an empty (Delayed)DataFrame    
@@ -188,7 +188,7 @@
         .empty_colData_DF(snpgdsfile, "sample.id", colDataOnDisk)
     } else { ## if there are valid rowDataColumns
         if (colDataOnDisk) {
-            sample.id <- .sampnode_snpgds_ondisk(snpgdsfile, "sample.id")
+            sample.id <- .sampnode_snpgds_ondisk(snpgdsfile, smpnode)
             annot <- setNames(
                 lapply(colDataColumns, function(x)
                     .sampnode_snpgds_ondisk(snpgdsfile, x)),
@@ -198,7 +198,7 @@
         } else {
             f <- openfn.gds(snpgdsfile)
             on.exit(closefn.gds(f))
-            sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+            sample.id <- read.gdsn(index.gdsn(f, smpnode))
             node <- paste0("sample.annot/", colDataColumns)
             annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
             names(annot) <- colDataColumns
@@ -262,11 +262,14 @@
 #' @rdname makeVariantExperimentFromGDS
 #' @export
 #' 
-makeVariantExperimentFromSNPGDS <- function(file, assayNames=NULL,
-                                         rowDataColumns = NULL,
-                                         colDataColumns = NULL,
-                                         rowDataOnDisk = TRUE,
-                                         colDataOnDisk = TRUE)
+makeVariantExperimentFromSNPGDS <- function(file,
+                                            ftnode = "snp.id",
+                                            smpnode = "sample.id", 
+                                            assayNames=NULL,
+                                            rowDataColumns = NULL,
+                                            colDataColumns = NULL,
+                                            rowDataOnDisk = TRUE,
+                                            colDataOnDisk = TRUE)
 {
     ## checkings
     if (!isSingleString(file))
@@ -289,10 +292,10 @@ makeVariantExperimentFromSNPGDS <- function(file, assayNames=NULL,
     }
 
     ## colData 
-    colData <- .colData_snpgds(file, colDataColumns, colDataOnDisk)
+    colData <- .colData_snpgds(file, smpnode, colDataColumns, colDataOnDisk)
 
     ## rowRange with info data if available for seqVarGDSClass
-    rowRange <- .rowRanges_snpgds(file, rowDataColumns, rowDataOnDisk)
+    rowRange <- .rowRanges_snpgds(file, ftnode, rowDataColumns, rowDataOnDisk)
 
     ## assays: make sure all assays are in correct dimensions (feature*sample*else) 
     assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)

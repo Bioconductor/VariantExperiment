@@ -67,11 +67,16 @@
 }
 
 ## return a DataFrame with names.
-.infoColumns_seqgds <- function(seqgdsfile, infoColumns, rowDataOnDisk){
+.infoColumns_seqgds <- function(seqgdsfile, ftnode, infoColumns, rowDataOnDisk){
     infoColumns <- .infoColumns_check(seqgdsfile, infoColumns)
-    infonodes <- paste0("annotation/info/", infoColumns)
 
-    ans_dim <- .get_gdsnode_desp(seqgdsfile, "variant.id", "dim")
+    if(is.character(infoColumns) && length(infoColumns) == 0) {
+        resDF <- .empty_rowData_DF(seqgdsfile, ftnode, rowDataOnDisk)
+        return(resDF)
+    }
+    
+    infonodes <- paste0("annotation/info/", infoColumns)
+    ans_dim <- .get_gdsnode_desp(seqgdsfile, ftnode, "dim")
     if(rowDataOnDisk){
         res <- lapply(infonodes, function(x) GDSArray(seqgdsfile, x))
         ## only keep nodes that are same length as "variant.id"!!  for
@@ -91,16 +96,16 @@
 #' @import SNPRelate
 #' @importMethodsFrom DelayedArray sub
 #' @importFrom S4Vectors mcols<- 
-.rowRanges_seqgds <- function(seqgdsfile, rowDataColumns, rowDataOnDisk){
+.rowRanges_seqgds <- function(seqgdsfile, ftnode = "variant.id", rowDataColumns, rowDataOnDisk){
     rr <- .granges_seqgds(seqgdsfile)
     ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
-    rowDataColumns <- .rowDataColumns_check(seqgdsfile, rowDataColumns)
+    rowDataColumns <- .rowDataColumns_check(seqgdsfile, ftnode, rowDataColumns)
 
     ## if no available rowDataColumns are selected, i.e.,
     ## rowDataColumns = character(0), return an empty (Delayed)DataFrame
     ## for mcols()
     if (is.character(rowDataColumns) && length(rowDataColumns) == 0) { ## character(0)
-        resDF <- .empty_rowData_DF(seqgdsfile, "variant.id", rowDataOnDisk)
+        resDF <- .empty_rowData_DF(seqgdsfile, ftnode, rowDataOnDisk)
         mcol(rr) <- resDF
         return(rr)
     }
@@ -145,17 +150,17 @@
 ## colData for samples
 ###
 
-.colData_seqgds <- function(seqgdsfile, colDataColumns, colDataOnDisk) {
-    colDataColumns <- .colDataColumns_check(seqgdsfile, colDataColumns)
+.colData_seqgds <- function(seqgdsfile, smpnode, colDataColumns, colDataOnDisk) {
+    colDataColumns <- .colDataColumns_check(seqgdsfile, colDataColumns, smpnode)
 
     ## if no available colDataColumns are selected, i.e.,
     ## colDataColumns = character(0), return an empty (Delayed)DataFrame    
     if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
-        .empty_colData_DF(seqgdsfile, "sample.id", colDataOnDisk)
+        .empty_colData_DF(seqgdsfile, smpnode, colDataOnDisk)
     } else {
         ## if there are valid rowDataColumns
         if (colDataOnDisk) {
-            sample.id <- .sampnode_seqgds_ondisk(seqgdsfile, "sample.id")
+            sample.id <- .sampnode_seqgds_ondisk(seqgdsfile, smpnode)
             annot <- setNames(
                 lapply(colDataColumns, function(x)
                     .sampnode_seqgds_ondisk(seqgdsfile, x)),
@@ -165,7 +170,7 @@
         } else {
             f <- openfn.gds(seqgdsfile)
             on.exit(closefn.gds(f))
-            sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
+            sample.id <- read.gdsn(index.gdsn(f, smpnode))
             node <- paste0("sample.annotation/", colDataColumns)
             annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
             names(annot) <- colDataColumns
@@ -212,7 +217,9 @@
 #' @rdname makeVariantExperimentFromGDS
 #' @export
 
-makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
+makeVariantExperimentFromSEQGDS <- function(file, ftnode = "variant.id",
+                                            smpnode = "sample.id",
+                                            assayNames=NULL,
                                             rowDataColumns = NULL,
                                             colDataColumns = NULL,
                                             infoColumns = NULL,
@@ -240,12 +247,12 @@ makeVariantExperimentFromSEQGDS <- function(file, assayNames=NULL,
     assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
     
     ## colData 
-    colData <- .colData_seqgds(file, colDataColumns, colDataOnDisk)
+    colData <- .colData_seqgds(file, smpnode, colDataColumns, colDataOnDisk)
     
     ## rowRange with info data if available for seqVarGDSClass
-    rowRange <- .rowRanges_seqgds(file, rowDataColumns, rowDataOnDisk)
+    rowRange <- .rowRanges_seqgds(file, ftnode, rowDataColumns, rowDataOnDisk)
     if ((is.null(infoColumns) || length(infoColumns) > 0)) {
-        infocols <- .infoColumns_seqgds(file, infoColumns, rowDataOnDisk)
+        infocols <- .infoColumns_seqgds(file, ftnode, infoColumns, rowDataOnDisk)
         mcols(rowRange) <- cbind(mcols(rowRange), infocols)
     }
 

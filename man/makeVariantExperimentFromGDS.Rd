@@ -21,6 +21,8 @@ makeVariantExperimentFromGDS(
 
 makeVariantExperimentFromSEQGDS(
   file,
+  ftnode = "variant.id",
+  smpnode = "sample.id",
   assayNames = NULL,
   rowDataColumns = NULL,
   colDataColumns = NULL,
@@ -31,6 +33,8 @@ makeVariantExperimentFromSEQGDS(
 
 makeVariantExperimentFromSNPGDS(
   file,
+  ftnode = "snp.id",
+  smpnode = "sample.id",
   assayNames = NULL,
   rowDataColumns = NULL,
   colDataColumns = NULL,

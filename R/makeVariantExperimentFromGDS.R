@@ -39,7 +39,7 @@
     if (length(feature.num) > 1 | any(feature.num == 0L))
         stop("Wrong feature node name is provided!")
     rr <- .granges_generalgds(gdsfile, feature.num)
-    rowDataColumns <- .rowDataColumns_check(gdsfile, rowDataColumns)
+    rowDataColumns <- .rowDataColumns_check(gdsfile, ftnode, rowDataColumns)
     ## if no available rowDataColumns are selected, i.e.,
     ## rowDataColumns = character(0), return an empty (Delayed)DataFrame
     ## for mcols()
@@ -59,7 +59,7 @@
         f <- openfn.gds(gdsfile)
         on.exit(closefn.gds(f))
         resDF <- setNames(
-            lapply(rowDataColumns, function(x) read.gdsn(index.gdsn(f, rowDataColumns))),
+            lapply(rowDataColumns, function(x) read.gdsn(index.gdsn(f, x))),
             rowDataColumns)
     }
     mcols(rr) <- resDF
@@ -185,15 +185,21 @@ makeVariantExperimentFromGDS <- function(file, ftnode, smpnode,
                                          ){ 
     ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
     ff <- .get_gds_fileFormat(file)
-    if (ff == "SEQ_ARRAY") {
-        return(makeVariantExperimentFromSEQGDS(file, assayNames,
+    if (!is.null(ff) && ff == "SEQ_ARRAY") {
+        return(makeVariantExperimentFromSEQGDS(file,
+                                               ftnode = "variant.id",
+                                               smpnode = "sample.id",
+                                               assayNames,
                                                rowDataColumns,
                                                colDataColumns,
                                                infoColumns, 
                                                rowDataOnDisk,
                                                colDataOnDisk))
-    } else if (ff == "SNP_ARRAY") {
-        return(makeVariantExperimentFromSNPGDS(file, assayNames,
+    } else if (!is.null(ff) && ff == "SNP_ARRAY") {
+        return(makeVariantExperimentFromSNPGDS(file,
+                                               ftnode = "snp.id",
+                                               smpnode = "sample.id",
+                                               assayNames,
                                                rowDataColumns,
                                                colDataColumns,
                                                rowDataOnDisk,

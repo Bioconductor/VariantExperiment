@@ -231,7 +231,7 @@
     }
 }
 
-.write_ve_as_newve <- function(ve, gds_path, fileFormat,
+.write_ve_as_newve <- function(ve, gds_path, fileFormat, ftnode, smpnode,
                                colDataOnDisk, rowDataOnDisk)
 {
     ### save assay data as GDSArray. 
@@ -252,10 +252,9 @@
                 gdsfile(seed(SummarizedExperiment::colData(ve)[[i]])) <- gds_path
             }
         }else {
-            coldata <- .colData_seqgds(
-                gds_path,
-                names(SummarizedExperiment::colData(ve)),
-                colDataOnDisk)
+            coldata <- .colData_seqgds(gds_path, smpnode,
+                                       colDataColumns = names(SummarizedExperiment::colData(ve)),
+                                       colDataOnDisk = colDataOnDisk)
             SummarizedExperiment::colData(ve) <- coldata
         }
     }
@@ -270,11 +269,11 @@
         }else {
             ## gds_path has the same contents as in ve. so the row/colDataColumns should be the same. 
             rownodes <- showAvailable(gds_path, "rowDataColumns")[[1]]
-            rowRange <- .rowRanges_seqgds(gds_path, rownodes, rowDataOnDisk)
+            rowRange <- .rowRanges_seqgds(gds_path, ftnode, rownodes, rowDataOnDisk)
             ## add "info_" columns for "seq_array".
             if (fileFormat == "SEQ_ARRAY"){
                 infoColumns <- showAvailable(gds_path, "infoColumns")[[1]]
-                infocols <- .infoColumns_seqgds(gds_path, infoColumns, rowDataOnDisk)
+                infocols <- .infoColumns_seqgds(gds_path, ftnode, infoColumns, rowDataOnDisk)
                 mcols(rowRange) <- cbind(mcols(rowRange), infocols)
             }
             rowRanges(ve) <- rowRange
@@ -352,9 +351,18 @@ saveVariantExperiment <-
         fileFormat <- .get_gds_fileFormat(gdsfile(ve))
     
     ## initiate gds file.
-
-    if (fileFormat == "SEQ_ARRAY") .initiate_seqgds(ve, gds_path, compress)
-    if (fileFormat == "SNP_ARRAY") .initiate_snpgds(ve, gds_path, compress)
+    ## FIXME: need a function to initiate other types of gds file... 
+    
+    if (fileFormat == "SEQ_ARRAY") {
+        .initiate_seqgds(ve, gds_path, compress)
+        ftnode <- "variant.id"
+        smpnode <- "sample.id"
+        }
+    if (fileFormat == "SNP_ARRAY") {
+        .initiate_snpgds(ve, gds_path, compress)
+        ftnode <- "snp.id"
+        smpnode <- "sample.id"
+    }
     gds_path <- tools::file_path_as_absolute(gds_path)
     
     ## write se data into gds file.
@@ -362,8 +370,8 @@ saveVariantExperiment <-
                      verbose)
     
     ## save the new VE paired with new GDS file. 
-    ve <- .write_ve_as_newve(ve, gds_path, fileFormat, colDataOnDisk,
-                             rowDataOnDisk)
+    ve <- .write_ve_as_newve(ve, gds_path, fileFormat, ftnode, smpnode,
+                             colDataOnDisk, rowDataOnDisk)
     
     ## save new ve file in ".rds"
     rds_path <- file.path(dir, "ve.rds")

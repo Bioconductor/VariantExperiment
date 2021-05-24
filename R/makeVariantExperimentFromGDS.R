@@ -1,422 +1,253 @@
-#' @import GDSArray
-#' @importFrom GenomicRanges GRanges ranges seqnames 
-#' @importFrom IRanges IRanges
-#' @import gdsfmt
-#' @import SNPRelate
-#' @rawNamespace import(SeqArray, except = c(colData, rowRanges))
+## makeVariantExperimentFromGDS requires that the input file has nodes for:
+## 1. sample id (needed in generating colData)
+## 2. feature id (needed in rowRanges, currently is matched by "id" for all feature related nodes)
+## 3. chromosome, position (needed in rowRanges, currently are matched using "chrom" and "pos")
+## 4. stop position? (reflen=1L used in .granges_generalgds)
 
-.granges_gdsdata <- function(gdsfile, fileFormat, ...){
-    if(fileFormat == "SNP_ARRAY"){
-        f <- snpgdsOpen(gdsfile)
-        on.exit(snpgdsClose(f))
-        vid <- read.gdsn(index.gdsn(f, "snp.id"))
-        chr <- read.gdsn(index.gdsn(f, "snp.chromosome"))
-        pos <- read.gdsn(index.gdsn(f, "snp.position"))
-        ## reflen <- nchar(seqGetData(x, "$ref"))  
-        ## reflen[reflen < 1L] <- 1L
-        reflen <- 1L  ## all snps, length == 1L
+## grep("chromosome", "position", "id") as
+## GenomicRanges::Granges(seqnames=chromosome, ranges = Iranges(start
+## = position, end = position + reflen-1L)) where define reflen = 1L
+## for snps, but can be other values for other data type)
+
+.granges_generalgds <- function(gdsfile, feature.num, reflen = 1L, ...){
+    ftnodes <- .get_gds_annonodes(gdsfile, feature.num)
+    f <- openfn.gds(gdsfile)
+    on.exit(closefn.gds(f))
+    ## Here trying to match for "chromosome" and "position" related
+    ## nodes. If no match, return error.
+    vidnd <- index.gdsn(f, ftnodes[grep("id", ftnodes)[1]], silent = TRUE)
+    chrnd <- index.gdsn(f, ftnodes[grep("chrom", ftnodes)[1]], silent = TRUE)
+    posnd <- index.gdsn(f, ftnodes[grep("pos", ftnodes)[1]], silent = TRUE)
+    if (!is.null(chrnd) & !is.null(posnd)) {
+        chr <- read.gdsn(chrnd)
+        pos <- read.gdsn(posnd)
         gr <- GenomicRanges::GRanges(seqnames=chr,
                                      ranges=IRanges(start=pos, end=pos+reflen-1L),
                                      ...)
-        names(gr) <- as.integer(vid)
-    }else if(fileFormat == "SEQ_ARRAY"){
-        f <- seqOpen(gdsfile)
-        on.exit(seqClose(f))
-        gr <- SeqArray::granges(f)
-    }
-    gr
-}
-
-.varnode_snpgds_inmem <- function(snpgdsfile, name){
-    f <- openfn.gds(snpgdsfile)
-    on.exit(closefn.gds(f))
-    if(name %in% "id") node <- "snp.rs.id"
-    if(name %in% "allele") node <- "snp.allele"
-    res <- read.gdsn(index.gdsn(f, node))
-    resDF <- setNames(DataFrame(res), toupper(name))
-    if(node == "snp.allele"){
-        a <- strsplit(res, split="/")
-        ## genotype data, possible for >2 alt? if yes, use sub() here
-        ## and use DNAStringSetList class for "allele2"
-        a1 <- Biostrings::DNAStringSet(unlist(a)[c(TRUE, FALSE)])
-        a2 <- Biostrings::DNAStringSet(unlist(a)[c(FALSE, TRUE)]) 
-        resDF <- setNames(DataFrame(a1, a2), paste0("ALLELE", seq_len(2)))
-    }
-    resDF  ## returns a DataFrame with names.
-}
-
-.varnode_seqgds_inmem <- function(seqgdsfile, name){
-    f <- seqOpen(seqgdsfile)
-    on.exit(seqClose(f))
-    if(name %in% "id") res <- seqGetData(f, paste0("annotation/", name))
-    if(name %in% "ref") res <- ref(f)
-    if(name %in% "alt") res <- alt(f)
-    if(name %in% "qual") res <- qual(f)
-    if(name %in% "filter") res <- filt(f)
-    resDF <- setNames(DataFrame(res), toupper(name))
-    resDF  ## returns a DataFrame with names. 
-}
-
-#' @importFrom methods new
-
-.varnodes <- function(gdsfile, fileFormat, name){
-    f <- openfn.gds(gdsfile)
-    on.exit(closefn.gds(f))
-    if(fileFormat == "SNP_ARRAY"){
-        varid <- read.gdsn(index.gdsn(f, "snp.id"))
-        if(name %in% "id") node <- "snp.rs.id"
-        if(name %in% "allele") node <- "snp.allele"
-    }else if(fileFormat == "SEQ_ARRAY"){
-        varid <- read.gdsn(index.gdsn(f, "variant.id"))
-        varnodes <- ls.gdsn(index.gdsn(f, "annotation"))
-        if(name %in% varnodes) node <- paste0("annotation/", name)
-        if(name %in% c("alt", "ref")) node <- "allele"
-    }
-    node
-}
-.varnode_gdsdata_ondisk <- function(gdsfile, fileFormat, name){
-    node <- .varnodes(gdsfile, fileFormat, name)
-    GDSArray(gdsfile, node)
-}
-
-#' @importMethodsFrom SeqArray info
-#' @import DelayedDataFrame
-.infonodes <- function(seqArrayFile){
-    f <- seqOpen(seqArrayFile)
-    on.exit(seqClose(f))
-    ls.gdsn(index.gdsn(f, "annotation/info"))
-}
-
-.info_seqgds <- function(seqArrayFile, infoColumns, rowDataOnDisk){
-    infonodes <- .infonodes(seqArrayFile)
-    if (is.null(infoColumns)) {
-        infoColumns <- infonodes
+        if (!is.null(vidnd)){
+            vid <- read.gdsn(vidnd)
+            names(gr) <- as.integer(vid)
+        }
+        gr
     } else {
-        idx <- toupper(infoColumns) %in% infonodes
-        if(any(!idx)){
-            warning("\n", 'The "infoColumns" argument of "',
-                    paste(infoColumns[!idx], collapse = ", "),
-                    '" does not exist!', "\n",
-                    'Please use showAvailable(file, "infoColumns") ',
-                    'to get the available columns for "infoColumns."', "\n")
-        }
-        infoColumns <- toupper(infoColumns[idx])
-        if(length(infoColumns) == 0)
-            infoColumns <- infonodes
+        stop("Can not find the related gds nodes containing chromosome and position information!")
     }
-    infonodes <- paste0("annotation/info/", infoColumns)
-    if(rowDataOnDisk){
-        res <- lapply(infonodes, function(x) GDSArray(seqArrayFile, x))
-        res1 <- DelayedDataFrame(lapply(res, I))
-    }else{
-        f <- seqOpen(seqArrayFile)
-        on.exit(seqClose(f))
-        res1 <- SeqArray::info(f, info=infoColumns)
-    }
-    setNames(res1, paste0("info_", infoColumns))
-    ## return a DataFrame with names.
-    }
+}
 
-#' @importFrom Biostrings DNAStringSet
-#' @import SNPRelate
-#' @importMethodsFrom DelayedArray sub
-.rowRanges_gdsdata <- function(file, fileFormat, rowDataColumns, rowDataOnDisk){
-    rr <- .granges_gdsdata(file, fileFormat)
-    ## following code generates the mcols(SummarizedExperiment::rowRanges(se))
-    if (is.character(rowDataColumns) && length(rowDataColumns) == 0) { ## character(0)
-        f <- openfn.gds(file)
-        on.exit(closefn.gds(f))
-        stopifnot(inherits(f, "gds.class"))
-        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        if (rowDataOnDisk) {
-            resDF <- DelayedDataFrame(row.names=sample.id)
-        } else {
-            resDF <- DataFrame(row.names=sample.id)
-        }
-        ## mcols(rr) <- resDF
-    } else {
-        if (is.null(rowDataColumns)) {
-            rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-        } else {
-            idx.within <- toupper(rowDataColumns) %in%
-                showAvailable(file)$rowDataColumns
-            if(any(!idx.within)){
-                warning('The snp annotation of "',
-                        paste(rowDataColumns[!idx.within], collapse = ", "),
-                        '" does not exist!', "\n",
-                        'Please use showAvailable(file, "rowDataColumns") ',
-                        'to get the available columns for "rowData."', "\n")
-            }
-            rowDataColumns <- tolower(rowDataColumns[idx.within])
-            if(length(rowDataColumns)==0)
-                rowDataColumns <- tolower(showAvailable(file)$rowDataColumns)
-        }
-        if(rowDataOnDisk){
-            res <- setNames(
-                lapply(rowDataColumns, function(x)
-                    .varnode_gdsdata_ondisk(file, fileFormat, name=x)),
-                toupper(rowDataColumns))
-            resDF <- DelayedDataFrame(lapply(res, I))
-            if("ALLELE" %in% names(resDF)){
-                resDF$ALLELE1 <- sub("/.$", "", resDF$ALLELE)
-                resDF$ALLELE2 <- sub("[TCGA]*/", "", resDF$ALLELE)
-                resDF[["ALLELE"]] <- NULL 
-            }
-            if("REF" %in% names(resDF)){
-                resDF$REF <- sub(",.*", "", resDF$REF)
-            }
-            if("ALT" %in% names(resDF)){
-                resDF$ALT <- sub("[TCGA]*,", "", resDF$ALT)
-            }
-        }else{ ## rowDataOnDisk = FALSE...
-            if(fileFormat == "SNP_ARRAY"){
-                resDF <- DataFrame(lapply(rowDataColumns, function(x)
-                    .varnode_snpgds_inmem(file, x)))
-            }else if(fileFormat == "SEQ_ARRAY"){
-                resDF <- DataFrame(lapply(rowDataColumns, function(x)
-                    .varnode_seqgds_inmem(file, x)))
-            }
-        }
+.rowRanges_generalgds <- function(gdsfile, ftnode, rowDataColumns, rowDataOnDisk) {
+    feature.num <- .get_gdsnode_desp(gdsfile, ftnode, "dim")
+    if (length(feature.num) > 1 | any(feature.num == 0L))
+        stop("Wrong feature node name is provided!")
+    rr <- .granges_generalgds(gdsfile, feature.num)
+    rowDataColumns <- .rowDataColumns_check(gdsfile, ftnode, rowDataColumns)
+    ## if no available rowDataColumns are selected, i.e.,
+    ## rowDataColumns = character(0), return an empty (Delayed)DataFrame
+    ## for mcols()
+    if (is.character(rowDataColumns) && length(rowDataColumns) == 0) {
+        resDF <- .empty_rowData_DF(gdsfile, ftnode, rowDataOnDisk)
         mcols(rr) <- resDF
+        return(rr)
     }
-    rr
-}
-
-.sampnodes <- function(file, fileFormat){
-    pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
-           ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
-    f <- openfn.gds(file)
-    on.exit(closefn.gds(f))
-    ls.gdsn(index.gdsn(f, pre))
-    
-}
-.sampnode_gdsdata_ondisk <- function(file, fileFormat, name)
-{
-    pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
-           ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
-    sampnodes <- .sampnodes(file, fileFormat)
-    if(name %in% sampnodes){
-        node <- paste0(pre, "/", name)
-    }else{
-        node <- name
-    }
-    GDSArray(file, node)  ## returns Delayed/GDSArray, not DF.
-}
-
-###
-## colData for samples
-###
-
-.colData_gdsdata <- function(file, fileFormat, colDataColumns, colDataOnDisk)
-{
-    if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
-        f <- openfn.gds(file)
+    ## if there are valid rowDataColumns
+    rowDataColumns <- rowDataColumns[rowDataColumns != ftnode]    
+    if(rowDataOnDisk){
+        res <- setNames(
+            lapply(rowDataColumns, function(x) GDSArray(gdsfile, x)), 
+            rowDataColumns)
+        resDF <- DelayedDataFrame(lapply(res, I))
+    }else{ ## rowDataOnDisk = FALSE...
+        f <- openfn.gds(gdsfile)
         on.exit(closefn.gds(f))
-        stopifnot(inherits(f, "gds.class"))
-        sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-        if (colDataOnDisk) {
-            DelayedDataFrame(row.names=sample.id)
-        } else {
-            DataFrame(row.names=sample.id)
-        }
+        resDF <- setNames(
+            lapply(rowDataColumns, function(x) read.gdsn(index.gdsn(f, x))),
+            rowDataColumns)
+    }
+    mcols(rr) <- resDF
+    rr    
+}
+
+.colData_generalgds <- function(gdsfile, smpnode, colDataColumns, colDataOnDisk) {
+    colDataColumns <- .colDataColumns_check(gdsfile, colDataColumns, smpnode)
+
+    ## if no available colDataColumns are selected, i.e.,
+    ## colDataColumns = character(0), return an empty
+    ## (Delayed)DataFrame with sample id as rownames.
+
+    if (is.character(colDataColumns) && length(colDataColumns) == 0) { ## character(0)
+        .empty_colData_DF(gdsfile, smpnode, colDataOnDisk)
     } else {
-        if (is.null(colDataColumns)) {
-            colDataColumns <- showAvailable(file)$colDataColumns
-        } else {
-            idx.within <- colDataColumns %in% showAvailable(file)$colDataColumns
-            if (any(!idx.within)) {
-                warning("\n", 'The sample annotation of "',
-                        paste(colDataColumns[!idx.within], collapse = ", "),
-                        '" does not exist!', "\n",
-                        'Please use showAvailable(file, "colDataColumns") ',
-                        'to get the available columns for "colData."',
-                        "\n")
-                colDataColumns <- colDataColumns[idx.within]
-                if (length(colDataColumns) == 0)
-                    colDataColumns <- showAvailable(file)$colDataColumns
-            }
-        } 
+        colDataColumns <- colDataColumns[colDataColumns != smpnode]
+        ## if there are valid rowDataColumns
         if (colDataOnDisk) {
-            sample.id <- .sampnode_gdsdata_ondisk(
-                file, fileFormat, "sample.id")
+            sample.id <- GDSArray(gdsfile, smpnode)
             annot <- setNames(
-                lapply(colDataColumns, function(x)
-                    .sampnode_gdsdata_ondisk(file, fileFormat, x)),
+                lapply(colDataColumns, function(x) GDSArray(gdsfile, x)), 
                 colDataColumns)
             DelayedDataFrame(lapply(annot, I),
                              row.names=as.character(sample.id))
         } else {
-            f <- openfn.gds(file)
+            f <- openfn.gds(gdsfile)
             on.exit(closefn.gds(f))
-            stopifnot(inherits(f, "gds.class"))
-            sample.id <- read.gdsn(index.gdsn(f, "sample.id"))
-            pre <- ifelse(fileFormat == "SNP_ARRAY", "sample.annot",
-                   ifelse(fileFormat == "SEQ_ARRAY", "sample.annotation", NULL))
-            node <- paste0(pre, "/", colDataColumns)
-            annot <- lapply(node, function(x) read.gdsn(index.gdsn(f, x)))
+            sample.id <- read.gdsn(index.gdsn(f, smpnode))
+            annot <- lapply(colDataColumns, function(x) read.gdsn(index.gdsn(f, x)))
             names(annot) <- colDataColumns
             DataFrame(annot, row.names=sample.id)
         }
     }
 }
-#' ShowAvailable
-#' 
-#' The function to show the available entries for the arguments within
-#' \code{makeVariantExperimentFromGDS}
-#' @name showAvailable
-#' @rdname makeVariantExperimentFromGDS
-#' @param file the path to the gds.class file.
-#' @param args the arguments in
-#'     \code{makeVariantExperimentFromGDS}.
-#' @examples
-#' ## snp gds file
-#' gds <- SNPRelate::snpgdsExampleFileName()
-#' showAvailable(gds)
-#'
-#' ## sequencing gds file
-#' gds <- SeqArray::seqExampleFileName("gds")
-#' showAvailable(gds)
-#'
-#' @importFrom IRanges CharacterList
-#' @export
-#' 
-showAvailable <- function(file,
-                          args=c("name", "rowDataColumns", "colDataColumns", "infoColumns")){
-    ## check if character.
-    if (!isSingleString(file))
-        stop(wmsg("'file' must be a single string specifying the path to ",
-                  "the gds file where the dataset is located."))
-    args <- match.arg(args, several.ok=TRUE)
-    ff <- GDSArray:::.get_gds_fileFormat(file)
-    res <- CharacterList()
-    if("name" %in% args){
-        if(ff == "SNP_ARRAY"){
-            assaynodes <- "genotype"
-        }else if(ff == "SEQ_ARRAY"){
-            assaynodes <- GDSArray:::.get_gdsnode_non1D_array(file)
-        }
-        res$name <- assaynodes
-    }
-    if("rowDataColumns" %in% args){
-        if(ff == "SNP_ARRAY"){
-            rdnodes <- c("ID", "ALLELE")
-        }else if(ff == "SEQ_ARRAY"){
-            rdnodes <- c("ID", "ALT", "REF", "QUAL", "FILTER")
-        }
-        res$rowDataColumns <- rdnodes
-    }
-    if (any(c("colDataColumns", "infoColumns") %in% args)) {
-        f <- openfn.gds(file)
-        on.exit(closefn.gds(f))
-    }
-    if ("colDataColumns" %in% args) {
-        fdnode <- ifelse(ff == "SNP_ARRAY", "sample.annot",
-                  ifelse(ff == "SEQ_ARRAY", "sample.annotation", NA))
-        cdnodes <- ls.gdsn(index.gdsn(f, fdnode))
-        res$colDataColumns <- cdnodes
-    }
-    if("infoColumns" %in% args && ff == "SEQ_ARRAY"){
-        infonodes <- ls.gdsn(index.gdsn(f, "annotation/info"))
-        res$infoColumns <- infonodes
-    }
-    res
-}
 
 #' makeVariantExperimentFromGDS
 #' 
-#' Conversion of gds file into SummarizedExperiment.
-#' @param name the components of the gds file that will be represented
-#'     as \code{GDSArray} file.
+#' Conversion of gds files into SummarizedExperiment object.
+#' @rdname makeVariantExperimentFromGDS
+#' @param file the GDS file name to be converted.
+#' @param ftnode the node name for feature id (e.g., "variant.id",
+#'     "snp.id", etc.).
+#' @param smpnode the node name for sample id (e.g., "sample.id").
+#' @param assayNames the gds node name that will be read into the
+#'     \code{assays} slot and be represented as \code{DelayedArray}
+#'     object.
 #' @param rowDataColumns which columns of \code{rowData} to
 #'     import. The default is NULL to read in all variant annotation
 #'     info.
 #' @param colDataColumns which columns of \code{colData} to
 #'     import. The default is NULL to read in all sample related
 #'     annotation info.
-#' @param infoColumns which columns of \code{infoColumns} to
-#'     import. The default is NULL to read in all info columns.
 #' @param rowDataOnDisk whether to save the \code{rowData} as
 #'     DelayedArray object. The default is TRUE.
 #' @param colDataOnDisk whether to save the \code{colData} as
 #'     DelayedArray object. The default is TRUE.
+#' @param infoColumns which columns of \code{infoColumns} to import
+#'     for "SEQ_ARRAY" ("SeqVarGDSClass" gds class). The default is
+#'     NULL to read in all available info columns.
 #' @return An \code{VariantExperiment} object.
 #' @importFrom tools file_path_as_absolute
-## #' @importFrom SummarizedExperiment SummarizedExperiment
 #' @importFrom stats setNames
-#' @examples
-#' file <- SNPRelate::snpgdsExampleFileName()
-#' ## se <- makeVariantExperimentFromGDS(file)
-#' ## rowData(se)
-#' ## colData(se)
-#' ## metadata(se)
-#' ## Only read specific columns for feature annotation.
-#' showAvailable(file)
-#' ## se1 <- makeVariantExperimentFromGDS(file, rowDataColumns=c("ALLELE"))
-#' ## SummarizedExperiment::rowRanges(se1)
+#' @export
 
-#' file <- SeqArray::seqExampleFileName(type="gds")
-#' ## se <- makeVariantExperimentFromGDS(file)
+#' @examples
+#'
+#' ## gds file from DNA-seq data
+#' 
+#' seqfile <- SeqArray::seqExampleFileName(type="gds")
+#' ve <- makeVariantExperimentFromGDS(seqfile)
 #' ## all assay data
-#' ## names(assays(se))
-#' ## showAvailable(file)
+#' names(assays(ve))
+#' showAvailable(seqfile)
 #'
 #' ## only read specific columns for feature / sample annotation. 
-#' names <- showAvailable(file, "name")$name
-#' rowdatacols <- showAvailable(file, "rowDataColumns")$rowDataColumns
-#' coldatacols <- showAvailable(file, "colDataColumns")$colDataColumns
-#' infocols <- showAvailable(file, "infoColumns")$infoColumns
-#' ## se1 <- makeVariantExperimentFromGDS(
-#' ## file,
-#' ## name = names[2],
-#' ## rowDataColumns = rowdatacols[1:3],
-#' ## colDataColumns = coldatacols[1],
-#' ## infoColumns = infocols[c(1,3,5,7)],
-#' ## rowDataOnDisk = FALSE,
-#' ## colDataOnDisk = FALSE)
-#' ## assay(se1)
+#'
+#' assayNamess <- showAvailable(seqfile)$assayNames
+#' rowdatacols <- showAvailable(seqfile)$rowDataColumns
+#' coldatacols <- showAvailable(seqfile)$colDataColumns
+#' infocols <- showAvailable(seqfile)$infoColumns
+#' ve1 <- makeVariantExperimentFromGDS(
+#' seqfile,
+#' assayNames = assayNamess[2],
+#' rowDataColumns = rowdatacols[1:3],
+#' colDataColumns = coldatacols[1],
+#' infoColumns = infocols[c(1,3,5,7)],
+#' rowDataOnDisk = FALSE,
+#' colDataOnDisk = FALSE)
+#' assay(ve1)
 #' 
-#' ## the rowData(se1) and colData(se1) are now in DataFrame format 
-#' ## rowData(se1)
-#' ## colData(se1)
+#' ## the rowData(ve1) and colData(ve1) are now in DataFrame format 
+#'
+#' rowData(ve1)
+#' colData(ve1)
+#'
+#' ## gds file from genotyping data
+#' 
+#' snpfile <- SNPRelate::snpgdsExampleFileName()
+#' ve <- makeVariantExperimentFromGDS(snpfile)
+#' rowData(ve)
+#' colData(ve)
+#' metadata(ve)
+#'
+#' ## Only read specific columns for feature annotation.
+#'
+#' showAvailable(snpfile)
+#' ve1 <- makeVariantExperimentFromGDS(snpfile, rowDataColumns=c("snp.allele"))
+#' rowRanges(ve1)
+#'
+#' ## use specific conversion functions for certain gds types
+#'
+#' veseq <- makeVariantExperimentFromSEQGDS(seqfile)
+#' vesnp <- makeVariantExperimentFromSNPGDS(snpfile)
 
-#' @export
-#' 
-makeVariantExperimentFromGDS <- function(file, name=NULL,
+makeVariantExperimentFromGDS <- function(file, ftnode, smpnode,
+                                         assayNames=NULL,
                                          rowDataColumns = NULL,
                                          colDataColumns = NULL,
-                                         infoColumns = NULL,
                                          rowDataOnDisk = TRUE,
-                                         colDataOnDisk = TRUE)
-{
+                                         colDataOnDisk = TRUE,
+                                         infoColumns = NULL ## only used when "SEQ_ARRAY"
+                                         ){ 
+    ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
+    ff <- .get_gds_fileFormat(file)
+    if (!is.null(ff) && ff == "SEQ_ARRAY") {
+        return(makeVariantExperimentFromSEQGDS(file,
+                                               ftnode = "variant.id",
+                                               smpnode = "sample.id",
+                                               assayNames,
+                                               rowDataColumns,
+                                               colDataColumns,
+                                               infoColumns, 
+                                               rowDataOnDisk,
+                                               colDataOnDisk))
+    } else if (!is.null(ff) && ff == "SNP_ARRAY") {
+        return(makeVariantExperimentFromSNPGDS(file,
+                                               ftnode = "snp.id",
+                                               smpnode = "sample.id",
+                                               assayNames,
+                                               rowDataColumns,
+                                               colDataColumns,
+                                               rowDataOnDisk,
+                                               colDataOnDisk))
+    }  
+
+    ## ELSE: FOR GENERAL GDS FILES
+    
+    ## checkings
     if (!isSingleString(file))
         stop(wmsg("'file' must be a single string specifying the path to ",
                   "the gds file where the dataset is located."))
     file <- tools::file_path_as_absolute(file)
-    stopifnot(is.character(name) | is.null(name))
-    ## if (!isSingleStringOrNA(name))
-    ##     stop("'name' must be a single string or NA")
+    stopifnot(is.character(assayNames) | is.null(assayNames))
+    ## if (!isSingleStringOrNA(assayNames))
+    ##     stop("'assayNames' must be a single string or NA")
     if(!isTRUEorFALSE(colDataOnDisk))
         stop("`colDataOnDisk` must be logical.")
     if(!isTRUEorFALSE(rowDataOnDisk))
         stop("`rowDataOnDisk` must be logical.")
-    ## check which extensive gds format? SNPGDSFileClass or seqVarGDSClass? 
-    ff <- GDSArray:::.get_gds_fileFormat(file)
-    if(is.null(name)){
-        if(ff == "SNP_ARRAY"){
-            name <- "genotype"
-        }else if(ff == "SEQ_ARRAY"){
-            name <- showAvailable(file, "name")$name
-        }
+
+    ## ans_nrow <- .get_gdsnode_desp(file, ftnode, "dim")
+    ## ans_ncol <- .get_gdsnode_desp(file, smpnode, "dim")
+    
+    ## assays
+    all_assays <- showAvailable(file, ftnode = ftnode, smpnode = smpnode)$assayNames
+    if (is.null(assayNames)) {
+        assayNames <- all_assays
+    } else {
+        assayNames <- match.arg(assayNames, assayNames)
     }
-    assays <- setNames(lapply(name, function(x) GDSArray(file, x)), name)
-    colData <- .colData_gdsdata(file, ff, colDataColumns, colDataOnDisk)
-    rowRange <- .rowRanges_gdsdata(file, ff, rowDataColumns, rowDataOnDisk)
-    if ((is.null(infoColumns) || length(infoColumns) > 0) && ff == "SEQ_ARRAY") {
-        infocols <- .info_seqgds(file, infoColumns, rowDataOnDisk)
-        mcols(rowRange) <- cbind(mcols(rowRange), infocols)
-    }
+    assays <- setNames(lapply(assayNames, function(x) GDSArray(file, x)), assayNames)
+    
+    ## colData 
+    colData <- .colData_generalgds(file, smpnode, colDataColumns, colDataOnDisk)
+    
+    ## rowRange with info data if available for seqVarGDSClass
+    rowRange <- .rowRanges_generalgds(file, ftnode, rowDataColumns, rowDataOnDisk)
+
+    ## assay data adjust dimensions into: feature*sample*else 
+    ans_nrow <- length(rowRange) 
+    ans_ncol <- nrow(colData) 
+    assays <- lapply(assays, .permdim, dim1 = ans_nrow, dim2 = ans_ncol)
+    
     se <- VariantExperiment(
         assays = assays,
         colData = colData,
         rowRanges = rowRange)
 }
+
+

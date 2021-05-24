@@ -12,7 +12,7 @@ saveVariantExperiment(
   replace = FALSE,
   fileFormat = NULL,
   compress = "LZMA_RA",
-  chunk_size = 10000,
+  chunk_size = 1000,
   rowDataOnDisk = TRUE,
   colDataOnDisk = TRUE,
   verbose = FALSE
@@ -35,9 +35,11 @@ exists. The default is FALSE.}
 \item{compress}{the compression method for writing the gds
 file. The default is "LZMA_RA".}
 
-\item{chunk_size}{The chunk size (number of rows) when reading
+\item{chunk_size}{The chunk size (number of columns) when reading
 GDSArray-based assays from input \code{ve} into memory and then
-write into a new gds file.}
+write into a new gds file. Default is 1000. Can be modified to
+smaller value if chunk data is too big (e.g., when number of
+rows are large).}
 
 \item{rowDataOnDisk}{whether to save the \code{rowData} as
 DelayedArray object. The default is TRUE.}
@@ -67,13 +69,13 @@ If the input \code{SummarizedExperiment} object has
 }
 \examples{
 gds <- SeqArray::seqExampleFileName("gds")
-## ve <- makeVariantExperimentFromGDS(gds)
-## gdsfile(ve)
-## ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
-## ve1
-## gdsfile(ve1)
+ve <- makeVariantExperimentFromGDS(gds)
+gdsfile(ve)
+ve1 <- subsetByOverlaps(ve, GRanges("22:1-48958933"))
+ve1
+gdsfile(ve1)
 aa <- tempfile()
-## obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
-## obj
-## gdsfile(obj)
+obj <- saveVariantExperiment(ve1, dir=aa, replace=TRUE)
+obj
+gdsfile(obj)
 }

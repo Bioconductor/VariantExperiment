@@ -5,6 +5,7 @@
 \alias{VariantExperiment-class}
 \alias{VariantExperiment}
 \alias{gdsfile,VariantExperiment-method}
+\alias{gdsfile<-,VariantExperiment-method}
 \title{VariantExperiment-class}
 \usage{
 VariantExperiment(
@@ -15,6 +16,8 @@ VariantExperiment(
 )
 
 \S4method{gdsfile}{VariantExperiment}(object)
+
+\S4method{gdsfile}{VariantExperiment}(object) <- value
 }
 \arguments{
 \item{assays}{A ‘list’ or ‘SimpleList’ of matrix-like elements, or
@@ -37,12 +40,18 @@ VariantExperiment.}
 the overall experiment.}
 
 \item{object}{a \code{VariantExperiment} object.}
+
+\item{value}{the new gds file path for VariantExperiment object.}
 }
 \value{
 a \code{VariantExperiment} object.
 }
 \description{
-VariantExperiment could represent big genomic data in RangedSummarizedExperiment object, with on-disk GDS back-end data. The assays are represented by \code{DelayedArray} objects; \code{rowData} and \code{colData} could be represented by \code{DelayedDataFrame} objects.
+VariantExperiment could represent big genomic data in
+    RangedSummarizedExperiment object, with on-disk GDS back-end
+    data. The assays are represented by \code{DelayedArray}
+    objects; \code{rowData} and \code{colData} could be represented
+    by \code{DelayedDataFrame} or \code{DataFrame} objects.
 }
 \details{
 VariantExperiment class and slot getters and setters.
